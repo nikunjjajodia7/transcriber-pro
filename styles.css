@@ -386,20 +386,9 @@
 }
 
 .neurovox-dock-pill__icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #8E8E93;
-    background: none;
-    border: none;
+    color: var(--icon-color);
     padding: 0;
-    cursor: pointer;
-    touch-action: manipulation;
-    -webkit-tap-highlight-color: transparent;
     flex-shrink: 0;
-    -webkit-appearance: none;
-    appearance: none;
-    box-shadow: none;
 }
 
 .neurovox-dock-pill__icon svg {
@@ -412,7 +401,7 @@
 }
 
 .neurovox-dock-pill__save.active {
-    color: #7F6DF2;
+    color: var(--interactive-accent);
 }
 
 .neurovox-dock-pill__close svg {
@@ -424,19 +413,13 @@
     width: 36px;
     height: 36px;
     border-radius: 50%;
-    background: #7F6DF2;
-    border: none;
+    background: var(--interactive-accent);
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    touch-action: manipulation;
-    -webkit-tap-highlight-color: transparent;
     flex-shrink: 0;
-    color: #FFFFFF;
-    -webkit-appearance: none;
-    appearance: none;
-    box-shadow: none;
+    color: var(--text-on-accent);
 }
 
 .neurovox-dock-pill__mic-btn svg {
@@ -472,16 +455,9 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    border: none;
     cursor: pointer;
-    touch-action: manipulation;
-    -webkit-tap-highlight-color: transparent;
     flex-shrink: 0;
     padding: 0;
-    background: none;
-    -webkit-appearance: none;
-    appearance: none;
-    box-shadow: none;
 }
 
 .neurovox-dock-pill__pause-btn {

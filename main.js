@@ -11368,7 +11368,7 @@ var MobileDockPill = class {
     if (this.saveAudioOn) this.saveBtnEl.classList.add("active");
     this.saveBtnEl.addEventListener("click", (e) => { e.stopPropagation(); this.handleSaveTap(); });
     this.expandedEl.appendChild(this.saveBtnEl);
-    const micBtn = document.createElement("button");
+    const micBtn = document.createElement("div");
     micBtn.classList.add("neurovox-dock-pill__mic-btn");
     (0, import_obsidian16.setIcon)(micBtn, "mic");
     micBtn.addEventListener("click", (e) => { e.stopPropagation(); this.handleMicTap(); });
@@ -11390,7 +11390,7 @@ var MobileDockPill = class {
     this.pauseBtnEl = this.makeIconBtn("pause", "neurovox-dock-pill__pause-btn");
     this.pauseBtnEl.addEventListener("click", (e) => { e.stopPropagation(); this.handlePauseTap(); });
     this.recordingEl.appendChild(this.pauseBtnEl);
-    const stopBtn = document.createElement("button");
+    const stopBtn = document.createElement("div");
     stopBtn.classList.add("neurovox-dock-pill__stop-btn");
     (0, import_obsidian16.setIcon)(stopBtn, "square");
     stopBtn.addEventListener("click", (e) => { e.stopPropagation(); this.handleStopTap(); });
@@ -11420,7 +11420,8 @@ var MobileDockPill = class {
     this.pillEl.addEventListener("click", () => { this.handlePillTap(); });
   }
   makeIconBtn(iconName, cls) {
-    const btn = document.createElement("button");
+    const btn = document.createElement("div");
+    btn.classList.add("clickable-icon");
     cls.split(" ").forEach((c) => btn.classList.add(c));
     (0, import_obsidian16.setIcon)(btn, iconName);
     return btn;
