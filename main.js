@@ -7975,7 +7975,7 @@ var RecordingAccordion = class extends BaseAccordion {
       toggle.setValue(this.settings.showToolbarButton).onChange(async (value) => {
         this.settings.showToolbarButton = value;
         if (value) {
-          if (!this.plugin.toolbarButton) {
+          if (!this.plugin.toolbarButton && !DeviceDetection.getInstance().isMobile()) {
             this.plugin.initializeUI();
           }
         } else {
@@ -14625,7 +14625,8 @@ ${top.join("\n")}`, 12e3);
   }
   initializeUI() {
     this.cleanupUI();
-    if (this.settings.showToolbarButton) {
+    const isMobile = DeviceDetection.getInstance().isMobile();
+    if (this.settings.showToolbarButton && !isMobile) {
       this.toolbarButton = new ToolbarButton(this, this.settings);
     }
   }
