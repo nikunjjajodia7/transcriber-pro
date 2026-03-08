@@ -4943,6 +4943,7 @@ var DEFAULT_SETTINGS = {
   // Recording
   audioQuality: "medium" /* Medium */,
   recordingFolderPath: "Recordings",
+  iphoneInboxFolderPath: "Recordings/Inbox",
   transcriptFolderPath: "Transcripts",
   showFloatingButton: true,
   useRecordingModal: true,
@@ -7901,6 +7902,7 @@ var RecordingAccordion = class extends BaseAccordion {
   }
   render() {
     this.createRecordingPathSetting();
+    this.createIphoneInboxPathSetting();
     this.createTranscriptPathSetting();
     this.createAudioQualitySetting();
     this.createStreamingModeSetting();
@@ -8063,6 +8065,14 @@ var RecordingAccordion = class extends BaseAccordion {
     new import_obsidian9.Setting(this.contentEl).setName("Enable speaker diarization").setDesc("For Deepgram transcription, label lines by speaker (Speaker 1, Speaker 2, etc.)").addToggle((toggle) => {
       toggle.setValue(this.settings.enableSpeakerDiarization).onChange(async (value) => {
         this.settings.enableSpeakerDiarization = value;
+        await this.plugin.saveSettings();
+      });
+    });
+  }
+  createIphoneInboxPathSetting() {
+    new import_obsidian9.Setting(this.contentEl).setName("iPhone inbox path").setDesc("Folder used for iPhone Voice Memos shared via Files. Latest file can be transcribed with a command.").addText((text) => {
+      text.setPlaceholder("Recordings/Inbox").setValue(this.settings.iphoneInboxFolderPath).onChange(async (value) => {
+        this.settings.iphoneInboxFolderPath = value.trim() || "Recordings/Inbox";
         await this.plugin.saveSettings();
       });
     });
@@ -10838,6 +10848,7 @@ var _InlineRecorderPanel = class {
     this.cursorPosition = options.cursorPosition;
     this.onDispose = options.onDispose;
     this.onStateChange = options.onStateChange;
+    this.isMobileSheet = Boolean(options.isMobileSheet);
     this.deviceDetection = DeviceDetection.getInstance();
     this.recordingManager = new AudioRecordingManager(this.plugin);
     this.documentInserter = new DocumentInserter(this.plugin);
@@ -11024,6 +11035,9 @@ var _InlineRecorderPanel = class {
   createPanel(anchor) {
     this.panelEl = document.createElement("div");
     this.panelEl.addClass("neurovox-inline-recorder-panel");
+    if (this.isMobileSheet) {
+      this.panelEl.addClass("is-mobile-sheet");
+    }
     this.positionPanel(this.panelEl, anchor);
     this.uiContainerEl = this.panelEl.createDiv({ cls: "neurovox-inline-recorder-body" });
     this.statusRowEl = this.uiContainerEl.createDiv({ cls: "neurovox-inline-recorder-status-row" });
@@ -11158,9 +11172,18 @@ var _InlineRecorderPanel = class {
   }
   positionPanel(panelEl, anchor) {
     const margin = 12;
+    const parentRect = this.containerEl.getBoundingClientRect();
     const panelWidth = panelEl.offsetWidth || 300;
     const panelHeight = panelEl.offsetHeight || 220;
-    const parentRect = this.containerEl.getBoundingClientRect();
+    if (this.isMobileSheet) {
+      const width = Math.min(360, Math.max(280, parentRect.width - margin * 2));
+      const left2 = Math.max(margin, Math.round((parentRect.width - width) / 2));
+      const top2 = Math.max(margin, Math.round(parentRect.height - panelHeight - 84));
+      panelEl.style.width = `${width}px`;
+      panelEl.style.left = `${left2}px`;
+      panelEl.style.top = `${top2}px`;
+      return;
+    }
     let left = anchor.x - panelWidth - margin;
     let top = anchor.y - panelHeight + 48;
     if (left < margin)
@@ -11291,6 +11314,9 @@ var _FloatingButton = class {
     this.onPageDropBound = null;
     this.onMicDragOverBound = null;
     this.onMicDropBound = null;
+    this.deviceDetection = DeviceDetection.getInstance();
+    this.isMobileDevice = this.deviceDetection.isMobile();
+    this.mobileDefaultsEnsured = false;
     if (_FloatingButton.instance) {
       _FloatingButton.instance.remove();
     }
@@ -11347,6 +11373,9 @@ var _FloatingButton = class {
   createContainer() {
     this.containerEl = document.createElement("div");
     this.containerEl.classList.add("neurovox-button-container");
+    if (this.isMobileDevice) {
+      this.containerEl.classList.add("is-mobile-dock");
+    }
   }
   /* Handles button click events independently of drag behavior.
   * This ensures recording only starts on direct clicks, not after drags.
@@ -11356,7 +11385,12 @@ var _FloatingButton = class {
       return;
     this.buttonEl = document.createElement("button");
     this.buttonEl.classList.add("neurovox-button", "floating");
-    this.buttonEl.setAttribute("aria-label", "Start recording (drag to move)");
+    if (this.isMobileDevice) {
+      this.buttonEl.classList.add("is-mobile-dock");
+      this.buttonEl.setAttribute("aria-label", "Open transcription actions");
+    } else {
+      this.buttonEl.setAttribute("aria-label", "Start recording (drag to move)");
+    }
     (0, import_obsidian16.setIcon)(this.buttonEl, "mic");
     this.buttonEl.addEventListener("click", (event) => {
       var _a, _b;
@@ -11368,7 +11402,9 @@ var _FloatingButton = class {
       this.handleClick();
     });
     this.updateButtonColor();
-    this.registerMicDropEvents();
+    if (!this.isMobileDevice) {
+      this.registerMicDropEvents();
+    }
     this.containerEl.appendChild(this.buttonEl);
   }
   registerMicDropEvents() {
@@ -11401,6 +11437,8 @@ var _FloatingButton = class {
     });
   }
   async initializePositionManager() {
+    if (this.isMobileDevice)
+      return;
     if (!this.containerEl || !this.buttonEl || !this.activeLeafContainer)
       return;
     this.positionManager = new ButtonPositionManager(
@@ -11433,6 +11471,8 @@ var _FloatingButton = class {
     await this.plugin.saveSettings({ refreshUi: false, triggerFloatingRefresh: false });
   }
   async setInitialPosition() {
+    if (this.isMobileDevice)
+      return;
     const savedPosition = this.pluginData.buttonPosition;
     if (savedPosition && this.activeLeafContainer && this.positionManager) {
       const containerRect = this.activeLeafContainer.getBoundingClientRect();
@@ -11454,6 +11494,8 @@ var _FloatingButton = class {
     }
   }
   async setDefaultPosition() {
+    if (this.isMobileDevice)
+      return;
     if (!this.activeLeafContainer || !this.positionManager) {
       return;
     }
@@ -11599,6 +11641,14 @@ var _FloatingButton = class {
     this.buttonEl.style.setProperty("--neurovox-button-color", color);
   }
   getCurrentPosition() {
+    if (this.isMobileDevice && this.buttonEl && this.activeLeafContainer) {
+      const buttonRect = this.buttonEl.getBoundingClientRect();
+      const parentRect = this.activeLeafContainer.getBoundingClientRect();
+      return {
+        x: Math.round(buttonRect.left - parentRect.left + buttonRect.width / 2),
+        y: Math.round(buttonRect.top - parentRect.top + buttonRect.height / 2)
+      };
+    }
     if (!this.positionManager) {
       return this.pluginData.buttonPosition || { x: 100, y: 100 };
     }
@@ -11671,6 +11721,11 @@ var _FloatingButton = class {
    * Handles click based on current recording mode
    */
   async handleClick() {
+    if (this.isMobileDevice) {
+      await this.ensureMobileLiveDefaults();
+      await this.toggleInlineRecorderPanel();
+      return;
+    }
     if (this.pluginData.useRecordingModal && this.plugin.settings.useExpandableFloatingRecorder) {
       await this.toggleInlineRecorderPanel();
       return;
@@ -11843,6 +11898,7 @@ var _FloatingButton = class {
       plugin: this.plugin,
       containerEl: this.activeLeafContainer,
       anchor,
+      isMobileSheet: this.isMobileDevice,
       activeFile: activeView.file,
       cursorPosition,
       onDispose: () => {
@@ -11858,6 +11914,22 @@ var _FloatingButton = class {
       }
     });
     await this.inlineRecorderPanel.start();
+  }
+  async ensureMobileLiveDefaults() {
+    if (!this.isMobileDevice || this.mobileDefaultsEnsured)
+      return;
+    this.mobileDefaultsEnsured = true;
+    const shouldEnableDiarization = !this.plugin.settings.enableSpeakerDiarization;
+    const shouldEnableTimestamps = !this.plugin.settings.includeTimestamps;
+    if (!shouldEnableDiarization && !shouldEnableTimestamps)
+      return;
+    this.plugin.settings.enableSpeakerDiarization = true;
+    this.plugin.settings.includeTimestamps = true;
+    try {
+      await this.plugin.saveSettings({ refreshUi: false, triggerFloatingRefresh: false });
+      new import_obsidian16.Notice("Enabled mobile speaker-turn timestamps by default.");
+    } catch (e) {
+    }
   }
 };
 var FloatingButton = _FloatingButton;
@@ -12934,6 +13006,10 @@ function migrateAndNormalizeSettings(data) {
     settingsVersion: CURRENT_SETTINGS_VERSION,
     audioQuality: asEnum(merged.audioQuality, AudioQuality, DEFAULT_SETTINGS.audioQuality),
     recordingFolderPath: asPath(merged.recordingFolderPath, DEFAULT_SETTINGS.recordingFolderPath),
+    iphoneInboxFolderPath: asPath(
+      merged.iphoneInboxFolderPath,
+      DEFAULT_SETTINGS.iphoneInboxFolderPath
+    ),
     transcriptFolderPath: asPath(merged.transcriptFolderPath, DEFAULT_SETTINGS.transcriptFolderPath),
     showFloatingButton: asBoolean(merged.showFloatingButton, DEFAULT_SETTINGS.showFloatingButton),
     useRecordingModal: asBoolean(merged.useRecordingModal, DEFAULT_SETTINGS.useRecordingModal),
@@ -13097,6 +13173,10 @@ function migrateAndNormalizeSettings(data) {
   if (settings.recordingFolderPath === "") {
     settings.recordingFolderPath = DEFAULT_SETTINGS.recordingFolderPath;
     warnings.push("recordingFolderPath reset to default");
+  }
+  if (settings.iphoneInboxFolderPath === "") {
+    settings.iphoneInboxFolderPath = DEFAULT_SETTINGS.iphoneInboxFolderPath;
+    warnings.push("iphoneInboxFolderPath reset to default");
   }
   if (settings.transcriptFolderPath === "") {
     settings.transcriptFolderPath = DEFAULT_SETTINGS.transcriptFolderPath;
@@ -13327,6 +13407,13 @@ var _NeuroVoxPlugin = class extends import_obsidian21.Plugin {
       }
     });
     this.addCommand({
+      id: "transcribe-latest-iphone-inbox-recording",
+      name: "Transcribe latest iPhone inbox recording",
+      callback: async () => {
+        await this.transcribeLatestIphoneInboxRecording();
+      }
+    });
+    this.addCommand({
       id: "inspect-local-queue",
       name: "Inspect queue",
       callback: async () => {
@@ -13472,6 +13559,42 @@ ${top.join("\n")}`, 12e3);
       return false;
     const validExtensions = ["mp3", "wav", "webm", "m4a"];
     return validExtensions.includes(file.extension.toLowerCase());
+  }
+  isSupportedInboxAudioFile(file) {
+    const validExtensions = ["mp3", "wav", "webm", "m4a", "ogg", "mp4", "aac"];
+    return validExtensions.includes(file.extension.toLowerCase());
+  }
+  isFileWithinFolder(filePath, folderPath) {
+    const normalizedFilePath = (0, import_obsidian21.normalizePath)(filePath);
+    const normalizedFolder = (0, import_obsidian21.normalizePath)(folderPath).replace(/\/+$/, "");
+    if (!normalizedFolder)
+      return false;
+    return normalizedFilePath.startsWith(`${normalizedFolder}/`);
+  }
+  async transcribeLatestIphoneInboxRecording() {
+    try {
+      const inboxFolder = (0, import_obsidian21.normalizePath)(
+        (this.settings.iphoneInboxFolderPath || "Recordings/Inbox").trim()
+      );
+      const adapter = this.app.vault.adapter;
+      if (!await adapter.exists(inboxFolder)) {
+        new import_obsidian21.Notice(`iPhone inbox folder not found: ${inboxFolder}`);
+        return;
+      }
+      const candidates = this.app.vault.getFiles().filter(
+        (file) => this.isSupportedInboxAudioFile(file) && this.isFileWithinFolder(file.path, inboxFolder)
+      ).sort((a, b) => b.stat.mtime - a.stat.mtime);
+      if (candidates.length === 0) {
+        new import_obsidian21.Notice(`No audio files found in iPhone inbox: ${inboxFolder}`);
+        return;
+      }
+      const latestFile = candidates[0];
+      new import_obsidian21.Notice(`\u{1F3B5} Transcribing latest inbox file: ${latestFile.name}`);
+      await this.processExistingAudioFile(latestFile);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      new import_obsidian21.Notice(`Failed to transcribe latest iPhone inbox recording: ${message}`);
+    }
   }
   isValidVideoFile(file) {
     if (!file)

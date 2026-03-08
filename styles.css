@@ -167,6 +167,10 @@
 .neurovox-inline-recorder-options-utility {
     justify-content: flex-end;
 }
+.neurovox-inline-recorder-options-utility .neurovox-inline-recorder-action {
+    white-space: normal;
+    text-align: center;
+}
 
 .neurovox-inline-recorder-option {
     display: inline-flex;
@@ -251,7 +255,15 @@
 
     .neurovox-inline-recorder-options-utility .neurovox-inline-recorder-action {
         width: 100%;
+        min-height: 36px;
+        white-space: normal;
     }
+}
+
+.neurovox-inline-recorder-panel.is-mobile-sheet {
+    width: min(360px, calc(100vw - 24px));
+    max-width: calc(100vw - 24px);
+    border-radius: 16px;
 }
 
 .neurovox-inline-recorder-panel.is-collapsed {
@@ -564,6 +576,19 @@
     z-index: 10010;
 }
 
+.neurovox-button-container.is-mobile-dock {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: max(16px, env(safe-area-inset-bottom));
+    top: auto;
+    width: auto;
+    height: auto;
+    display: flex;
+    justify-content: center;
+    pointer-events: none;
+}
+
 .neurovox-button.floating {
     position: absolute;
     width: var(--neurovox-floating-button-size);
@@ -583,6 +608,13 @@
     transition: all var(--neurovox-transition-quick) ease;
     transform-origin: top left;
     touch-action: none;
+}
+
+.neurovox-button.floating.is-mobile-dock {
+    position: relative;
+    cursor: pointer;
+    touch-action: manipulation;
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.24);
 }
 
 .neurovox-button.floating:hover {
