@@ -5218,6 +5218,9 @@ function flattenTranscriptText(transcript, includeTimestamps = false) {
       return "";
     if (!includeTimestamps)
       return text;
+    if (/(^|\n)\s*## Speaker Mapping\s*$/m.test(text) || text.includes("<!-- neurovox:mapping:start:")) {
+      return text;
+    }
     return `${formatTimestamp(segment.startMs)} ${text}`.trim();
   }).filter(Boolean);
   return lines.join("\n");
@@ -5290,7 +5293,7 @@ function extractSpeakerLabels(transcript) {
   return Array.from(labelIds).sort((a, b) => a - b).map((id) => `Speaker ${id}`);
 }
 function hasSpeakerMappingSection(noteContent) {
-  return /^\s*(?:>\s*)*## Speaker Mapping\s*$/m.test(noteContent);
+  return /^\s*(?:>\s*)*(?:\[[0-9]{2}:[0-9]{2}(?::[0-9]{2})?\]\s+)?## Speaker Mapping\s*$/m.test(noteContent);
 }
 function buildEntrySpeakerMappingSection(labels, entryId) {
   if (labels.length === 0)
@@ -5351,7 +5354,7 @@ function findEntryMappingRegion(entryContent, entryId) {
   while (end < entryContent.length && (entryContent[end] === "\n" || entryContent[end] === "\r")) {
     end += 1;
   }
-  const headerRegex = /^\s*(?:>\s*)*## Speaker Mapping\s*$/gm;
+  const headerRegex = /^\s*(?:>\s*)*(?:\[[0-9]{2}:[0-9]{2}(?::[0-9]{2})?\]\s+)?## Speaker Mapping\s*$/gm;
   const before = entryContent.slice(0, start);
   let headerStart = start;
   let headerMatch = headerRegex.exec(before);
@@ -5393,6 +5396,17 @@ function applyMapToText(text, mapping, inferredAliases) {
   let replaced = 0;
   let updated = text;
   const entries = Array.from(mapping.entries()).sort((a, b) => b[0] - a[0]);
+  const applyLabel = (sourceLabel, targetName) => {
+    const escapedSource = escapeForRegExp(sourceLabel);
+    const pattern = new RegExp(
+      `(^|\\n)(\\s*(?:>\\s*)*(?:(?:\\[[0-9]{2}:[0-9]{2}(?::[0-9]{2})?\\]|\\[\\[t=[0-9]{2}:[0-9]{2}(?::[0-9]{2})?\\]\\])\\s+)?)${escapedSource}\\s*:`,
+      "gi"
+    );
+    updated = updated.replace(pattern, (_match, p1, p2) => {
+      replaced += 1;
+      return `${p1}${p2}${targetName}:`;
+    });
+  };
   for (const [id, name] of entries) {
     const sourceLabels = /* @__PURE__ */ new Set([`Speaker ${id}`]);
     const inferred = inferredAliases.get(id);
@@ -5400,16 +5414,13 @@ function applyMapToText(text, mapping, inferredAliases) {
       sourceLabels.add(inferred);
     }
     for (const sourceLabel of sourceLabels) {
-      const escapedSource = escapeForRegExp(sourceLabel);
-      const pattern = new RegExp(
-        `(^|\\n)(\\s*(?:>\\s*)*(?:(?:\\[[0-9]{2}:[0-9]{2}(?::[0-9]{2})?\\]|\\[\\[t=[0-9]{2}:[0-9]{2}(?::[0-9]{2})?\\]\\])\\s+)?)${escapedSource}:`,
-        "g"
-      );
-      updated = updated.replace(pattern, (_match, p1, p2) => {
-        replaced += 1;
-        return `${p1}${p2}${name}:`;
-      });
+      applyLabel(sourceLabel, name);
     }
+    applyLabel(`Speaker${id}`, name);
+  }
+  if (mapping.size === 1) {
+    const firstName = entries[0][1];
+    applyLabel("Speaker", firstName);
   }
   return { text: updated, replaced };
 }
@@ -11177,8 +11188,10 @@ var _InlineRecorderPanel = class {
     const panelHeight = panelEl.offsetHeight || 220;
     if (this.isMobileSheet) {
       const width = Math.min(360, Math.max(280, parentRect.width - margin * 2));
+      const safeInsetBottom = typeof window !== "undefined" && window.visualViewport ? Math.max(0, window.innerHeight - window.visualViewport.height - window.visualViewport.offsetTop) : 0;
+      const dockOffset = 92;
       const left2 = Math.max(margin, Math.round((parentRect.width - width) / 2));
-      const top2 = Math.max(margin, Math.round(parentRect.height - panelHeight - 84));
+      const top2 = Math.max(margin, Math.round(parentRect.height - panelHeight - dockOffset - safeInsetBottom));
       panelEl.style.width = `${width}px`;
       panelEl.style.left = `${left2}px`;
       panelEl.style.top = `${top2}px`;
@@ -14269,7 +14282,7 @@ ${top.join("\n")}`, 12e3);
         return;
       }
       if (result.replacedCount === 0) {
-        new import_obsidian21.Notice("No generic speaker labels found to replace.");
+        new import_obsidian21.Notice("No matching speaker labels found in this entry body. Ensure lines use speaker labels (e.g., Speaker 1:).");
         return;
       }
       await this.app.vault.modify(activeFile, result.updatedContent);
