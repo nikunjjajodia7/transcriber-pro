@@ -1,0 +1,914 @@
+/************************************
+ * THEME VARIABLES
+ ************************************/
+ :root {
+    /* Core Sizes */
+    --neurovox-spacing-xs: 0.25rem;
+    --neurovox-spacing-sm: 0.5rem;
+    --neurovox-spacing-md: 1.5rem;
+    --neurovox-spacing-lg: 2rem;
+    --neurovox-spacing-xl: 2.5rem;
+
+    /* Component Sizes */
+    --neurovox-button-size: 38px;
+    --neurovox-control-size: 48px;
+    --neurovox-timer-size: 3rem;
+    --neurovox-wave-width: 7px;
+    --neurovox-wave-height: 40px;
+    --neurovox-icon-size: 20px;
+    --neurovox-toggle-width: 40px;
+    --neurovox-toggle-height: 20px;
+
+    /* Floating Button Specific Sizes */
+    --neurovox-floating-button-size: 48px;
+    --neurovox-floating-icon-size: 24px;
+    --neurovox-button-margin: 8px;
+    --neurovox-border-width: 2px;
+
+    /* Animation Timing */
+    --neurovox-transition-quick: 0.2s;
+    --neurovox-transition-normal: 0.3s;
+    --neurovox-animation-duration: 1.2s;
+    --neurovox-resize-delay: 100ms;
+
+    /* Effects */
+    --neurovox-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    --neurovox-shadow-hover: 0 4px 12px rgba(0, 0, 0, 0.2);
+    --neurovox-transition: all var(--neurovox-transition-quick) cubic-bezier(0.4, 0, 0.2, 1);
+    --neurovox-border-radius: var(--radius-s);
+    --neurovox-border-radius-lg: var(--radius-m);
+    --neurovox-hover-transform: -2px;
+    --neurovox-drag-scale: 1.1;
+}
+
+/************************************
+ * MODAL STYLES
+ ************************************/
+.neurovox-timer-modal {
+    background-color: var(--background-primary);
+    border-radius: var(--neurovox-border-radius-lg);
+    box-shadow: var(--shadow-l);
+    overflow: hidden;
+}
+
+.neurovox-timer-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--neurovox-spacing-lg);
+    padding: var(--neurovox-spacing-lg);
+    margin: 0 auto;
+    width: 100%;
+    max-width: 400px;
+}
+
+/* Mobile-specific modal adjustments */
+.neurovox-timer-modal.is-mobile .neurovox-timer-content {
+    padding: var(--neurovox-spacing-md);
+    gap: var(--neurovox-spacing-md);
+    max-width: 100%;
+}
+
+.neurovox-inline-recorder-panel {
+    position: absolute;
+    z-index: 9999;
+    width: 312px;
+    max-width: min(312px, calc(100vw - 24px));
+    background: color-mix(in srgb, var(--background-primary) 94%, transparent);
+    border: 1px solid color-mix(in srgb, var(--background-modifier-border) 85%, transparent);
+    border-radius: 18px;
+    box-shadow: 0 18px 42px rgba(0, 0, 0, 0.24);
+    backdrop-filter: blur(10px);
+    overflow: hidden;
+    transition: opacity 0.16s ease, transform 0.16s ease;
+}
+
+.neurovox-inline-recorder-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.neurovox-inline-recorder-status::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: var(--text-faint);
+}
+
+.neurovox-inline-recorder-panel[data-state='recording'] .neurovox-inline-recorder-status::before {
+    background: var(--color-red);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-red) 20%, transparent);
+}
+
+.neurovox-inline-recorder-panel[data-state='paused'] .neurovox-inline-recorder-status::before {
+    background: var(--color-orange);
+}
+
+.neurovox-inline-recorder-panel[data-state='finalizing'] .neurovox-inline-recorder-status::before {
+    background: var(--interactive-accent);
+}
+
+.neurovox-inline-recorder-status-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.neurovox-inline-recorder-timer {
+    font-family: var(--font-monospace);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-normal);
+    letter-spacing: 0.08em;
+}
+
+.neurovox-inline-recorder-body {
+    padding: 14px 14px 12px;
+}
+
+.neurovox-inline-recorder-section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.neurovox-inline-recorder-section.is-hidden {
+    display: none;
+}
+
+.neurovox-inline-recorder-options {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.neurovox-inline-recorder-options-primary {
+    margin-bottom: 2px;
+}
+
+.neurovox-inline-recorder-options-primary .neurovox-inline-recorder-action {
+    width: 100%;
+    justify-content: center;
+}
+
+.neurovox-inline-recorder-options-secondary {
+    justify-content: space-between;
+}
+
+.neurovox-inline-recorder-options-utility {
+    justify-content: flex-end;
+}
+
+.neurovox-inline-recorder-option {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--text-muted);
+    user-select: none;
+}
+
+.neurovox-inline-recorder-option input[type="checkbox"] {
+    margin: 0;
+}
+
+.neurovox-inline-recorder-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--background-modifier-border);
+    background: color-mix(in srgb, var(--background-secondary) 86%, transparent);
+    color: var(--text-normal);
+    border-radius: 12px;
+    padding: 7px 12px;
+    min-height: 30px;
+    line-height: 1.2;
+    white-space: nowrap;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+}
+
+.neurovox-inline-recorder-action:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.14);
+}
+
+.neurovox-inline-recorder-action-primary {
+    background: linear-gradient(
+        140deg,
+        color-mix(in srgb, var(--interactive-accent) 88%, white) 0%,
+        var(--interactive-accent) 100%
+    );
+    color: var(--text-on-accent);
+    border-color: color-mix(in srgb, var(--interactive-accent) 65%, black);
+}
+
+.neurovox-inline-recorder-action-ghost {
+    background: transparent;
+    border-color: transparent;
+    color: var(--text-muted);
+    padding: 7px 12px;
+}
+
+.neurovox-inline-recorder-action:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+    .neurovox-inline-recorder-panel {
+        width: min(312px, calc(100vw - 16px));
+        max-width: calc(100vw - 16px);
+        border-radius: 14px;
+    }
+
+    .neurovox-inline-recorder-body {
+        padding: 12px;
+    }
+
+    .neurovox-inline-recorder-options-secondary {
+        justify-content: flex-start;
+    }
+
+    .neurovox-inline-recorder-option {
+        width: 100%;
+    }
+
+    .neurovox-inline-recorder-options-utility {
+        justify-content: stretch;
+    }
+
+    .neurovox-inline-recorder-options-utility .neurovox-inline-recorder-action {
+        width: 100%;
+    }
+}
+
+.neurovox-inline-recorder-panel.is-collapsed {
+    opacity: 0;
+    transform: scale(0.97);
+    pointer-events: none;
+}
+
+.neurovox-button.floating.drag-over {
+    outline: 2px dashed var(--interactive-accent);
+    outline-offset: 3px;
+}
+
+.neurovox-drop-target-active {
+    box-shadow: inset 0 0 0 2px var(--interactive-accent);
+}
+
+.neurovox-drop-review-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 14px;
+}
+
+.neurovox-inline-recorder-finalizing {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    padding: 2px 0 4px;
+}
+
+.neurovox-inline-recorder-finalizing::before {
+    content: '';
+    width: 12px;
+    height: 12px;
+    border: 2px solid var(--background-modifier-border);
+    border-top-color: var(--interactive-accent);
+    border-radius: 50%;
+    animation: neurovox-inline-spin 0.9s linear infinite;
+}
+
+.neurovox-inline-recorder-section-active .neurovox-timer-display {
+    margin-top: 2px;
+    margin-bottom: 8px;
+    font-size: 20px;
+    letter-spacing: 0.08em;
+}
+
+.neurovox-inline-recorder-section-active .neurovox-audio-wave {
+    margin-bottom: 8px;
+}
+
+.neurovox-inline-recorder-section-active .neurovox-timer-controls {
+    gap: 12px;
+}
+
+@keyframes neurovox-inline-spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.neurovox-timer-display {
+    font-family: var(--font-monospace);
+    font-size: var(--neurovox-timer-size);
+    font-weight: 700;
+    color: var(--text-normal);
+    line-height: 1;
+    letter-spacing: 0.1em;
+    text-align: center;
+    margin: 0;
+    white-space: nowrap;
+    transition: color var(--neurovox-transition-normal) ease;
+}
+
+.neurovox-timer-display.is-warning {
+    color: var(--text-error);
+    animation: pulse 2s infinite;
+}
+
+/************************************
+ * CONTROL BUTTONS
+ ************************************/
+.neurovox-timer-controls {
+    display: flex;
+    justify-content: center;
+    gap: var(--neurovox-spacing-md);
+    padding: 0;
+}
+
+/* Enhanced mobile button styles */
+/* Enhanced touch-optimized button styles */
+.neurovox-timer-button {
+    width: var(--neurovox-control-size);
+    height: var(--neurovox-control-size);
+    border: none;
+    border-radius: 50%;
+    background-color: var(--interactive-normal);
+    color: var(--text-on-accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: var(--neurovox-transition);
+    padding: 0;
+    box-shadow: var(--neurovox-shadow);
+    will-change: transform;
+    touch-action: manipulation; /* Prevent double-tap zoom on mobile */
+    -webkit-tap-highlight-color: transparent; /* Remove tap highlight on mobile */
+    -webkit-touch-callout: none; /* Disable callout on long press */
+    user-select: none; /* Prevent text selection */
+    position: relative;
+    overflow: hidden;
+}
+
+/* Touch feedback states */
+.neurovox-timer-button.touch-button {
+    transform: translateZ(0); /* Force GPU acceleration */
+}
+
+.neurovox-timer-button.touch-button::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.1);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    pointer-events: none;
+    border-radius: 50%;
+}
+
+.neurovox-timer-button.touch-button.is-touching::after {
+    opacity: 1;
+}
+
+.neurovox-timer-button.touch-button.is-long-press::after {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* Touch ripple effect */
+@keyframes touch-ripple {
+    0% {
+        transform: scale(0);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(2);
+        opacity: 0;
+    }
+}
+
+.neurovox-timer-button.touch-button::before {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 100%);
+    transform: scale(0);
+    opacity: 0;
+    pointer-events: none;
+    border-radius: 50%;
+}
+
+.neurovox-timer-button.touch-button.is-touching::before {
+    animation: touch-ripple 0.6s ease-out;
+}
+
+/* Larger touch targets for mobile */
+.neurovox-timer-modal.is-mobile .neurovox-timer-button {
+    width: calc(var(--neurovox-control-size) * 1.2);
+    height: calc(var(--neurovox-control-size) * 1.2);
+    margin: var(--neurovox-spacing-sm);
+}
+
+/* Disable hover effects on mobile */
+@media (hover: none) {
+    .neurovox-timer-button:hover {
+        transform: none;
+        box-shadow: var(--neurovox-shadow);
+    }
+}
+
+/* Active state for mobile */
+.neurovox-timer-modal.is-mobile .neurovox-timer-button:active {
+    transform: scale(0.95);
+    opacity: 0.8;
+}
+
+/* Mobile-optimized button states */
+.neurovox-timer-button[data-state="processing"] {
+    opacity: 0.7;
+    cursor: not-allowed;
+    animation: processing 1s infinite;
+}
+
+.neurovox-timer-button[data-state="error"] {
+    background-color: var(--text-error);
+    animation: shake 0.5s ease-in-out;
+}
+
+/* Processing animation */
+@keyframes processing {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(0.95); }
+}
+
+/* Error animation */
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-4px); }
+    75% { transform: translateX(4px); }
+}
+
+.neurovox-timer-button:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--neurovox-shadow-hover);
+}
+
+.neurovox-timer-button:active {
+    transform: translateY(0);
+}
+
+.neurovox-timer-button svg {
+    width: var(--neurovox-icon-size);
+    height: var(--neurovox-icon-size);
+    stroke-width: 2;
+}
+
+.neurovox-pause-button {
+    background-color: var(--interactive-accent);
+}
+
+.neurovox-stop-button {
+    background-color: var(--text-error);
+}
+
+/************************************
+ * AUDIO VISUALIZATION
+ ************************************/
+/* Enhanced audio wave visualization */
+.neurovox-audio-wave {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: var(--neurovox-spacing-xs);
+    height: calc(var(--neurovox-wave-height) + var(--neurovox-spacing-md));
+    margin: 0;
+    padding: var(--neurovox-spacing-sm);
+    touch-action: none;
+    pointer-events: none;
+}
+
+/* Mobile-specific wave adjustments */
+.neurovox-timer-modal.is-mobile .neurovox-audio-wave {
+    gap: calc(var(--neurovox-spacing-xs) * 1.5);
+    height: calc(var(--neurovox-wave-height) * 0.8);
+}
+
+.neurovox-timer-modal.is-mobile .neurovox-wave-bar {
+    width: calc(var(--neurovox-wave-width) * 1.2);
+}
+
+.neurovox-wave-bar {
+    width: var(--neurovox-wave-width);
+    height: var(--neurovox-wave-height);
+    border-radius: calc(var(--neurovox-wave-width) / 2);
+    background-color: var(--interactive-accent);
+    opacity: 0.8;
+    transform-origin: bottom;
+    will-change: transform;
+}
+
+.neurovox-audio-wave.is-recording .neurovox-wave-bar {
+    animation: wave var(--neurovox-animation-duration) ease-in-out infinite;
+}
+
+.neurovox-audio-wave.is-recording .neurovox-wave-bar:nth-child(1) { animation-delay: 0s; }
+.neurovox-audio-wave.is-recording .neurovox-wave-bar:nth-child(2) { animation-delay: 0.1s; }
+.neurovox-audio-wave.is-recording .neurovox-wave-bar:nth-child(3) { animation-delay: 0.2s; }
+.neurovox-audio-wave.is-recording .neurovox-wave-bar:nth-child(4) { animation-delay: 0.3s; }
+.neurovox-audio-wave.is-recording .neurovox-wave-bar:nth-child(5) { animation-delay: 0.4s; }
+
+.neurovox-audio-wave.is-paused .neurovox-wave-bar {
+    animation-play-state: paused;
+}
+
+.neurovox-audio-wave.is-stopped .neurovox-wave-bar {
+    animation: none;
+    transform: scaleY(0.3);
+}
+
+/************************************
+ * FLOATING BUTTON
+ ************************************/
+.neurovox-button-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 10010;
+}
+
+.neurovox-button.floating {
+    position: absolute;
+    width: var(--neurovox-floating-button-size);
+    height: var(--neurovox-floating-button-size);
+    border-radius: 50%;
+    background-color: var(--neurovox-button-color, var(--interactive-accent));
+    border: var(--neurovox-border-width) solid var(--background-modifier-border);
+    color: var(--text-on-accent);
+    padding: 0;
+    margin: 0;
+    cursor: grab;
+    pointer-events: all;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--shadow-s);
+    transition: all var(--neurovox-transition-quick) ease;
+    transform-origin: top left;
+    touch-action: none;
+}
+
+.neurovox-button.floating:hover {
+    transform: translateY(var(--neurovox-hover-transform));
+    box-shadow: var(--shadow-l);
+}
+
+.neurovox-button.floating.is-dragging {
+    cursor: grabbing;
+    transform: scale(var(--neurovox-drag-scale));
+    box-shadow: var(--shadow-l);
+}
+
+.neurovox-button.floating svg {
+    width: var(--neurovox-floating-icon-size);
+    height: var(--neurovox-floating-icon-size);
+    color: currentColor;
+}
+
+/************************************
+ * TOOLBAR BUTTON
+ ************************************/
+.neurovox-toolbar-button {
+    color: var(--text-muted);
+    padding: 0 var(--neurovox-spacing-sm);
+    transition: color var(--neurovox-transition-quick) ease;
+}
+
+.neurovox-toolbar-button:hover {
+    color: var(--text-normal);
+}
+
+/************************************
+ * SETTINGS & ACCORDIONS
+ ************************************/
+.neurovox-settings-container {
+    display: flex;
+    flex-direction: column;
+    gap: var(--neurovox-spacing-md);
+    padding: var(--neurovox-spacing-xs);
+}
+
+.neurovox-accordion {
+    background-color: var(--background-secondary);
+    border: 1px solid var(--background-modifier-border);
+    border-radius: var(--radius-m);
+    overflow: hidden;
+    transition: var(--neurovox-transition);
+    margin-bottom: var(--neurovox-spacing-sm);
+}
+
+.neurovox-accordion-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--neurovox-spacing-sm);
+    background-color: var(--background-secondary-alt);
+    cursor: pointer;
+    border-bottom: 1px solid var(--background-modifier-border);
+    transition: background-color var(--neurovox-transition-quick) ease;
+}
+
+.neurovox-accordion-header:hover {
+    background-color: var(--background-modifier-hover);
+}
+
+.neurovox-accordion-title-wrapper {
+    display: flex;
+    align-items: center;
+    gap: var(--neurovox-spacing-sm);
+}
+
+.neurovox-accordion-title {
+    font-size: var(--font-ui-medium);
+    font-weight: var(--font-medium);
+    color: var(--text-normal);
+}
+
+.neurovox-accordion-description {
+    font-size: var(--font-ui-smaller);
+    color: var(--text-muted);
+    padding: var(--neurovox-spacing-xs) var(--neurovox-spacing-md);
+}
+
+.neurovox-accordion-content {
+    padding: var(--neurovox-spacing-md);
+    display: flex;
+    flex-direction: column;
+    gap: var(--neurovox-spacing-md);
+    background-color: var(--background-primary);
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    transition: max-height var(--neurovox-transition-normal) ease, opacity var(--neurovox-transition-normal) ease;
+}
+
+.neurovox-accordion-open .neurovox-accordion-content {
+    max-height: 70vh;
+    opacity: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+}
+
+/* Mobile optimization for accordion content */
+@media (max-width: 768px) {
+    .neurovox-accordion-open .neurovox-accordion-content {
+        max-height: 65vh;
+    }
+
+    /* Improve touch scrolling experience */
+    .neurovox-accordion-content::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    .neurovox-accordion-content::-webkit-scrollbar-track {
+        background: var(--background-secondary);
+    }
+
+    .neurovox-accordion-content::-webkit-scrollbar-thumb {
+        background-color: var(--background-modifier-border);
+        border-radius: 2px;
+    }
+}
+
+/************************************
+ * FORM CONTROLS
+ ************************************/
+.neurovox-setting-item {
+    display: flex;
+    flex-direction: column;
+    gap: var(--neurovox-spacing-xs);
+    padding: var(--neurovox-spacing-sm) 0;
+    border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.neurovox-setting-item:last-child {
+    border-bottom: none;
+}
+
+/* Toggle Switch */
+.neurovox-toggle {
+    width: var(--neurovox-toggle-width);
+    height: var(--neurovox-toggle-height);
+    border-radius: calc(var(--neurovox-toggle-height) / 2);
+    background-color: var(--background-modifier-border);
+    transition: var(--neurovox-transition);
+    cursor: pointer;
+}
+
+.neurovox-toggle.is-enabled {
+    background-color: var(--interactive-accent);
+}
+
+/* Sliders */
+.neurovox-slider {
+    width: 100%;
+    height: 4px;
+    background-color: var(--background-modifier-border);
+    border-radius: 2px;
+    appearance: none;
+    cursor: pointer;
+}
+
+.neurovox-slider::-webkit-slider-thumb {
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    background-color: var(--interactive-accent);
+    border: none;
+    border-radius: 50%;
+    transition: var(--neurovox-transition);
+    cursor: grab;
+}
+
+.neurovox-slider::-webkit-slider-thumb:hover {
+    background-color: var(--interactive-accent-hover);
+    transform: scale(1.1);
+}
+
+/* Textarea */
+.neurovox-prompt-textarea {
+    width: 100%;
+    min-height: 100px;
+    resize: vertical;
+    background-color: var(--background-primary);
+    border: 1px solid var(--background-modifier-border);
+    border-radius: var(--radius-s);
+    padding: var(--neurovox-spacing-sm);
+    color: var(--text-normal);
+    font-family: var(--font-text);
+    line-height: 1.5;
+    transition: border-color var(--neurovox-transition-quick) ease;
+}
+
+.neurovox-prompt-textarea:focus {
+    border-color: var(--interactive-accent);
+    outline: none;
+}
+
+/* Enhanced confirmation modal styles */
+.neurovox-confirmation-modal {
+    padding: var(--neurovox-spacing-md);
+}
+
+.neurovox-confirmation-modal.is-mobile {
+    padding: var(--neurovox-spacing-sm);
+}
+
+.neurovox-confirmation-modal.is-mobile .mobile-title {
+    font-size: 1.5em;
+    margin-bottom: var(--neurovox-spacing-md);
+}
+
+.neurovox-confirmation-modal.is-mobile .mobile-message {
+    font-size: 1.1em;
+    line-height: 1.4;
+    margin-bottom: var(--neurovox-spacing-lg);
+}
+
+.neurovox-confirmation-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--neurovox-spacing-sm);
+    margin-top: var(--neurovox-spacing-lg);
+}
+
+/* Mobile-optimized button container */
+.neurovox-confirmation-buttons.is-mobile {
+    flex-direction: column-reverse;
+    gap: var(--neurovox-spacing-md);
+    margin-top: var(--neurovox-spacing-xl);
+}
+
+/* Mobile-optimized buttons */
+.neurovox-confirmation-buttons .mobile-button {
+    height: 48px !important;
+    min-width: 100% !important;
+    font-size: 1.1em !important;
+    padding: var(--neurovox-spacing-sm) var(--neurovox-spacing-md) !important;
+    margin: 0 !important;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    user-select: none;
+}
+
+/* Active states for mobile buttons */
+.neurovox-confirmation-buttons .mobile-button:active {
+    transform: scale(0.98);
+    opacity: 0.9;
+}
+
+.neurovox-button-danger {
+    background-color: var(--text-error) !important;
+    color: var(--text-on-accent) !important;
+}
+
+.neurovox-button-primary {
+    background-color: var(--interactive-accent) !important;
+    color: var(--text-on-accent) !important;
+}
+
+.neurovox-button-danger:hover,
+.neurovox-button-primary:hover {
+    opacity: 0.9;
+}
+
+.neurovox-modal-toggle-setting {
+    margin-top: 0 !important;
+    margin-bottom: var(--neurovox-spacing-md);
+    opacity: 0.9;
+}
+
+.neurovox-modal-toggle-setting .setting-item-control {
+    padding-right: 2em;
+}
+
+/* Transition effect for settings */
+.neurovox-accordion-content .setting-item {
+    transition: opacity var(--neurovox-transition-normal) ease;
+}
+
+/* Recording Button Animation */
+.neurovox-button.recording {
+    animation: breathing 2s ease-in-out infinite;
+    background-color: var(--color-red) !important;
+}
+
+@keyframes breathing {
+    0%, 100% {
+        transform: scale(0.9);
+        opacity: 0.7;
+    }
+    50% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/************************************
+ * ANIMATIONS
+ ************************************/
+/* Performance-optimized animations for mobile */
+@media (prefers-reduced-motion: no-preference) {
+    @keyframes wave {
+        0%, 100% { transform: scaleY(0.2); }
+        50% { transform: scaleY(1.2); }
+    }
+
+    .neurovox-timer-modal.is-mobile .neurovox-wave-bar {
+        animation-duration: calc(var(--neurovox-animation-duration) * 0.8);
+        will-change: transform;
+    }
+}
+
+/* Reduce motion if user prefers */
+@media (prefers-reduced-motion: reduce) {
+    .neurovox-audio-wave.is-recording .neurovox-wave-bar {
+        animation: none;
+        transform: scaleY(0.5);
+    }
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+}
