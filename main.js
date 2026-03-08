@@ -11401,9 +11401,10 @@ var MobileDockPill = class {
     // Finalizing section
     this.finalizingEl = document.createElement("div");
     this.finalizingEl.classList.add("neurovox-dock-pill__finalizing");
-    const spinner = document.createElement("div");
-    spinner.classList.add("neurovox-dock-pill__spinner");
-    this.finalizingEl.appendChild(spinner);
+    const loaderIcon = document.createElement("div");
+    loaderIcon.classList.add("neurovox-dock-pill__loader-icon");
+    (0, import_obsidian16.setIcon)(loaderIcon, "loader");
+    this.finalizingEl.appendChild(loaderIcon);
     const statusText = document.createElement("span");
     statusText.classList.add("neurovox-dock-pill__status-text");
     statusText.textContent = "Transcribing";
@@ -11705,6 +11706,18 @@ var MobileDockPill = class {
     if (this.containerEl.parentNode !== document.body) {
       document.body.appendChild(this.containerEl);
     }
+    this.measureAndPositionAboveDock();
+  }
+  measureAndPositionAboveDock() {
+    if (!this.containerEl) return;
+    const dockEl = document.querySelector('.mobile-navbar')
+      || document.querySelector('.workspace-tab-header-container-inner')
+      || document.querySelector('.mod-mobile .workspace-tab-header-container');
+    if (dockEl) {
+      const dockRect = dockEl.getBoundingClientRect();
+      const distFromBottom = window.innerHeight - dockRect.top;
+      this.containerEl.style.bottom = (distFromBottom + 6) + 'px';
+    }
   }
   show() {
     if (this.containerEl) this.containerEl.style.display = "";
@@ -11743,6 +11756,7 @@ var UploadBottomSheet = class {
     this.ctaEl = null;
     this.saveToggleEl = null;
     this.fileInputEl = null;
+    this.chooseLinkEl = null;
   }
   open() {
     // Overlay
@@ -11753,18 +11767,21 @@ var UploadBottomSheet = class {
     // Sheet
     this.sheetEl = document.createElement("div");
     this.sheetEl.classList.add("neurovox-upload-sheet");
-    // Header
+    // Handle bar
+    const handle = document.createElement("div");
+    handle.classList.add("neurovox-upload-sheet__handle");
+    this.sheetEl.appendChild(handle);
+    // Header (centered title + description)
     const header = document.createElement("div");
     header.classList.add("neurovox-upload-sheet__header");
     const title = document.createElement("span");
     title.classList.add("neurovox-upload-sheet__title");
     title.textContent = "Upload Audio";
     header.appendChild(title);
-    const closeBtn = document.createElement("button");
-    closeBtn.classList.add("neurovox-upload-sheet__close");
-    (0, import_obsidian16.setIcon)(closeBtn, "x");
-    closeBtn.addEventListener("click", () => this.close());
-    header.appendChild(closeBtn);
+    const description = document.createElement("div");
+    description.classList.add("neurovox-upload-sheet__description");
+    description.textContent = "Select an audio file to transcribe into your note.";
+    header.appendChild(description);
     this.sheetEl.appendChild(header);
     // File picker area
     const picker = document.createElement("div");
@@ -11784,7 +11801,7 @@ var UploadBottomSheet = class {
     this.fileCardEl.classList.add("neurovox-upload-sheet__file-card");
     const fileIcon = document.createElement("div");
     fileIcon.classList.add("neurovox-upload-sheet__file-icon");
-    (0, import_obsidian16.setIcon)(fileIcon, "file-audio");
+    (0, import_obsidian16.setIcon)(fileIcon, "music");
     this.fileCardEl.appendChild(fileIcon);
     const fileInfo = document.createElement("div");
     fileInfo.classList.add("neurovox-upload-sheet__file-info");
@@ -11795,19 +11812,32 @@ var UploadBottomSheet = class {
     this.fileSizeEl.classList.add("neurovox-upload-sheet__file-size");
     fileInfo.appendChild(this.fileSizeEl);
     this.fileCardEl.appendChild(fileInfo);
-    const removeBtn = document.createElement("button");
-    removeBtn.classList.add("neurovox-upload-sheet__file-remove");
-    (0, import_obsidian16.setIcon)(removeBtn, "x");
-    removeBtn.addEventListener("click", () => this.clearFile());
-    this.fileCardEl.appendChild(removeBtn);
+    const fileCheck = document.createElement("div");
+    fileCheck.classList.add("neurovox-upload-sheet__file-check");
+    (0, import_obsidian16.setIcon)(fileCheck, "check-circle");
+    this.fileCardEl.appendChild(fileCheck);
     this.sheetEl.appendChild(this.fileCardEl);
-    // Save audio toggle
+    // "Choose a different file" link
+    this.chooseLinkEl = document.createElement("button");
+    this.chooseLinkEl.classList.add("neurovox-upload-sheet__choose-link");
+    this.chooseLinkEl.textContent = "Choose a different file";
+    this.chooseLinkEl.style.display = "none";
+    this.chooseLinkEl.addEventListener("click", () => this.openFilePicker());
+    this.sheetEl.appendChild(this.chooseLinkEl);
+    // Save audio toggle row
     const saveRow = document.createElement("div");
     saveRow.classList.add("neurovox-upload-sheet__save-row");
+    const saveRowLeft = document.createElement("div");
+    saveRowLeft.classList.add("neurovox-upload-sheet__save-row-left");
+    const saveIcon = document.createElement("div");
+    saveIcon.classList.add("neurovox-upload-sheet__save-icon");
+    (0, import_obsidian16.setIcon)(saveIcon, "save");
+    saveRowLeft.appendChild(saveIcon);
     const saveLabel = document.createElement("span");
     saveLabel.classList.add("neurovox-upload-sheet__save-label");
-    saveLabel.textContent = "Save audio file";
-    saveRow.appendChild(saveLabel);
+    saveLabel.textContent = "Save audio to vault";
+    saveRowLeft.appendChild(saveLabel);
+    saveRow.appendChild(saveRowLeft);
     this.saveToggleEl = document.createElement("button");
     this.saveToggleEl.classList.add("neurovox-upload-sheet__save-toggle");
     if (this.saveAudioOn) this.saveToggleEl.classList.add("active");
@@ -11817,10 +11847,15 @@ var UploadBottomSheet = class {
     });
     saveRow.appendChild(this.saveToggleEl);
     this.sheetEl.appendChild(saveRow);
-    // Transcribe CTA
+    // Transcribe CTA with sparkles icon
     this.ctaEl = document.createElement("button");
     this.ctaEl.classList.add("neurovox-upload-sheet__cta");
-    this.ctaEl.textContent = "Transcribe";
+    const sparklesIcon = document.createElement("span");
+    (0, import_obsidian16.setIcon)(sparklesIcon, "sparkles");
+    this.ctaEl.appendChild(sparklesIcon);
+    const ctaText = document.createElement("span");
+    ctaText.textContent = "Transcribe";
+    this.ctaEl.appendChild(ctaText);
     this.ctaEl.addEventListener("click", () => {
       if (!this.selectedFile) return;
       const file = this.selectedFile;
@@ -11856,12 +11891,14 @@ var UploadBottomSheet = class {
     if (this.fileSizeEl) this.fileSizeEl.textContent = this.formatSize(file.size);
     if (this.fileCardEl) this.fileCardEl.classList.add("has-file");
     if (this.ctaEl) this.ctaEl.classList.add("enabled");
+    if (this.chooseLinkEl) this.chooseLinkEl.style.display = "";
   }
   clearFile() {
     this.selectedFile = null;
     if (this.fileCardEl) this.fileCardEl.classList.remove("has-file");
     if (this.ctaEl) this.ctaEl.classList.remove("enabled");
     if (this.fileInputEl) this.fileInputEl.value = "";
+    if (this.chooseLinkEl) this.chooseLinkEl.style.display = "none";
   }
   formatSize(bytes) {
     if (bytes < 1024) return `${bytes} B`;
@@ -12133,6 +12170,9 @@ var _FloatingButton = class {
           if (this.positionManager && this.activeLeafContainer) {
             this.positionManager.updateContainer(this.activeLeafContainer);
           }
+          if (this.mobilePill) {
+            this.mobilePill.measureAndPositionAboveDock();
+          }
         });
       })
     );
@@ -12150,6 +12190,9 @@ var _FloatingButton = class {
                 this.positionManager.updateContainer(this.activeLeafContainer);
               }
             });
+          }
+          if (this.mobilePill) {
+            this.mobilePill.measureAndPositionAboveDock();
           }
         }, this.getComputedResizeDelay());
       })
