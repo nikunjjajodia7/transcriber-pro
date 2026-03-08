@@ -397,6 +397,9 @@
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
     flex-shrink: 0;
+    -webkit-appearance: none;
+    appearance: none;
+    box-shadow: none;
 }
 
 .neurovox-dock-pill__icon svg {
@@ -431,6 +434,9 @@
     -webkit-tap-highlight-color: transparent;
     flex-shrink: 0;
     color: #FFFFFF;
+    -webkit-appearance: none;
+    appearance: none;
+    box-shadow: none;
 }
 
 .neurovox-dock-pill__mic-btn svg {
@@ -473,6 +479,9 @@
     flex-shrink: 0;
     padding: 0;
     background: none;
+    -webkit-appearance: none;
+    appearance: none;
+    box-shadow: none;
 }
 
 .neurovox-dock-pill__pause-btn {
