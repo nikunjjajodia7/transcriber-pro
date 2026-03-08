@@ -294,6 +294,8 @@
     transform: translateX(-50%);
     z-index: 10020;
     pointer-events: none;
+    will-change: transform, bottom;
+    transition: transform 0.15s ease-out;
 }
 
 .neurovox-dock-pill {

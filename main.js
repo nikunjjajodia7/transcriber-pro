@@ -11326,6 +11326,9 @@ var MobileDockPill = class {
     this.saveBtnEl = null;
     this.timerSeconds = 0;
     this.timerId = null;
+    this.dockTrackingRafId = null;
+    this.lastDockBottom = null;
+    this.dockEl = null;
     this.isDisposed = false;
     this.recordingManager = null;
     this.streamingService = null;
@@ -11708,6 +11711,7 @@ var MobileDockPill = class {
     }
     this.measureAndPositionAboveDock();
     this.startOverlayObserver();
+    this.startDockTracking();
   }
   startOverlayObserver() {
     if (this.overlayObserver) return;
@@ -11728,6 +11732,40 @@ var MobileDockPill = class {
       this.containerEl.style.visibility = '';
       this.containerEl.style.pointerEvents = '';
     }
+  }
+  startDockTracking() {
+    if (this.dockTrackingRafId !== null) return;
+    this.dockEl = document.querySelector('.mobile-navbar')
+        || document.querySelector('.workspace-tab-header-container-inner')
+        || document.querySelector('.mod-mobile .workspace-tab-header-container');
+    if (!this.dockEl) return;
+    const track = () => {
+        if (this.isDisposed || !this.containerEl || !this.dockEl) {
+            this.dockTrackingRafId = null;
+            return;
+        }
+        const dockRect = this.dockEl.getBoundingClientRect();
+        const distFromBottom = window.innerHeight - dockRect.top;
+        if (distFromBottom !== this.lastDockBottom) {
+            this.lastDockBottom = distFromBottom;
+            if (distFromBottom <= 0) {
+                this.containerEl.style.transform = 'translateX(-50%) translateY(100%)';
+            } else {
+                this.containerEl.style.transform = 'translateX(-50%)';
+                this.containerEl.style.bottom = (distFromBottom + 6) + 'px';
+            }
+        }
+        this.dockTrackingRafId = requestAnimationFrame(track);
+    };
+    this.dockTrackingRafId = requestAnimationFrame(track);
+  }
+  stopDockTracking() {
+    if (this.dockTrackingRafId !== null) {
+        cancelAnimationFrame(this.dockTrackingRafId);
+        this.dockTrackingRafId = null;
+    }
+    this.lastDockBottom = null;
+    this.dockEl = null;
   }
   measureAndPositionAboveDock() {
     if (!this.containerEl) return;
@@ -11750,6 +11788,7 @@ var MobileDockPill = class {
     this.isDisposed = true;
     this.stopTimer();
     this.cancelRecording();
+    this.stopDockTracking();
     if (this.overlayObserver) {
       this.overlayObserver.disconnect();
       this.overlayObserver = null;
