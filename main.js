@@ -11368,9 +11368,7 @@ var MobileDockPill = class {
     if (this.saveAudioOn) this.saveBtnEl.classList.add("active");
     this.saveBtnEl.addEventListener("click", (e) => { e.stopPropagation(); this.handleSaveTap(); });
     this.expandedEl.appendChild(this.saveBtnEl);
-    const micBtn = document.createElement("div");
-    micBtn.classList.add("neurovox-dock-pill__mic-btn");
-    (0, import_obsidian16.setIcon)(micBtn, "mic");
+    const micBtn = this.makeIconBtn("mic", "neurovox-dock-pill__icon neurovox-dock-pill__mic");
     micBtn.addEventListener("click", (e) => { e.stopPropagation(); this.handleMicTap(); });
     this.expandedEl.appendChild(micBtn);
     const closeBtn1 = this.makeIconBtn("x", "neurovox-dock-pill__icon neurovox-dock-pill__close");

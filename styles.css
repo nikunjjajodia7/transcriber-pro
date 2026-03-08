@@ -318,7 +318,7 @@
 }
 
 .neurovox-dock-pill[data-state="expanded"] {
-    width: 172px;
+    width: 156px;
 }
 
 .neurovox-dock-pill[data-state="recording"],
@@ -407,24 +407,6 @@
 .neurovox-dock-pill__close svg {
     width: 20px;
     height: 20px;
-}
-
-.neurovox-dock-pill__mic-btn {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    background: var(--interactive-accent);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    flex-shrink: 0;
-    color: var(--text-on-accent);
-}
-
-.neurovox-dock-pill__mic-btn svg {
-    width: 28px;
-    height: 28px;
 }
 
 .neurovox-dock-pill__red-dot {
