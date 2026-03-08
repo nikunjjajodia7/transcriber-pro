@@ -11338,6 +11338,7 @@ var MobileDockPill = class {
     this.onStateChange = null;
     this.onDispose = null;
     this.uploadSheet = null;
+    this.overlayObserver = null;
     this.deviceDetection = DeviceDetection.getInstance();
     this.saveAudioOn = this.plugin.settings.saveLiveRecordingAudio || false;
     this.useStreaming = this.plugin.settings.streamingMode != null ? this.plugin.settings.streamingMode : this.deviceDetection.shouldUseStreamingMode();
@@ -11707,6 +11708,27 @@ var MobileDockPill = class {
       document.body.appendChild(this.containerEl);
     }
     this.measureAndPositionAboveDock();
+    this.startOverlayObserver();
+  }
+  startOverlayObserver() {
+    if (this.overlayObserver) return;
+    this.overlayObserver = new MutationObserver(() => {
+      this.updateVisibilityForOverlays();
+    });
+    this.overlayObserver.observe(document.body, { childList: true, subtree: true });
+  }
+  updateVisibilityForOverlays() {
+    if (!this.containerEl) return;
+    const hasOverlay = document.querySelector('.modal-container') !== null
+      || document.querySelector('.menu') !== null
+      || document.querySelector('.prompt') !== null;
+    if (hasOverlay) {
+      this.containerEl.style.visibility = 'hidden';
+      this.containerEl.style.pointerEvents = 'none';
+    } else {
+      this.containerEl.style.visibility = '';
+      this.containerEl.style.pointerEvents = '';
+    }
   }
   measureAndPositionAboveDock() {
     if (!this.containerEl) return;
@@ -11729,6 +11751,10 @@ var MobileDockPill = class {
     this.isDisposed = true;
     this.stopTimer();
     this.cancelRecording();
+    if (this.overlayObserver) {
+      this.overlayObserver.disconnect();
+      this.overlayObserver = null;
+    }
     if (this.uploadSheet) {
       this.uploadSheet.close();
       this.uploadSheet = null;
