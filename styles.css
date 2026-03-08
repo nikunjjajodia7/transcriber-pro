@@ -284,6 +284,462 @@
     box-shadow: inset 0 0 0 2px var(--interactive-accent);
 }
 
+/************************************
+ * MOBILE DOCK PILL
+ ************************************/
+.neurovox-dock-pill-container {
+    position: fixed;
+    bottom: calc(6px + max(48px, env(safe-area-inset-bottom, 48px)));
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10020;
+    pointer-events: none;
+}
+
+.neurovox-dock-pill {
+    height: 44px;
+    border-radius: 22px;
+    background: #3A3A3C;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    pointer-events: all;
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    transition: width 180ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.neurovox-dock-pill[data-state="idle"] {
+    width: 48px;
+}
+
+.neurovox-dock-pill[data-state="expanded"] {
+    width: 172px;
+}
+
+.neurovox-dock-pill[data-state="recording"],
+.neurovox-dock-pill[data-state="paused"] {
+    width: 191px;
+}
+
+.neurovox-dock-pill[data-state="finalizing"] {
+    width: 147px;
+}
+
+.neurovox-dock-pill__content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    padding: 0 12px;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.neurovox-dock-pill__idle-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #8E8E93;
+    flex-shrink: 0;
+}
+
+.neurovox-dock-pill__idle-icon svg {
+    width: 20px;
+    height: 20px;
+}
+
+.neurovox-dock-pill__expanded,
+.neurovox-dock-pill__recording,
+.neurovox-dock-pill__finalizing {
+    display: none;
+    align-items: center;
+    gap: 16px;
+}
+
+.neurovox-dock-pill[data-state="expanded"] .neurovox-dock-pill__expanded {
+    display: flex;
+}
+
+.neurovox-dock-pill[data-state="recording"] .neurovox-dock-pill__recording,
+.neurovox-dock-pill[data-state="paused"] .neurovox-dock-pill__recording {
+    display: flex;
+}
+
+.neurovox-dock-pill[data-state="finalizing"] .neurovox-dock-pill__finalizing {
+    display: flex;
+}
+
+.neurovox-dock-pill[data-state="idle"] .neurovox-dock-pill__idle-icon {
+    display: flex;
+}
+
+.neurovox-dock-pill[data-state="expanded"] .neurovox-dock-pill__idle-icon,
+.neurovox-dock-pill[data-state="recording"] .neurovox-dock-pill__idle-icon,
+.neurovox-dock-pill[data-state="paused"] .neurovox-dock-pill__idle-icon,
+.neurovox-dock-pill[data-state="finalizing"] .neurovox-dock-pill__idle-icon {
+    display: none;
+}
+
+.neurovox-dock-pill__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #636366;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    flex-shrink: 0;
+}
+
+.neurovox-dock-pill__icon svg {
+    width: 20px;
+    height: 20px;
+}
+
+.neurovox-dock-pill__save.active {
+    color: #7F6DF2;
+}
+
+.neurovox-dock-pill__close svg {
+    width: 16px;
+    height: 16px;
+}
+
+.neurovox-dock-pill__mic-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #7F6DF2;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    flex-shrink: 0;
+    color: #FFFFFF;
+}
+
+.neurovox-dock-pill__mic-btn svg {
+    width: 18px;
+    height: 18px;
+}
+
+.neurovox-dock-pill__red-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #E93147;
+    flex-shrink: 0;
+    animation: neurovox-pill-pulse 2s ease-in-out infinite;
+}
+
+.neurovox-dock-pill[data-state="paused"] .neurovox-dock-pill__red-dot {
+    animation: none;
+    opacity: 0.5;
+}
+
+.neurovox-dock-pill__timer {
+    font-family: var(--font-monospace, ui-monospace, monospace);
+    font-size: 14px;
+    font-weight: 600;
+    color: #E93147;
+    letter-spacing: 0.04em;
+    flex-shrink: 0;
+}
+
+.neurovox-dock-pill__pause-btn,
+.neurovox-dock-pill__stop-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    flex-shrink: 0;
+    padding: 0;
+    background: none;
+}
+
+.neurovox-dock-pill__pause-btn {
+    color: #FFFFFF;
+}
+
+.neurovox-dock-pill__pause-btn svg {
+    width: 20px;
+    height: 20px;
+}
+
+.neurovox-dock-pill__stop-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #E93147;
+    color: #FFFFFF;
+}
+
+.neurovox-dock-pill__stop-btn svg {
+    width: 14px;
+    height: 14px;
+}
+
+.neurovox-dock-pill__spinner {
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(240, 160, 48, 0.3);
+    border-top-color: #F0A030;
+    border-radius: 50%;
+    animation: neurovox-pill-spin 1.2s linear infinite;
+    flex-shrink: 0;
+}
+
+.neurovox-dock-pill__status-text {
+    font-size: 13px;
+    font-weight: 600;
+    color: #F0A030;
+    flex-shrink: 0;
+}
+
+@keyframes neurovox-pill-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+}
+
+@keyframes neurovox-pill-spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/************************************
+ * UPLOAD BOTTOM SHEET
+ ************************************/
+.neurovox-upload-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 10030;
+    opacity: 0;
+    transition: opacity 300ms ease;
+}
+
+.neurovox-upload-overlay.visible {
+    opacity: 1;
+}
+
+.neurovox-upload-sheet {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #1C1C1E;
+    border-radius: 16px 16px 0 0;
+    z-index: 10031;
+    padding: 20px 20px calc(20px + env(safe-area-inset-bottom, 0px));
+    transform: translateY(100%);
+    transition: transform 300ms cubic-bezier(0.32, 0.72, 0, 1);
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+.neurovox-upload-sheet.visible {
+    transform: translateY(0);
+}
+
+.neurovox-upload-sheet__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.neurovox-upload-sheet__title {
+    font-size: 17px;
+    font-weight: 600;
+    color: #FFFFFF;
+}
+
+.neurovox-upload-sheet__close {
+    background: none;
+    border: none;
+    color: #8E8E93;
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.neurovox-upload-sheet__close svg {
+    width: 20px;
+    height: 20px;
+}
+
+.neurovox-upload-sheet__picker {
+    border: 2px dashed #3A3A3C;
+    border-radius: 12px;
+    padding: 32px 16px;
+    text-align: center;
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    margin-bottom: 16px;
+}
+
+.neurovox-upload-sheet__picker-text {
+    font-size: 14px;
+    color: #8E8E93;
+    margin-top: 8px;
+}
+
+.neurovox-upload-sheet__picker-icon {
+    color: #636366;
+}
+
+.neurovox-upload-sheet__picker-icon svg {
+    width: 32px;
+    height: 32px;
+}
+
+.neurovox-upload-sheet__file-card {
+    display: none;
+    align-items: center;
+    gap: 12px;
+    background: #2C2C2E;
+    border-radius: 12px;
+    padding: 12px;
+    margin-bottom: 16px;
+}
+
+.neurovox-upload-sheet__file-card.has-file {
+    display: flex;
+}
+
+.neurovox-upload-sheet__file-icon {
+    color: #7F6DF2;
+    flex-shrink: 0;
+}
+
+.neurovox-upload-sheet__file-icon svg {
+    width: 20px;
+    height: 20px;
+}
+
+.neurovox-upload-sheet__file-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.neurovox-upload-sheet__file-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: #FFFFFF;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.neurovox-upload-sheet__file-size {
+    font-size: 12px;
+    color: #8E8E93;
+    margin-top: 2px;
+}
+
+.neurovox-upload-sheet__file-remove {
+    background: none;
+    border: none;
+    color: #636366;
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.neurovox-upload-sheet__file-remove svg {
+    width: 16px;
+    height: 16px;
+}
+
+.neurovox-upload-sheet__save-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 0;
+    margin-bottom: 16px;
+}
+
+.neurovox-upload-sheet__save-label {
+    font-size: 14px;
+    color: #FFFFFF;
+}
+
+.neurovox-upload-sheet__save-toggle {
+    width: 44px;
+    height: 24px;
+    border-radius: 12px;
+    background: #3A3A3C;
+    border: none;
+    cursor: pointer;
+    position: relative;
+    transition: background 200ms ease;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.neurovox-upload-sheet__save-toggle.active {
+    background: #7F6DF2;
+}
+
+.neurovox-upload-sheet__save-toggle::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #FFFFFF;
+    transition: transform 200ms ease;
+}
+
+.neurovox-upload-sheet__save-toggle.active::after {
+    transform: translateX(20px);
+}
+
+.neurovox-upload-sheet__cta {
+    width: 100%;
+    height: 48px;
+    border-radius: 12px;
+    background: #7F6DF2;
+    color: #FFFFFF;
+    font-size: 16px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    opacity: 0.5;
+    pointer-events: none;
+    transition: opacity 200ms ease;
+}
+
+.neurovox-upload-sheet__cta.enabled {
+    opacity: 1;
+    pointer-events: all;
+}
+
 .neurovox-drop-review-actions {
     display: flex;
     gap: 10px;
