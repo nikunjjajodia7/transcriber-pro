@@ -4947,7 +4947,7 @@ var DEFAULT_SETTINGS = {
   transcriptFolderPath: "Transcripts",
   showFloatingButton: true,
   useRecordingModal: true,
-  showToolbarButton: true,
+  showToolbarButton: false,
   micButtonColor: "#4B4B4B",
   transcriptionModel: "whisper-1",
   transcriptionProvider: "openai" /* OpenAI */,
@@ -7918,7 +7918,6 @@ var RecordingAccordion = class extends BaseAccordion {
     this.createAudioQualitySetting();
     this.createStreamingModeSetting();
     this.createFloatingButtonSetting();
-    this.createToolbarButtonSetting();
     this.createMicButtonColorSetting();
     this.createTranscriptionFormatSetting();
     this.createTranscriptionModelSetting();
@@ -7969,24 +7968,6 @@ var RecordingAccordion = class extends BaseAccordion {
     } catch (error) {
       throw error;
     }
-  }
-  createToolbarButtonSetting() {
-    new import_obsidian9.Setting(this.contentEl).setName("Show toolbar button").setDesc("Show a microphone button in the toolbar").addToggle((toggle) => {
-      toggle.setValue(this.settings.showToolbarButton).onChange(async (value) => {
-        this.settings.showToolbarButton = value;
-        if (value) {
-          if (!this.plugin.toolbarButton && !DeviceDetection.getInstance().isMobile()) {
-            this.plugin.initializeUI();
-          }
-        } else {
-          if (this.plugin.toolbarButton) {
-            this.plugin.toolbarButton.remove();
-            this.plugin.toolbarButton = null;
-          }
-        }
-        await this.plugin.saveSettings();
-      });
-    });
   }
   createMicButtonColorSetting() {
     new import_obsidian9.Setting(this.contentEl).setName("Mic button color").setDesc("Choose the color for the microphone buttons").addColorPicker((color) => {
@@ -12721,9 +12702,6 @@ var DropReviewModal = class extends import_obsidian16.Modal {
   }
 };
 
-// src/ui/ToolbarButton.ts
-var import_obsidian18 = require("obsidian");
-
 // src/modals/TimerModal.ts
 var import_obsidian17 = require("obsidian");
 var _TimerModal = class extends import_obsidian17.Modal {
@@ -13224,59 +13202,6 @@ var _TimerModal = class extends import_obsidian17.Modal {
 var TimerModal = _TimerModal;
 TimerModal.RECORDER_STOP_TIMEOUT_MS = 12e3;
 
-// src/ui/ToolbarButton.ts
-var ToolbarButton = class {
-  constructor(plugin, pluginData) {
-    this.plugin = plugin;
-    this.pluginData = pluginData;
-    this.createButton();
-  }
-  /**
-   * Creates the toolbar microphone button and adds it to the ribbon.
-   */
-  createButton() {
-    this.ribbonIconEl = this.plugin.addRibbonIcon(
-      "mic-vocal",
-      "Start recording",
-      (evt) => {
-        this.openRecordingModal();
-      }
-    );
-    this.ribbonIconEl.addClass("neurovox-toolbar-button");
-  }
-  /**
-   * Opens the recording modal.
-   */
-  openRecordingModal() {
-    const activeLeaf = this.plugin.app.workspace.getActiveViewOfType(import_obsidian18.MarkdownView);
-    if (activeLeaf) {
-      const activeFile = activeLeaf.file;
-      if (!activeFile) {
-        new import_obsidian18.Notice("No active file to insert transcription.");
-        return;
-      }
-      const editor = activeLeaf.editor;
-      const cursorPosition = editor.getCursor();
-      const modal = new TimerModal(this.plugin, activeFile, cursorPosition);
-      modal.onStop = async (result) => {
-        if (typeof result === "string") {
-          await this.plugin.recordingProcessor.processStreamingResult(result, activeFile, cursorPosition);
-        } else {
-          await this.plugin.recordingProcessor.processRecording(result, activeFile, cursorPosition);
-        }
-      };
-      modal.open();
-    } else {
-      new import_obsidian18.Notice("No active note found to insert transcription.");
-    }
-  }
-  /**
-   * Removes the toolbar button from the ribbon.
-   */
-  remove() {
-    this.ribbonIconEl.detach();
-  }
-};
 
 // src/modals/RecoveryJobsModal.ts
 var import_obsidian19 = require("obsidian");
@@ -13757,7 +13682,7 @@ function migrateAndNormalizeSettings(data) {
     transcriptFolderPath: asPath(merged.transcriptFolderPath, DEFAULT_SETTINGS.transcriptFolderPath),
     showFloatingButton: asBoolean(merged.showFloatingButton, DEFAULT_SETTINGS.showFloatingButton),
     useRecordingModal: asBoolean(merged.useRecordingModal, DEFAULT_SETTINGS.useRecordingModal),
-    showToolbarButton: asBoolean(merged.showToolbarButton, DEFAULT_SETTINGS.showToolbarButton),
+    showToolbarButton: false,
     micButtonColor: asString(merged.micButtonColor, DEFAULT_SETTINGS.micButtonColor),
     transcriptionModel: asString(merged.transcriptionModel, DEFAULT_SETTINGS.transcriptionModel),
     transcriptionProvider: asEnum(
@@ -13970,7 +13895,6 @@ var _NeuroVoxPlugin = class extends import_obsidian21.Plugin {
   constructor() {
     super(...arguments);
     this.buttonMap = /* @__PURE__ */ new Map();
-    this.toolbarButton = null;
     this.activeLeaf = null;
     this.settingTab = null;
     // Custom events emitter
@@ -14663,10 +14587,6 @@ ${top.join("\n")}`, 12e3);
   }
   initializeUI() {
     this.cleanupUI();
-    const isMobile = DeviceDetection.getInstance().isMobile();
-    if (this.settings.showToolbarButton && !isMobile) {
-      this.toolbarButton = new ToolbarButton(this, this.settings);
-    }
   }
   createButtonForFile(file) {
     const existingButton = this.buttonMap.get(file.path);
@@ -14684,10 +14604,6 @@ ${top.join("\n")}`, 12e3);
   cleanupUI() {
     this.buttonMap.forEach((button) => button.remove());
     this.buttonMap.clear();
-    if (this.toolbarButton) {
-      this.toolbarButton.remove();
-      this.toolbarButton = null;
-    }
   }
   handleRecordingStart() {
     var _a;

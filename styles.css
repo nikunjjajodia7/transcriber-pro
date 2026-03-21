@@ -1128,19 +1128,6 @@
 }
 
 /************************************
- * TOOLBAR BUTTON
- ************************************/
-.neurovox-toolbar-button {
-    color: var(--text-muted);
-    padding: 0 var(--neurovox-spacing-sm);
-    transition: color var(--neurovox-transition-quick) ease;
-}
-
-.neurovox-toolbar-button:hover {
-    color: var(--text-normal);
-}
-
-/************************************
  * SETTINGS & ACCORDIONS
  ************************************/
 .neurovox-settings-container {
