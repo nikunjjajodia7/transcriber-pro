@@ -4,7 +4,7 @@
 
 NeuroVox is an [Obsidian](https://obsidian.md) plugin that adds voice transcription and AI post-processing to your notes. You record audio (or drop in an existing audio/video file), and the plugin transcribes it using one of three AI providers — OpenAI, Groq, or Deepgram — then optionally runs post-processing (summarization, formatting) and inserts the result into your vault.
 
-This repository (`kinshasa`) is the **BRAT distribution package** — it contains only the compiled, bundled plugin artifacts needed for installation via [Obsidian BRAT](https://github.com/TfTHacker/obsidian42-brat). The source code lives in a separate repository.
+This repository (`london`) is the **BRAT distribution package** — it contains only the compiled, bundled plugin artifacts needed for installation via [Obsidian BRAT](https://github.com/TfTHacker/obsidian42-brat). The source code lives in a separate repository.
 
 ---
 
@@ -52,7 +52,7 @@ User (Obsidian app)
 ### File layout
 
 ```
-kinshasa/
+london/
   main.js         # Bundled plugin (esbuild output)
   styles.css      # All plugin CSS
   manifest.json   # Obsidian plugin manifest

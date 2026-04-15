@@ -4598,7 +4598,10 @@ var AudioChunker = class {
    * Converts an AudioBuffer to a Blob using MediaRecorder
    */
   async bufferToBlob(audioContext, buffer, mimeType) {
-    return new Promise((resolve) => {
+    if (!buffer.duration || !Number.isFinite(buffer.duration) || buffer.duration <= 0) {
+      throw new Error("bufferToBlob: invalid buffer duration");
+    }
+    return new Promise((resolve, reject) => {
       const source = audioContext.createBufferSource();
       source.buffer = buffer;
       const destination = audioContext.createMediaStreamDestination();
@@ -4608,18 +4611,36 @@ var AudioChunker = class {
         bitsPerSecond: this.bitRate
       });
       const chunks = [];
+      let settled = false;
+      const safetyTimeout = setTimeout(() => {
+        if (!settled) {
+          settled = true;
+          reject(new Error("bufferToBlob: timed out waiting for MediaRecorder"));
+        }
+      }, buffer.duration * 1e3 + 1e4);
       recorder.ondataavailable = (e) => {
         if (e.data.size > 0)
           chunks.push(e.data);
       };
+      recorder.onerror = (e) => {
+        if (!settled) {
+          settled = true;
+          clearTimeout(safetyTimeout);
+          reject(new Error("bufferToBlob: MediaRecorder error"));
+        }
+      };
       recorder.onstop = () => {
-        resolve(new Blob(chunks, { type: mimeType }));
+        if (!settled) {
+          settled = true;
+          clearTimeout(safetyTimeout);
+          resolve(new Blob(chunks, { type: mimeType }));
+        }
       };
       recorder.start();
       source.start(0);
       setTimeout(() => {
-        source.stop();
-        recorder.stop();
+        try { source.stop(); } catch (e) {}
+        try { recorder.stop(); } catch (e) {}
       }, buffer.duration * 1e3);
     });
   }
@@ -4886,7 +4907,7 @@ var _AIAdapter = class {
     }
   }
   async prepareTranscriptionRequest(audioArrayBuffer, model) {
-    const boundary = "boundary";
+    const boundary = "----NVBoundary" + Math.random().toString(36).slice(2) + Date.now().toString(36);
     const encoder = new TextEncoder();
     const parts = [];
     parts.push(encoder.encode(`--${boundary}\r
@@ -4924,7 +4945,7 @@ var _AIAdapter = class {
   }
 };
 var AIAdapter = _AIAdapter;
-AIAdapter.DEFAULT_REQUEST_TIMEOUT_MS = 0;
+AIAdapter.DEFAULT_REQUEST_TIMEOUT_MS = 3e4;
 
 // src/settings/Settings.ts
 var AudioQuality = /* @__PURE__ */ ((AudioQuality2) => {
@@ -5285,7 +5306,7 @@ function extractSpeakerLabels(transcript) {
   let match = regex.exec(transcript);
   while (match) {
     const id = Number(match[2]);
-    if (Number.isFinite(id) && id > 0) {
+    if (Number.isFinite(id) && id >= 0) {
       labelIds.add(id);
     }
     match = regex.exec(transcript);
@@ -6106,7 +6127,10 @@ var RuntimeLogger = class {
       await this.ensureLogDir(adapter);
       const line = `${JSON.stringify(payload)}
 `;
-      if (typeof adapter.append === "function") {
+      if (this._hasAppend === void 0) {
+        this._hasAppend = typeof adapter.append === "function";
+      }
+      if (this._hasAppend) {
         await adapter.append(this.LOG_FILE, line);
         return;
       }
@@ -6184,6 +6208,7 @@ RuntimeLogger.MAX_AGE_MS_DEFAULT = 7 * 24 * 60 * 60 * 1e3;
 RuntimeLogger.logWriteChain = Promise.resolve();
 RuntimeLogger.dirEnsured = false;
 RuntimeLogger.recentWriteFailures = [];
+RuntimeLogger._hasAppend = void 0;
 
 // src/utils/recovery/JobStore.ts
 var _JobStore = class {
@@ -6294,7 +6319,8 @@ var _JobStore = class {
       await mutator(state);
       await this.writeState(state);
     });
-    this.writeChain = run.catch(() => {
+    this.writeChain = run.catch((err) => {
+      console.error("[NeuroVox][JobStore] State write failed:", err);
     });
     await run;
   }
@@ -6349,6 +6375,7 @@ var _LocalQueueBackend = class {
   constructor(plugin) {
     this.plugin = plugin;
     this.writeChain = Promise.resolve();
+    this.dirEnsured = false;
   }
   async enqueue(payload) {
     const now = new Date().toISOString();
@@ -6485,7 +6512,8 @@ var _LocalQueueBackend = class {
       await mutator(state);
       await this.writeState(state);
     });
-    this.writeChain = run.catch(() => {
+    this.writeChain = run.catch((err) => {
+      console.error("[NeuroVox][Queue] State write failed:", err);
     });
     await run;
   }
@@ -6515,9 +6543,11 @@ var _LocalQueueBackend = class {
     await adapter.write(_LocalQueueBackend.FILE, JSON.stringify(state, null, 2));
   }
   async ensureDir(adapter) {
+    if (this.dirEnsured) return;
     if (!await adapter.exists(_LocalQueueBackend.BASE_DIR)) {
       await adapter.mkdir(_LocalQueueBackend.BASE_DIR);
     }
+    this.dirEnsured = true;
   }
   async quarantineCorruptFile(adapter, path, raw) {
     try {
@@ -6539,13 +6569,11 @@ function classifyError(error) {
     "unauthorized",
     "invalid api key",
     "api key is not configured",
-    "forbidden",
-    "401",
-    "403"
-  ])) {
+    "forbidden"
+  ]) || matchesStatusCode(message, [401, 403])) {
     return { errorClass: "auth", retryable: false };
   }
-  if (includesAny(message, ["rate limit", "quota", "429", "too many requests"])) {
+  if (includesAny(message, ["rate limit", "quota", "too many requests"]) || matchesStatusCode(message, [429])) {
     return { errorClass: "rate_limit", retryable: true };
   }
   if (includesAny(message, [
@@ -6554,9 +6582,8 @@ function classifyError(error) {
     "invalid transcription response",
     "file too large",
     "payload",
-    "400",
     "unprocessable"
-  ])) {
+  ]) || matchesStatusCode(message, [400])) {
     return { errorClass: "payload", retryable: false };
   }
   if (includesAny(message, ["timed out", "timeout", "etimedout"])) {
@@ -6574,14 +6601,10 @@ function classifyError(error) {
     return { errorClass: "network", retryable: true };
   }
   if (includesAny(message, [
-    "500",
-    "502",
-    "503",
-    "504",
     "server error",
     "internal server error",
     "bad gateway"
-  ])) {
+  ]) || matchesStatusCode(message, [500, 502, 503, 504])) {
     return { errorClass: "server", retryable: true };
   }
   return { errorClass: "unknown", retryable: false };
@@ -6595,6 +6618,9 @@ function toMessage(error) {
 }
 function includesAny(value, patterns) {
   return patterns.some((p) => value.includes(p));
+}
+function matchesStatusCode(message, codes) {
+  return codes.some((code) => new RegExp(`(?:^|\\b|status\\s*)${code}(?:\\b|$)`).test(message));
 }
 
 // src/utils/routing/BatchRoutingPolicy.ts
@@ -6615,26 +6641,6 @@ var BatchRoutingPolicy = class {
         sourceType,
         isLargeUpload,
         reason: backendEnabled ? "uploaded_cloud_route_enforced" : "uploaded_cloud_route_enforced_backend_disabled",
-        backendEnabled
-      };
-    }
-    if (isLargeUpload && prefersBackend) {
-      if (backendEnabled) {
-        return {
-          route: "backend_batch",
-          preferredRoute: "backend_batch",
-          sourceType,
-          isLargeUpload,
-          reason: "large_upload_backend_enabled",
-          backendEnabled
-        };
-      }
-      return {
-        route: "direct_batch",
-        preferredRoute: "backend_batch",
-        sourceType,
-        isLargeUpload,
-        reason: "large_upload_backend_not_enabled_fallback_direct",
         backendEnabled
       };
     }
@@ -6732,6 +6738,18 @@ function isFailedTerminalStatus(statusRaw) {
 }
 
 // src/utils/backend/BackendBatchOrchestrationService.ts
+function validateBackendUrl(candidateUrl, backendBaseUrl) {
+  try {
+    const candidateOrigin = new URL(candidateUrl).origin;
+    const baseOrigin = new URL(backendBaseUrl).origin;
+    if (candidateOrigin !== baseOrigin) {
+      throw new Error(`Backend returned URL with unexpected origin: ${candidateOrigin} (expected ${baseOrigin})`);
+    }
+  } catch (e) {
+    if (e.message.includes("unexpected origin")) throw e;
+    throw new Error(`Backend returned invalid URL: ${candidateUrl}`);
+  }
+}
 var _BackendBatchOrchestrationService = class {
   constructor(plugin) {
     this.plugin = plugin;
@@ -6772,6 +6790,8 @@ var _BackendBatchOrchestrationService = class {
     const uploadUrl = (created.uploadUrl || `${createUrl}/${encodeURIComponent(jobId)}/source`).trim();
     const statusUrl = (created.statusUrl || `${createUrl}/${encodeURIComponent(jobId)}`).trim();
     const startUrl = `${createUrl}/${encodeURIComponent(jobId)}/start`;
+    validateBackendUrl(statusUrl, baseUrl);
+    validateBackendUrl(startUrl, baseUrl);
     await this.uploadSource(uploadUrl, audioBlob, logContext, jobId);
     if (created.started !== true) {
       await RuntimeLogger.log(this.plugin, logContext, "backend_job_start", {
@@ -6850,12 +6870,30 @@ var _BackendBatchOrchestrationService = class {
     const pollMs = this.plugin.settings.backendPollIntervalMs;
     const startedAt = Date.now();
     let lastUiState = null;
-    while (Date.now() - startedAt <= timeoutMs) {
-      const status = await this.requestJson(statusUrl, "GET");
+    let consecutiveErrors = 0;
+    let currentPollMs = pollMs;
+    while (Date.now() - startedAt < timeoutMs) {
+      let status;
+      try {
+        status = await this.requestJson(statusUrl, "GET");
+        consecutiveErrors = 0;
+      } catch (pollError) {
+        consecutiveErrors += 1;
+        console.warn(`[NeuroVox] Poll request failed (${consecutiveErrors}/5):`, pollError);
+        if (consecutiveErrors >= 5) {
+          throw new Error(`Backend poll failed 5 consecutive times. Last error: ${pollError instanceof Error ? pollError.message : String(pollError)}`);
+        }
+        await this.sleep(currentPollMs);
+        currentPollMs = Math.min(currentPollMs * 1.5, pollMs * 4);
+        continue;
+      }
       const normalized = (status.status || "").toLowerCase();
       const stage = status.stage || normalized || "processing";
       const rawUiState = mapBackendToUiState(status.status, status.stage);
       const uiState = clampMonotonicUiState(lastUiState, rawUiState);
+      if (uiState !== lastUiState) {
+        currentPollMs = pollMs;
+      }
       lastUiState = uiState;
       this.plugin.showProcessingStatus(`Backend: ${formatUiStateLabel(uiState)}`);
       await RuntimeLogger.log(this.plugin, logContext, "backend_job_poll", {
@@ -6906,7 +6944,8 @@ var _BackendBatchOrchestrationService = class {
         });
         throw new Error(message);
       }
-      await this.sleep(pollMs);
+      await this.sleep(currentPollMs);
+      currentPollMs = Math.min(currentPollMs * 1.5, pollMs * 4);
     }
     throw new Error(
       `Backend job timed out after ${this.plugin.settings.backendJobTimeoutSec}s`
@@ -6992,8 +7031,8 @@ var _RecordingProcessor = class {
       throw new Error("Recording is already in progress.");
     }
     try {
-      this.processingState.setIsProcessing(true);
       this.processingState.reset();
+      this.processingState.setIsProcessing(true);
       this.plugin.showProcessingStatus("Transcribing audio");
       await this.jobStore.upsertJob(baseJob);
       const payload = {
@@ -7320,8 +7359,8 @@ var _RecordingProcessor = class {
       throw new Error("Recording is already in progress.");
     }
     try {
-      this.processingState.setIsProcessing(true);
       this.processingState.reset();
+      this.processingState.setIsProcessing(true);
       this.plugin.showProcessingStatus("Processing streaming transcript");
       await this.jobStore.upsertJob(baseJob);
       await RuntimeLogger.log(this.plugin, logContext, "record_start", { status: "started" });
@@ -8170,18 +8209,6 @@ var RecordingAccordion = class extends BaseAccordion {
         await this.plugin.saveSettings();
       });
     });
-    new import_obsidian9.Setting(this.contentEl).setName("Enable backend orchestration (legacy)").setDesc("Deprecated for uploaded files in cloud-v1. Uploads are backend-routed regardless of this toggle.").addToggle((toggle) => {
-      toggle.setValue(this.settings.enableBackendOrchestration).onChange(async (value) => {
-        this.settings.enableBackendOrchestration = value;
-        await this.plugin.saveSettings();
-      });
-    });
-    new import_obsidian9.Setting(this.contentEl).setName("Prefer backend for large uploads (legacy)").setDesc("Deprecated in cloud-v1. Uploaded audio always routes to backend.").addToggle((toggle) => {
-      toggle.setValue(this.settings.preferBackendForLargeUploads).onChange(async (value) => {
-        this.settings.preferBackendForLargeUploads = value;
-        await this.plugin.saveSettings();
-      });
-    });
     new import_obsidian9.Setting(this.contentEl).setName("Backend base URL").setDesc("Backend API root used for long-upload orchestration, e.g. https://api.example.com").addText((text) => {
       text.setPlaceholder("https://api.example.com").setValue(this.settings.backendBaseUrl).onChange(async (value) => {
         this.settings.backendBaseUrl = value.trim();
@@ -8206,12 +8233,6 @@ var RecordingAccordion = class extends BaseAccordion {
       text.setPlaceholder("1800").setValue(String(this.settings.backendJobTimeoutSec)).onChange(async (value) => {
         const parsed = Number(value);
         this.settings.backendJobTimeoutSec = Number.isFinite(parsed) ? Math.min(14400, Math.max(60, Math.round(parsed))) : 1800;
-        await this.plugin.saveSettings();
-      });
-    });
-    new import_obsidian9.Setting(this.contentEl).setName("Fail open to direct mode (legacy)").setDesc("Deprecated for uploads in cloud-v1. Upload path no longer falls back to direct provider mode.").addToggle((toggle) => {
-      toggle.setValue(this.settings.backendFailOpenToDirect).onChange(async (value) => {
-        this.settings.backendFailOpenToDirect = value;
         await this.plugin.saveSettings();
       });
     });
@@ -9377,16 +9398,12 @@ var _DeepgramLiveAdapter = class {
         }
         done();
       }, _DeepgramLiveAdapter.STOP_TIMEOUT_MS);
-      const prevOnClose = (_a = this.ws) == null ? void 0 : _a.onclose;
       if (this.ws) {
         this.ws.onclose = (event) => {
           var _a2;
           window.clearTimeout(timeout);
           this.opened = false;
           (_a2 = this.listener) == null ? void 0 : _a2.call(this, { type: "closed", code: event.code, reason: event.reason });
-          if (prevOnClose) {
-            prevOnClose.call(this.ws, event);
-          }
           done();
         };
       }
@@ -15165,6 +15182,7 @@ ${top.join("\n")}`, 12e3);
     this.events.trigger("floating-button-setting-changed", this.settings.showFloatingButton);
   }
   onunload() {
+    RecordingProcessor.instance = null;
     this.saveSettings().catch(() => {
     });
     if (this.processingInterval !== null) {
