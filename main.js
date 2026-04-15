@@ -14593,19 +14593,19 @@ ${top.join("\n")}`, 12e3);
     const globalAudio = document.querySelector("audio");
     return globalAudio instanceof HTMLAudioElement ? globalAudio : null;
   }
-  handleActiveLeafChange(leaf) {
+  async handleActiveLeafChange(leaf) {
     this.activeLeaf = leaf;
-    this.buttonMap.forEach((button, path) => {
+    for (const button of this.buttonMap.values()) {
       var _panel;
       if ((_panel = button.inlineRecorderPanel) && (_panel.state === "recording" || _panel.state === "paused")) {
         try {
-          _panel.stop();
+          await _panel.stop();
         } catch (e) {
           console.error("[NeuroVox] Failed to stop recording on note switch:", e);
         }
       }
       button.remove();
-    });
+    }
     this.buttonMap.clear();
     if (this.settings.showFloatingButton && (leaf == null ? void 0 : leaf.view) instanceof import_obsidian21.MarkdownView && leaf.view.file) {
       this.createButtonForFile(leaf.view.file);
