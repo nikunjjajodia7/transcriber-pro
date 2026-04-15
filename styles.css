@@ -53,6 +53,20 @@
     --neurovox-drag-scale: 1.1;
 }
 
+/* Light-mode mobile palette (iOS light-mode equivalents) */
+.theme-light {
+    --neurovox-mobile-bg: #F2F2F7;
+    --neurovox-mobile-surface: #FFFFFF;
+    --neurovox-mobile-surface-alt: #E5E5EA;
+    --neurovox-mobile-text: #1C1C1E;
+    --neurovox-mobile-text-muted: #8E8E93;
+    --neurovox-mobile-text-secondary: #AEAEB2;
+    --neurovox-mobile-accent: #7F6DF2;
+    --neurovox-mobile-red: #E93147;
+    --neurovox-mobile-amber: #E09422;
+    --neurovox-mobile-green: #34C759;
+}
+
 /************************************
  * MODAL STYLES
  ************************************/
@@ -1173,6 +1187,14 @@
     background-color: var(--background-modifier-hover);
 }
 
+.neurovox-accordion-toggle svg {
+    transition: transform 0.2s ease;
+}
+
+.neurovox-accordion-toggle.neurovox-accordion-icon-open svg {
+    transform: rotate(90deg);
+}
+
 .neurovox-accordion-title-wrapper {
     display: flex;
     align-items: center;
@@ -1343,12 +1365,12 @@
 }
 
 /* Mobile-optimized buttons */
-.neurovox-confirmation-buttons .mobile-button {
-    height: 48px !important;
-    min-width: 100% !important;
-    font-size: 1.1em !important;
-    padding: var(--neurovox-spacing-sm) var(--neurovox-spacing-md) !important;
-    margin: 0 !important;
+.neurovox-confirmation-buttons.is-mobile .mobile-button {
+    height: 48px;
+    min-width: 100%;
+    font-size: 1.1em;
+    padding: var(--neurovox-spacing-sm) var(--neurovox-spacing-md);
+    margin: 0;
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
     -webkit-touch-callout: none;
@@ -1361,14 +1383,14 @@
     opacity: 0.9;
 }
 
-.neurovox-button-danger {
-    background-color: var(--text-error) !important;
-    color: var(--text-on-accent) !important;
+button.neurovox-button-danger {
+    background-color: var(--text-error);
+    color: var(--text-on-accent);
 }
 
-.neurovox-button-primary {
-    background-color: var(--interactive-accent) !important;
-    color: var(--text-on-accent) !important;
+button.neurovox-button-primary {
+    background-color: var(--interactive-accent);
+    color: var(--text-on-accent);
 }
 
 .neurovox-button-danger:hover,
@@ -1376,8 +1398,8 @@
     opacity: 0.9;
 }
 
-.neurovox-modal-toggle-setting {
-    margin-top: 0 !important;
+.neurovox-timer-modal .neurovox-modal-toggle-setting {
+    margin-top: 0;
     margin-bottom: var(--neurovox-spacing-md);
     opacity: 0.9;
 }
@@ -1392,9 +1414,9 @@
 }
 
 /* Recording Button Animation */
-.neurovox-button.recording {
+button.neurovox-button.recording {
     animation: breathing 2s ease-in-out infinite;
-    background-color: var(--color-red) !important;
+    background-color: var(--color-red);
 }
 
 @keyframes breathing {

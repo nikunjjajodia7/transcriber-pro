@@ -7827,8 +7827,8 @@ var BaseAccordion = class {
   }
   updateToggleIcon() {
     this.toggleIcon.empty();
-    const iconText = document.createTextNode(this.isOpen ? "\u2796" : "\u2795");
-    this.toggleIcon.appendChild(iconText);
+    (0, import_obsidian7.setIcon)(this.toggleIcon, "chevron-right");
+    this.toggleIcon.classList.toggle("neurovox-accordion-icon-open", this.isOpen);
   }
   createSettingItem(name, desc) {
     const setting = new import_obsidian7.Setting(this.contentEl);
@@ -11713,8 +11713,14 @@ var MobileDockPill = class {
   }
   startOverlayObserver() {
     if (this.overlayObserver) return;
+    this.overlayCheckPending = false;
     this.overlayObserver = new MutationObserver(() => {
-      this.updateVisibilityForOverlays();
+      if (this.overlayCheckPending) return;
+      this.overlayCheckPending = true;
+      requestAnimationFrame(() => {
+        this.updateVisibilityForOverlays();
+        this.overlayCheckPending = false;
+      });
     });
     this.overlayObserver.observe(document.body, { childList: true, subtree: true });
   }
@@ -11938,6 +11944,18 @@ var UploadBottomSheet = class {
       if (file) this.setFile(file);
     });
     document.body.appendChild(this.fileInputEl);
+    // Keyboard and back-button dismiss
+    this.onEscBound = (e) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        this.close();
+      }
+    };
+    this.onPopStateBound = () => {
+      this.close();
+    };
+    document.addEventListener("keydown", this.onEscBound);
+    window.addEventListener("popstate", this.onPopStateBound);
     // Animate in
     requestAnimationFrame(() => {
       if (this.overlayEl) this.overlayEl.classList.add("visible");
@@ -11968,6 +11986,14 @@ var UploadBottomSheet = class {
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   }
   close() {
+    if (this.onEscBound) {
+      document.removeEventListener("keydown", this.onEscBound);
+      this.onEscBound = null;
+    }
+    if (this.onPopStateBound) {
+      window.removeEventListener("popstate", this.onPopStateBound);
+      this.onPopStateBound = null;
+    }
     if (this.overlayEl) {
       this.overlayEl.classList.remove("visible");
     }
@@ -12128,6 +12154,8 @@ var _FloatingButton = class {
     };
     this.onMicDropBound = (event) => {
       var _a;
+      if (!this.hasAudioFile(event.dataTransfer))
+        return;
       event.preventDefault();
       (_a = this.buttonEl) == null ? void 0 : _a.removeClass("drag-over");
       void this.handleDroppedAudio(event.dataTransfer, "mic");
@@ -12326,6 +12354,8 @@ var _FloatingButton = class {
     };
     this.onPageDropBound = (event) => {
       var _a;
+      if (!this.hasAudioFile(event.dataTransfer))
+        return;
       event.preventDefault();
       (_a = this.activeLeafContainer) == null ? void 0 : _a.removeClass("neurovox-drop-target-active");
       void this.handleDroppedAudio(event.dataTransfer, "page");
@@ -12825,13 +12855,6 @@ var _TimerModal = class extends import_obsidian17.Modal {
    */
   async onOpen() {
     try {
-      const viewport = document.querySelector('meta[name="viewport"]');
-      if (!viewport) {
-        const meta = document.createElement("meta");
-        meta.name = "viewport";
-        meta.content = "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no";
-        document.head.appendChild(meta);
-      }
       const { contentEl } = this;
       contentEl.empty();
       contentEl.addClass("neurovox-timer-modal");
@@ -14570,11 +14593,19 @@ ${top.join("\n")}`, 12e3);
     const globalAudio = document.querySelector("audio");
     return globalAudio instanceof HTMLAudioElement ? globalAudio : null;
   }
-  handleActiveLeafChange(leaf) {
+  async handleActiveLeafChange(leaf) {
     this.activeLeaf = leaf;
-    this.buttonMap.forEach((button, path) => {
+    for (const button of this.buttonMap.values()) {
+      var _panel;
+      if ((_panel = button.inlineRecorderPanel) && (_panel.state === "recording" || _panel.state === "paused")) {
+        try {
+          await _panel.stop();
+        } catch (e) {
+          console.error("[NeuroVox] Failed to stop recording on note switch:", e);
+        }
+      }
       button.remove();
-    });
+    }
     this.buttonMap.clear();
     if (this.settings.showFloatingButton && (leaf == null ? void 0 : leaf.view) instanceof import_obsidian21.MarkdownView && leaf.view.file) {
       this.createButtonForFile(leaf.view.file);
@@ -15198,6 +15229,10 @@ ${top.join("\n")}`, 12e3);
     });
     this.speakerAutoApplyDebounceTimers.clear();
     this.speakerAutoApplyInFlight.clear();
+    if (this.modalInstance) {
+      this.modalInstance.close();
+      this.modalInstance = null;
+    }
     this.cleanupUI();
   }
 };
