@@ -6790,7 +6790,6 @@ var _BackendBatchOrchestrationService = class {
     const uploadUrl = (created.uploadUrl || `${createUrl}/${encodeURIComponent(jobId)}/source`).trim();
     const statusUrl = (created.statusUrl || `${createUrl}/${encodeURIComponent(jobId)}`).trim();
     const startUrl = `${createUrl}/${encodeURIComponent(jobId)}/start`;
-    validateBackendUrl(uploadUrl, baseUrl);
     validateBackendUrl(statusUrl, baseUrl);
     validateBackendUrl(startUrl, baseUrl);
     await this.uploadSource(uploadUrl, audioBlob, logContext, jobId);
@@ -6921,7 +6920,6 @@ var _BackendBatchOrchestrationService = class {
         if (!resultUrl) {
           throw new Error("Backend job completed but no result payload was provided.");
         }
-        validateBackendUrl(resultUrl, this.plugin.settings.backendBaseUrl.trim().replace(/\/+$/, ""));
         const result = await this.requestJson(resultUrl, "GET");
         const transcript = (result.transcription || "").trim();
         if (!transcript) {
