@@ -15180,7 +15180,7 @@ ${top.join("\n")}`, 12e3);
   }
   async writeDeepgramDiagnosticReport(diagnosis, sourcePath) {
     const adapter = this.app.vault.adapter;
-    const baseDir = (0, import_obsidian21.normalizePath)("nuerovox/diagnostics");
+    const baseDir = (0, import_obsidian21.normalizePath)("neurovox/diagnostics");
     if (!await adapter.exists(baseDir)) {
       await adapter.mkdir(baseDir);
     }
