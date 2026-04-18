@@ -1,4 +1,7 @@
-var _DeepgramLiveAdapter = class {
+class DeepgramLiveAdapter {
+  static OPEN_TIMEOUT_MS = 12e3;
+  static STOP_TIMEOUT_MS = 1e4;
+
   constructor(options) {
     this.options = options;
     this.ws = null;
@@ -30,7 +33,7 @@ var _DeepgramLiveAdapter = class {
     await new Promise((resolve, reject) => {
       const timeout = window.setTimeout(() => {
         reject(new Error("Deepgram live WebSocket open timed out"));
-      }, _DeepgramLiveAdapter.OPEN_TIMEOUT_MS);
+      }, DeepgramLiveAdapter.OPEN_TIMEOUT_MS);
       ws.onopen = async () => {
         var _a;
         window.clearTimeout(timeout);
@@ -85,7 +88,7 @@ var _DeepgramLiveAdapter = class {
         } catch (e) {
         }
         done();
-      }, _DeepgramLiveAdapter.STOP_TIMEOUT_MS);
+      }, DeepgramLiveAdapter.STOP_TIMEOUT_MS);
       if (this.ws) {
         this.ws.onclose = (event) => {
           var _a2;
@@ -232,7 +235,4 @@ var _DeepgramLiveAdapter = class {
     flush();
     return turns.length > 0 ? turns : void 0;
   }
-};
-var DeepgramLiveAdapter = _DeepgramLiveAdapter;
-DeepgramLiveAdapter.OPEN_TIMEOUT_MS = 12e3;
-DeepgramLiveAdapter.STOP_TIMEOUT_MS = 1e4;
+}

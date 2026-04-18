@@ -1,4 +1,4 @@
-var WebAudioPcmSource = class {
+class WebAudioPcmSource {
   constructor(stream, options) {
     this.stream = stream;
     this.audioContext = null;
@@ -125,4 +125,4 @@ var WebAudioPcmSource = class {
     }
     return output;
   }
-};
+}

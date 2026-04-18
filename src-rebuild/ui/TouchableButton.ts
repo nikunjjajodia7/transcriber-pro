@@ -1,5 +1,5 @@
 var import_obsidian13 = require("obsidian");
-var TouchableButton = class extends import_obsidian13.ButtonComponent {
+class TouchableButton extends import_obsidian13.ButtonComponent {
   constructor(options) {
     super(options.container);
     this.isProcessingAction = false;
@@ -111,4 +111,4 @@ var TouchableButton = class extends import_obsidian13.ButtonComponent {
     }
     this.buttonEl.remove();
   }
-};
+}

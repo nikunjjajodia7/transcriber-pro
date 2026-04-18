@@ -1,5 +1,5 @@
 var import_obsidian7 = require("obsidian");
-var BaseAccordion = class {
+class BaseAccordion {
   constructor(containerEl, title, description = "") {
     this.isOpen = false;
     this.containerEl = containerEl;
@@ -33,4 +33,4 @@ var BaseAccordion = class {
     setting.setName(name).setDesc(desc);
     return setting;
   }
-};
+}

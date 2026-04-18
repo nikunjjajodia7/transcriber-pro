@@ -1,4 +1,4 @@
-var AudioProcessor = class {
+class AudioProcessor {
   constructor(plugin) {
     this.plugin = plugin;
     // Maximum audio size before skipping chunking (25MB)
@@ -93,4 +93,4 @@ var AudioProcessor = class {
         return `File too large (${fileSize}MB). Switch to Deepgram for large files.`;
     }
   }
-};
+}

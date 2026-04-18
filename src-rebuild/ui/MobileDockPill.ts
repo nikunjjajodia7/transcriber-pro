@@ -1,4 +1,4 @@
-var MobileDockPill = class {
+class MobileDockPill {
   constructor(plugin) {
     this.plugin = plugin;
     this.state = "idle";
@@ -528,4 +528,4 @@ var MobileDockPill = class {
       this.containerEl = null;
     }
   }
-};
+}

@@ -12,7 +12,9 @@ function validateBackendUrl(candidateUrl, backendBaseUrl) {
     throw new Error(`Backend returned invalid URL: ${candidateUrl}`);
   }
 }
-var _BackendBatchOrchestrationService = class {
+class BackendBatchOrchestrationService {
+  static CHUNK_SIZE_BYTES = 8 * 1024 * 1024;
+
   constructor(plugin) {
     this.plugin = plugin;
   }
@@ -80,7 +82,7 @@ var _BackendBatchOrchestrationService = class {
     this.plugin.showProcessingStatus("Uploading source audio to backend");
     const totalChunks = Math.max(
       1,
-      Math.ceil(audioBlob.size / _BackendBatchOrchestrationService.CHUNK_SIZE_BYTES)
+      Math.ceil(audioBlob.size / BackendBatchOrchestrationService.CHUNK_SIZE_BYTES)
     );
     const mimeType = audioBlob.type || "application/octet-stream";
     if (totalChunks === 1) {
@@ -96,10 +98,10 @@ var _BackendBatchOrchestrationService = class {
       });
     } else {
       for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex += 1) {
-        const start = chunkIndex * _BackendBatchOrchestrationService.CHUNK_SIZE_BYTES;
+        const start = chunkIndex * BackendBatchOrchestrationService.CHUNK_SIZE_BYTES;
         const end = Math.min(
           audioBlob.size,
-          start + _BackendBatchOrchestrationService.CHUNK_SIZE_BYTES
+          start + BackendBatchOrchestrationService.CHUNK_SIZE_BYTES
         );
         const chunk = audioBlob.slice(start, end, mimeType);
         const chunkBody = await chunk.arrayBuffer();
@@ -239,6 +241,4 @@ var _BackendBatchOrchestrationService = class {
   sleep(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
-};
-var BackendBatchOrchestrationService = _BackendBatchOrchestrationService;
-BackendBatchOrchestrationService.CHUNK_SIZE_BYTES = 8 * 1024 * 1024;
+}

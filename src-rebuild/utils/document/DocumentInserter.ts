@@ -1,14 +1,18 @@
 var import_obsidian3 = require("obsidian");
 
-var _DocumentInserter = class {
+class DocumentInserter {
+  static LIVE_MARKER_START_PREFIX = "<!-- neurovox:live:start:";
+  static LIVE_MARKER_END_PREFIX = "<!-- neurovox:live:end:";
+  static liveCalloutCollapsedState = /* @__PURE__ */ new Map();
+
   constructor(plugin) {
     this.plugin = plugin;
   }
   static setLiveCalloutCollapsedState(filePath, collapsed) {
-    const key = _DocumentInserter.buildLiveStateKey(filePath);
+    const key = DocumentInserter.buildLiveStateKey(filePath);
     if (!key)
       return;
-    _DocumentInserter.liveCalloutCollapsedState.set(key, collapsed);
+    DocumentInserter.liveCalloutCollapsedState.set(key, collapsed);
   }
   /**
    * Inserts formatted content at the specified position in a file
@@ -140,8 +144,8 @@ ${baseText}`.trim();
   }
   getLiveMarkers(markerId) {
     return {
-      startMarker: `${_DocumentInserter.LIVE_MARKER_START_PREFIX}${markerId} -->`,
-      endMarker: `${_DocumentInserter.LIVE_MARKER_END_PREFIX}${markerId} -->`
+      startMarker: `${DocumentInserter.LIVE_MARKER_START_PREFIX}${markerId} -->`,
+      endMarker: `${DocumentInserter.LIVE_MARKER_END_PREFIX}${markerId} -->`
     };
   }
   buildLiveTranscriptionBlock(startMarker, endMarker, transcription, collapsed) {
@@ -158,16 +162,16 @@ ${quoted}
 `;
   }
   getLiveCalloutCollapsedState(filePath) {
-    const key = _DocumentInserter.buildLiveStateKey(filePath);
+    const key = DocumentInserter.buildLiveStateKey(filePath);
     if (!key)
       return void 0;
-    return _DocumentInserter.liveCalloutCollapsedState.get(key);
+    return DocumentInserter.liveCalloutCollapsedState.get(key);
   }
   clearLiveCalloutCollapsedState(filePath) {
-    const key = _DocumentInserter.buildLiveStateKey(filePath);
+    const key = DocumentInserter.buildLiveStateKey(filePath);
     if (!key)
       return;
-    _DocumentInserter.liveCalloutCollapsedState.delete(key);
+    DocumentInserter.liveCalloutCollapsedState.delete(key);
   }
   static buildLiveStateKey(filePath) {
     const note = (filePath || "").trim();
@@ -327,8 +331,4 @@ ${content.slice(insertAt)}`;
     }
     return (hash >>> 0).toString(16);
   }
-};
-var DocumentInserter = _DocumentInserter;
-DocumentInserter.LIVE_MARKER_START_PREFIX = "<!-- neurovox:live:start:";
-DocumentInserter.LIVE_MARKER_END_PREFIX = "<!-- neurovox:live:end:";
-DocumentInserter.liveCalloutCollapsedState = /* @__PURE__ */ new Map();
+}

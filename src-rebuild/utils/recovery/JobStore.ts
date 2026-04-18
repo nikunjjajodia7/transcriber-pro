@@ -1,4 +1,7 @@
-var _JobStore = class {
+class JobStore {
+  static BASE_DIR = ".obsidian/plugins/neurovox/recovery";
+  static FILE = ".obsidian/plugins/neurovox/recovery/jobs.json";
+
   constructor(plugin) {
     this.plugin = plugin;
     this.writeChain = Promise.resolve();
@@ -114,16 +117,16 @@ var _JobStore = class {
   async readState() {
     const adapter = this.plugin.app.vault.adapter;
     await this.ensureDir(adapter);
-    if (!await adapter.exists(_JobStore.FILE)) {
+    if (!await adapter.exists(JobStore.FILE)) {
       return { jobs: [], checkpoints: [] };
     }
     try {
-      const raw = await adapter.read(_JobStore.FILE);
+      const raw = await adapter.read(JobStore.FILE);
       let parsed;
       try {
         parsed = JSON.parse(raw);
       } catch (e) {
-        await this.quarantineCorruptFile(adapter, _JobStore.FILE, raw);
+        await this.quarantineCorruptFile(adapter, JobStore.FILE, raw);
         return { jobs: [], checkpoints: [] };
       }
       return {
@@ -137,11 +140,11 @@ var _JobStore = class {
   async writeState(state) {
     const adapter = this.plugin.app.vault.adapter;
     await this.ensureDir(adapter);
-    await adapter.write(_JobStore.FILE, JSON.stringify(state, null, 2));
+    await adapter.write(JobStore.FILE, JSON.stringify(state, null, 2));
   }
   async ensureDir(adapter) {
-    if (!await adapter.exists(_JobStore.BASE_DIR)) {
-      await adapter.mkdir(_JobStore.BASE_DIR);
+    if (!await adapter.exists(JobStore.BASE_DIR)) {
+      await adapter.mkdir(JobStore.BASE_DIR);
     }
   }
   async quarantineCorruptFile(adapter, path, raw) {
@@ -152,7 +155,4 @@ var _JobStore = class {
     } catch (e) {
     }
   }
-};
-var JobStore = _JobStore;
-JobStore.BASE_DIR = ".obsidian/plugins/neurovox/recovery";
-JobStore.FILE = ".obsidian/plugins/neurovox/recovery/jobs.json";
+}

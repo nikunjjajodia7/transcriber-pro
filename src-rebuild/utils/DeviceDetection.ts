@@ -1,4 +1,4 @@
-var DeviceDetection = class {
+class DeviceDetection {
   constructor() {
     this.availableMemory = null;
     this.isMobileDevice = this.detectMobile();
@@ -82,4 +82,4 @@ var DeviceDetection = class {
     const threshold = this.isMobile() ? 50 * 1024 * 1024 : 200 * 1024 * 1024;
     return available < threshold;
   }
-};
+}

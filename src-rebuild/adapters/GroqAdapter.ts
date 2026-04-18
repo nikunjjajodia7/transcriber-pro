@@ -1,4 +1,4 @@
-var GroqAdapter = class extends AIAdapter {
+class GroqAdapter extends AIAdapter {
   constructor(settings) {
     super(settings, "groq" /* Groq */);
     this.apiKey = "";
@@ -53,4 +53,4 @@ var GroqAdapter = class extends AIAdapter {
     }
     throw new Error("Invalid transcription response format from Groq");
   }
-};
+}

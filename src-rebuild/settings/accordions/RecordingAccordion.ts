@@ -1,5 +1,5 @@
 var import_obsidian9 = require("obsidian");
-var RecordingAccordion = class extends BaseAccordion {
+class RecordingAccordion extends BaseAccordion {
   constructor(containerEl, settings, getAdapter, plugin) {
     super(containerEl, "\u{1F399} Recording", "Configure recording preferences and select a transcription model.");
     this.settings = settings;
@@ -303,4 +303,4 @@ var RecordingAccordion = class extends BaseAccordion {
     }
     return null;
   }
-};
+}

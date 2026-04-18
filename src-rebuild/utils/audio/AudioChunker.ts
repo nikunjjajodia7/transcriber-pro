@@ -1,4 +1,4 @@
-var AudioChunker = class {
+class AudioChunker {
   constructor(sampleRate, bitRate, mimeType = "audio/webm; codecs=opus") {
     this.sampleRate = sampleRate;
     this.bitRate = bitRate;
@@ -140,4 +140,4 @@ var AudioChunker = class {
       }, buffer.duration * 1e3);
     });
   }
-};
+}

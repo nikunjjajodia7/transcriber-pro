@@ -1,13 +1,15 @@
 var import_obsidian6 = require("obsidian");
 
-var _VideoProcessor = class {
+class VideoProcessor {
+  static instance = null;
+
   constructor(plugin) {
     this.plugin = plugin;
     this.isProcessing = false;
   }
   static async getInstance(plugin) {
     if (!this.instance) {
-      this.instance = new _VideoProcessor(plugin);
+      this.instance = new VideoProcessor(plugin);
       await this.instance.initializeFFmpeg();
     }
     return this.instance;
@@ -110,6 +112,4 @@ var _VideoProcessor = class {
     };
     return mimeTypes[extension.toLowerCase()] || "video/mp4";
   }
-};
-var VideoProcessor = _VideoProcessor;
-VideoProcessor.instance = null;
+}

@@ -1,6 +1,10 @@
 var import_obsidian5 = require("obsidian");
 
-var _RecordingProcessor = class {
+class RecordingProcessor {
+  static instance = null;
+  static ADAPTER_VALIDATION_TIMEOUT_MS = 4e3;
+  static STALE_FAILED_JOB_MAX_AGE_MS = 10 * 60 * 1e3;
+
   constructor(plugin) {
     this.plugin = plugin;
     this.config = {
@@ -18,7 +22,7 @@ var _RecordingProcessor = class {
   }
   static getInstance(plugin) {
     var _a;
-    return (_a = this.instance) != null ? _a : this.instance = new _RecordingProcessor(plugin);
+    return (_a = this.instance) != null ? _a : this.instance = new RecordingProcessor(plugin);
   }
   /**
    * Processes a recording: transcribes audio and inserts the content into the document
@@ -300,7 +304,7 @@ var _RecordingProcessor = class {
   }
   async runStartupMaintenance() {
     await this.jobStore.demoteStaleFailedToCanceled(
-      _RecordingProcessor.STALE_FAILED_JOB_MAX_AGE_MS
+      RecordingProcessor.STALE_FAILED_JOB_MAX_AGE_MS
     );
     await this.jobStore.prune();
     await this.queueBackend.prune();
@@ -517,7 +521,7 @@ ${transcription}`;
     return adapter;
   }
   async validateAdapterWithTimeout(adapter) {
-    const timeoutMs = _RecordingProcessor.ADAPTER_VALIDATION_TIMEOUT_MS;
+    const timeoutMs = RecordingProcessor.ADAPTER_VALIDATION_TIMEOUT_MS;
     return await Promise.race([
       adapter.validateApiKey().catch(() => false),
       new Promise((resolve) => {
@@ -693,8 +697,4 @@ ${transcription}`;
     }
     return (hash >>> 0).toString(16);
   }
-};
-var RecordingProcessor = _RecordingProcessor;
-RecordingProcessor.instance = null;
-RecordingProcessor.ADAPTER_VALIDATION_TIMEOUT_MS = 4e3;
-RecordingProcessor.STALE_FAILED_JOB_MAX_AGE_MS = 10 * 60 * 1e3;
+}

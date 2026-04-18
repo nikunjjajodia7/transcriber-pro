@@ -1,5 +1,7 @@
 var import_obsidian17 = require("obsidian");
-var _TimerModal = class extends import_obsidian17.Modal {
+class TimerModal extends import_obsidian17.Modal {
+  static RECORDER_STOP_TIMEOUT_MS = 12e3;
+
   constructor(plugin, targetFile, insertionPosition) {
     var _a;
     super(plugin.app);
@@ -304,7 +306,7 @@ var _TimerModal = class extends import_obsidian17.Modal {
       new Promise(
         (_, reject) => window.setTimeout(
           () => reject(new Error("Recorder stop timed out")),
-          _TimerModal.RECORDER_STOP_TIMEOUT_MS
+          TimerModal.RECORDER_STOP_TIMEOUT_MS
         )
       )
     ]);
@@ -486,6 +488,4 @@ var _TimerModal = class extends import_obsidian17.Modal {
     this.cleanup();
     void this.requestClose();
   }
-};
-var TimerModal = _TimerModal;
-TimerModal.RECORDER_STOP_TIMEOUT_MS = 12e3;
+}

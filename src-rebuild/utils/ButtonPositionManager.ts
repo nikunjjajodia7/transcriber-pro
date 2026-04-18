@@ -1,4 +1,4 @@
-var ButtonPositionManager = class {
+class ButtonPositionManager {
   constructor(containerEl, buttonEl, activeContainer, buttonSize, margin, onPositionChange, onDragEnd, onClick) {
     this.containerEl = containerEl;
     this.buttonEl = buttonEl;
@@ -184,4 +184,4 @@ var ButtonPositionManager = class {
     document.removeEventListener("touchmove", this._boundHandlers.touchMove);
     document.removeEventListener("touchend", this._boundHandlers.touchEnd);
   }
-};
+}

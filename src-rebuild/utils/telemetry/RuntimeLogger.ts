@@ -1,4 +1,13 @@
-var RuntimeLogger = class {
+class RuntimeLogger {
+  static LOG_DIR = ".obsidian/plugins/neurovox/logs";
+  static LOG_FILE = ".obsidian/plugins/neurovox/logs/latest.jsonl";
+  static MAX_BYTES_DEFAULT = 10 * 1024 * 1024;
+  static MAX_AGE_MS_DEFAULT = 7 * 24 * 60 * 60 * 1e3;
+  static logWriteChain = Promise.resolve();
+  static dirEnsured = false;
+  static recentWriteFailures = [];
+  static _hasAppend = void 0;
+
   static createContext(prefix = "job") {
     const now = Date.now();
     const rand = Math.random().toString(36).slice(2, 8);
@@ -96,12 +105,4 @@ var RuntimeLogger = class {
     }
     this.dirEnsured = true;
   }
-};
-RuntimeLogger.LOG_DIR = ".obsidian/plugins/neurovox/logs";
-RuntimeLogger.LOG_FILE = ".obsidian/plugins/neurovox/logs/latest.jsonl";
-RuntimeLogger.MAX_BYTES_DEFAULT = 10 * 1024 * 1024;
-RuntimeLogger.MAX_AGE_MS_DEFAULT = 7 * 24 * 60 * 60 * 1e3;
-RuntimeLogger.logWriteChain = Promise.resolve();
-RuntimeLogger.dirEnsured = false;
-RuntimeLogger.recentWriteFailures = [];
-RuntimeLogger._hasAppend = void 0;
+}

@@ -1,4 +1,4 @@
-var ChunkQueue = class {
+class ChunkQueue {
   constructor(maxQueueSize, memoryLimit, onMemoryWarning) {
     this.queue = [];
     // in bytes
@@ -135,4 +135,4 @@ var ChunkQueue = class {
       processingCount: this.processingCount
     };
   }
-};
+}

@@ -1,6 +1,8 @@
 var import_obsidian15 = require("obsidian");
 
-var _InlineRecorderPanel = class {
+class InlineRecorderPanel {
+  static RECORDER_STOP_TIMEOUT_MS = 12e3;
+
   constructor(options) {
     this.panelEl = null;
     this.statusRowEl = null;
@@ -191,7 +193,7 @@ var _InlineRecorderPanel = class {
       new Promise(
         (_, reject) => window.setTimeout(
           () => reject(new Error("Recorder stop timed out")),
-          _InlineRecorderPanel.RECORDER_STOP_TIMEOUT_MS
+          InlineRecorderPanel.RECORDER_STOP_TIMEOUT_MS
         )
       )
     ]);
@@ -478,6 +480,4 @@ var _InlineRecorderPanel = class {
     const remainingSeconds = (seconds % 60).toString().padStart(2, "0");
     return `${minutes}:${remainingSeconds}`;
   }
-};
-var InlineRecorderPanel = _InlineRecorderPanel;
-InlineRecorderPanel.RECORDER_STOP_TIMEOUT_MS = 12e3;
+}

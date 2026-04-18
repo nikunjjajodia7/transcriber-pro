@@ -1,4 +1,4 @@
-var UploadBottomSheet = class {
+class UploadBottomSheet {
   constructor(options) {
     this.plugin = options.plugin;
     this.saveAudioOn = options.saveAudioOn;
@@ -196,4 +196,4 @@ var UploadBottomSheet = class {
       this.onCancel();
     }, 320);
   }
-};
+}

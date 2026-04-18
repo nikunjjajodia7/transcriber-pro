@@ -1,4 +1,4 @@
-var ProcessingState = class {
+class ProcessingState {
   constructor() {
     this.isProcessing = false;
     this.currentStep = null;
@@ -128,4 +128,4 @@ var ProcessingState = class {
     this.processedChunks = data.processedChunks;
     this.totalChunks = data.totalChunks;
   }
-};
+}

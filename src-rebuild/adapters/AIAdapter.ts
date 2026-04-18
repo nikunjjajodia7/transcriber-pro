@@ -41,7 +41,9 @@ function getModelInfo(modelId) {
   }
   return void 0;
 }
-var _AIAdapter = class {
+class AIAdapter {
+  static DEFAULT_REQUEST_TIMEOUT_MS = 3e4;
+
   constructor(settings, provider) {
     this.settings = settings;
     this.provider = provider;
@@ -141,7 +143,7 @@ var _AIAdapter = class {
       return false;
     return this.keyValidated && this.lastValidatedKey === currentKey;
   }
-  async makeAPIRequest(endpoint, method, headers, body, timeoutMs = _AIAdapter.DEFAULT_REQUEST_TIMEOUT_MS) {
+  async makeAPIRequest(endpoint, method, headers, body, timeoutMs = AIAdapter.DEFAULT_REQUEST_TIMEOUT_MS) {
     try {
       const requestHeaders = {
         "Authorization": `Bearer ${this.getApiKey()}`,
@@ -208,6 +210,4 @@ var _AIAdapter = class {
       return error;
     return "Unknown error occurred";
   }
-};
-var AIAdapter = _AIAdapter;
-AIAdapter.DEFAULT_REQUEST_TIMEOUT_MS = 3e4;
+}

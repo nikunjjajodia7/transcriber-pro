@@ -1,4 +1,4 @@
-var OpenAIAdapter = class extends AIAdapter {
+class OpenAIAdapter extends AIAdapter {
   constructor(settings) {
     super(settings, "openai" /* OpenAI */);
     this.apiKey = "";
@@ -53,4 +53,4 @@ var OpenAIAdapter = class extends AIAdapter {
     }
     throw new Error("Invalid transcription response format from OpenAI");
   }
-};
+}

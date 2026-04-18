@@ -1,6 +1,6 @@
 var import_obsidian14 = require("obsidian");
 
-var RecordingUI = class {
+class RecordingUI {
   constructor(container, handlers) {
     this.container = container;
     this.handlers = handlers;
@@ -107,4 +107,4 @@ var RecordingUI = class {
     (_b = this.stopButton) == null ? void 0 : _b.cleanup();
     this.container.empty();
   }
-};
+}

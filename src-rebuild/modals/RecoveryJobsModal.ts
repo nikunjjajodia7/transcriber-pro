@@ -1,5 +1,5 @@
 var import_obsidian19 = require("obsidian");
-var RecoveryJobsModal = class extends import_obsidian19.Modal {
+class RecoveryJobsModal extends import_obsidian19.Modal {
   constructor(app, jobs) {
     super(app);
     this.jobs = jobs;
@@ -57,4 +57,4 @@ var RecoveryJobsModal = class extends import_obsidian19.Modal {
     }
     this.close();
   }
-};
+}

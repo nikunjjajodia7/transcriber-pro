@@ -1,4 +1,4 @@
-var TranscriptRenderer = class {
+class TranscriptRenderer {
   constructor(config) {
     this.config = config;
   }
@@ -37,4 +37,4 @@ ${postContent}
       return line.startsWith(">") ? line : `>${line}`;
     }).join("\n");
   }
-};
+}

@@ -1,4 +1,4 @@
-var ResultCompiler = class {
+class ResultCompiler {
   constructor(startTimestamp) {
     this.segments = [];
     this.totalDuration = 0;
@@ -213,4 +213,4 @@ var ResultCompiler = class {
     );
     return Array.from(allIndices).filter((index) => !processedIndices.has(index));
   }
-};
+}

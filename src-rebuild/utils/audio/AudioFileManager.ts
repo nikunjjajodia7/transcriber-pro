@@ -1,4 +1,4 @@
-var AudioFileManager = class {
+class AudioFileManager {
   constructor(plugin) {
     this.plugin = plugin;
   }
@@ -48,4 +48,4 @@ var AudioFileManager = class {
       }
     }
   }
-};
+}

@@ -1,4 +1,7 @@
-var _LocalQueueBackend = class {
+class LocalQueueBackend {
+  static BASE_DIR = ".obsidian/plugins/neurovox/queue";
+  static FILE = ".obsidian/plugins/neurovox/queue/local-queue.json";
+
   constructor(plugin) {
     this.plugin = plugin;
     this.writeChain = Promise.resolve();
@@ -147,16 +150,16 @@ var _LocalQueueBackend = class {
   async readState() {
     const adapter = this.plugin.app.vault.adapter;
     await this.ensureDir(adapter);
-    if (!await adapter.exists(_LocalQueueBackend.FILE)) {
+    if (!await adapter.exists(LocalQueueBackend.FILE)) {
       return { jobs: [] };
     }
     try {
-      const raw = await adapter.read(_LocalQueueBackend.FILE);
+      const raw = await adapter.read(LocalQueueBackend.FILE);
       let parsed;
       try {
         parsed = JSON.parse(raw);
       } catch (e) {
-        await this.quarantineCorruptFile(adapter, _LocalQueueBackend.FILE, raw);
+        await this.quarantineCorruptFile(adapter, LocalQueueBackend.FILE, raw);
         return { jobs: [] };
       }
       return { jobs: Array.isArray(parsed == null ? void 0 : parsed.jobs) ? parsed.jobs : [] };
@@ -167,12 +170,12 @@ var _LocalQueueBackend = class {
   async writeState(state) {
     const adapter = this.plugin.app.vault.adapter;
     await this.ensureDir(adapter);
-    await adapter.write(_LocalQueueBackend.FILE, JSON.stringify(state, null, 2));
+    await adapter.write(LocalQueueBackend.FILE, JSON.stringify(state, null, 2));
   }
   async ensureDir(adapter) {
     if (this.dirEnsured) return;
-    if (!await adapter.exists(_LocalQueueBackend.BASE_DIR)) {
-      await adapter.mkdir(_LocalQueueBackend.BASE_DIR);
+    if (!await adapter.exists(LocalQueueBackend.BASE_DIR)) {
+      await adapter.mkdir(LocalQueueBackend.BASE_DIR);
     }
     this.dirEnsured = true;
   }
@@ -184,7 +187,4 @@ var _LocalQueueBackend = class {
     } catch (e) {
     }
   }
-};
-var LocalQueueBackend = _LocalQueueBackend;
-LocalQueueBackend.BASE_DIR = ".obsidian/plugins/neurovox/queue";
-LocalQueueBackend.FILE = ".obsidian/plugins/neurovox/queue/local-queue.json";
+}

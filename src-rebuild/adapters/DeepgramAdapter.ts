@@ -1,5 +1,9 @@
 var import_obsidian20 = require("obsidian");
-var _DeepgramAdapter = class extends AIAdapter {
+class DeepgramAdapter extends AIAdapter {
+  static MIN_TIMEOUT_MS = 18e4;
+  static MAX_TIMEOUT_MS = 18e5;
+  static TIMEOUT_PER_MB_MS = 8e3;
+
   constructor(settings) {
     super(settings, "deepgram" /* Deepgram */);
     this.apiKey = "";
@@ -147,10 +151,10 @@ var _DeepgramAdapter = class extends AIAdapter {
   }
   calculateTimeoutMs(sizeBytes) {
     const sizeMb = Math.max(1, Math.ceil(sizeBytes / (1024 * 1024)));
-    const computed = sizeMb * _DeepgramAdapter.TIMEOUT_PER_MB_MS;
+    const computed = sizeMb * DeepgramAdapter.TIMEOUT_PER_MB_MS;
     return Math.min(
-      _DeepgramAdapter.MAX_TIMEOUT_MS,
-      Math.max(_DeepgramAdapter.MIN_TIMEOUT_MS, computed)
+      DeepgramAdapter.MAX_TIMEOUT_MS,
+      Math.max(DeepgramAdapter.MIN_TIMEOUT_MS, computed)
     );
   }
   applyLanguageSettings(query, model) {
@@ -270,8 +274,4 @@ var _DeepgramAdapter = class extends AIAdapter {
     }
     return status ? `status ${status} - ${compact}` : compact;
   }
-};
-var DeepgramAdapter = _DeepgramAdapter;
-DeepgramAdapter.MIN_TIMEOUT_MS = 18e4;
-DeepgramAdapter.MAX_TIMEOUT_MS = 18e5;
-DeepgramAdapter.TIMEOUT_PER_MB_MS = 8e3;
+}

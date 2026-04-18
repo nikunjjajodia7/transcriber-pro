@@ -1,6 +1,6 @@
 var import_obsidian11 = require("obsidian");
 
-var NeuroVoxSettingTab = class extends import_obsidian11.PluginSettingTab {
+class NeuroVoxSettingTab extends import_obsidian11.PluginSettingTab {
   constructor(app, plugin) {
     super(app, plugin);
     this.recordingAccordion = null;
@@ -42,4 +42,4 @@ var NeuroVoxSettingTab = class extends import_obsidian11.PluginSettingTab {
   getPostProcessingAccordion() {
     return this.postProcessingAccordion;
   }
-};
+}

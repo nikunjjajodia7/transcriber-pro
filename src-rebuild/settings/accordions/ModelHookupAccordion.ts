@@ -1,5 +1,5 @@
 var import_obsidian8 = require("obsidian");
-var ModelHookupAccordion = class extends BaseAccordion {
+class ModelHookupAccordion extends BaseAccordion {
   constructor(containerEl, settings, getAdapter, plugin) {
     super(
       containerEl,
@@ -97,4 +97,4 @@ var ModelHookupAccordion = class extends BaseAccordion {
       });
     });
   }
-};
+}

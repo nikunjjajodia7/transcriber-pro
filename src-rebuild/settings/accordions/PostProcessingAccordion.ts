@@ -1,5 +1,5 @@
 var import_obsidian10 = require("obsidian");
-var PostProcessingAccordion = class extends BaseAccordion {
+class PostProcessingAccordion extends BaseAccordion {
   constructor(containerEl, settings, getAdapter, plugin) {
     super(
       containerEl,
@@ -166,4 +166,4 @@ var PostProcessingAccordion = class extends BaseAccordion {
       }
     }
   }
-};
+}

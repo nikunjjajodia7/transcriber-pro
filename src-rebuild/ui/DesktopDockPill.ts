@@ -1,4 +1,4 @@
-var DesktopDockPill = class {
+class DesktopDockPill {
   constructor(plugin) {
     this.plugin = plugin;
     this.state = "idle";
@@ -469,4 +469,4 @@ var DesktopDockPill = class {
       this.containerEl = null;
     }
   }
-};
+}

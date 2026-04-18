@@ -1,6 +1,4 @@
-var import_recordrtc = __toESM(require_RecordRTC());
-
-var AudioRecordingManager = class {
+class AudioRecordingManager {
   constructor(plugin) {
     this.plugin = plugin;
     this.recorder = null;
@@ -197,4 +195,4 @@ var AudioRecordingManager = class {
   getStream() {
     return this.stream;
   }
-};
+}

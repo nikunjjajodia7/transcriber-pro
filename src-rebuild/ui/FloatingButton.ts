@@ -1,6 +1,8 @@
 var import_obsidian16 = require("obsidian");
 
-var _FloatingButton = class {
+class FloatingButton {
+  static instance = null;
+
   constructor(plugin, pluginData, onClickCallback) {
     this.plugin = plugin;
     this.pluginData = pluginData;
@@ -26,21 +28,21 @@ var _FloatingButton = class {
     this.activeLeafRef = null;
     this.layoutChangeRef = null;
     this.resizeRef = null;
-    if (_FloatingButton.instance) {
-      _FloatingButton.instance.remove();
+    if (FloatingButton.instance) {
+      FloatingButton.instance.remove();
     }
     this.buttonEl = null;
     this.containerEl = null;
     this.initializeComponents();
   }
   static getInstance(plugin, pluginData, onClickCallback) {
-    if (!_FloatingButton.instance || _FloatingButton.instance.isInvalid()) {
-      if (_FloatingButton.instance) {
-        _FloatingButton.instance.remove();
+    if (!FloatingButton.instance || FloatingButton.instance.isInvalid()) {
+      if (FloatingButton.instance) {
+        FloatingButton.instance.remove();
       }
-      _FloatingButton.instance = new _FloatingButton(plugin, pluginData, onClickCallback);
+      FloatingButton.instance = new FloatingButton(plugin, pluginData, onClickCallback);
     }
-    return _FloatingButton.instance;
+    return FloatingButton.instance;
   }
   isInvalid() {
     var _a, _b, _c, _d;
@@ -537,8 +539,8 @@ var _FloatingButton = class {
       this.containerEl.remove();
       this.containerEl = null;
     }
-    if (_FloatingButton.instance === this) {
-      _FloatingButton.instance = null;
+    if (FloatingButton.instance === this) {
+      FloatingButton.instance = null;
     }
   }
   /**
@@ -766,10 +768,8 @@ var _FloatingButton = class {
     } catch (e) {
     }
   }
-};
-var FloatingButton = _FloatingButton;
-FloatingButton.instance = null;
-var DropReviewModal = class extends import_obsidian16.Modal {
+}
+class DropReviewModal extends import_obsidian16.Modal {
   constructor(appPlugin, file, targetFile, source, onResolve) {
     super(appPlugin.app);
     this.file = file;
@@ -810,4 +810,4 @@ var DropReviewModal = class extends import_obsidian16.Modal {
       this.onResolve(false);
     }
   }
-};
+}

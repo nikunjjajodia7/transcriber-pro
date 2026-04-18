@@ -1,4 +1,6 @@
-var _TranscriptionService = class {
+class TranscriptionService {
+  static ADAPTER_VALIDATION_TIMEOUT_MS = 4e3;
+
   constructor(plugin) {
     this.plugin = plugin;
   }
@@ -91,7 +93,7 @@ ${transcription}`;
     return adapter;
   }
   async validateAdapterWithTimeout(adapter) {
-    const timeoutMs = _TranscriptionService.ADAPTER_VALIDATION_TIMEOUT_MS;
+    const timeoutMs = TranscriptionService.ADAPTER_VALIDATION_TIMEOUT_MS;
     return await Promise.race([
       adapter.validateApiKey().catch(() => false),
       new Promise((resolve) => {
@@ -99,6 +101,4 @@ ${transcription}`;
       })
     ]);
   }
-};
-var TranscriptionService = _TranscriptionService;
-TranscriptionService.ADAPTER_VALIDATION_TIMEOUT_MS = 4e3;
+}

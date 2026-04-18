@@ -1,6 +1,12 @@
 var import_obsidian12 = require("obsidian");
 
-var _StreamingTranscriptionService = class {
+class StreamingTranscriptionService {
+  static CHUNK_MAX_RETRIES = 2;
+  static CHUNK_RETRY_DELAY_MS = 1e3;
+  static FINALIZE_TIMEOUT_MS = 12 * 60 * 1e3;
+  static FOUR_HUNDRED_FALLBACK_THRESHOLD = 2;
+  static LIVE_DIARIZATION_STABILIZATION_MS = 2500;
+
   constructor(plugin, callbacks) {
     this.plugin = plugin;
     this.isProcessing = false;
@@ -184,7 +190,7 @@ var _StreamingTranscriptionService = class {
   }
   async processChunkWithRetry(chunk, metadata) {
     let attempt = 0;
-    while (attempt <= _StreamingTranscriptionService.CHUNK_MAX_RETRIES) {
+    while (attempt <= StreamingTranscriptionService.CHUNK_MAX_RETRIES) {
       try {
         await this.processChunkOnce(chunk, metadata);
         this.consecutive400Errors = 0;
@@ -195,37 +201,37 @@ var _StreamingTranscriptionService = class {
         const is400 = /\bstatus 400\b/i.test(errorMessage);
         if (is400) {
           this.consecutive400Errors += 1;
-          if (this.plugin.settings.streamTransportFallbackEnabled && this.transportProfile === "native" && this.consecutive400Errors >= _StreamingTranscriptionService.FOUR_HUNDRED_FALLBACK_THRESHOLD) {
+          if (this.plugin.settings.streamTransportFallbackEnabled && this.transportProfile === "native" && this.consecutive400Errors >= StreamingTranscriptionService.FOUR_HUNDRED_FALLBACK_THRESHOLD) {
             this.transportProfile = "wav_fallback";
             await RuntimeLogger.log(this.plugin, this.logContext, "chunk_retry", {
               status: "retrying",
               chunkId: metadata.id,
               chunkIndex: metadata.index,
               attempt,
-              maxAttempts: _StreamingTranscriptionService.CHUNK_MAX_RETRIES + 1,
+              maxAttempts: StreamingTranscriptionService.CHUNK_MAX_RETRIES + 1,
               reason: "Switching stream transport profile to wav_fallback after repeated 400 errors"
             });
           }
         } else {
           this.consecutive400Errors = 0;
         }
-        if (attempt <= _StreamingTranscriptionService.CHUNK_MAX_RETRIES) {
+        if (attempt <= StreamingTranscriptionService.CHUNK_MAX_RETRIES) {
           await RuntimeLogger.log(this.plugin, this.logContext, "chunk_retry", {
             status: "retrying",
             chunkId: metadata.id,
             chunkIndex: metadata.index,
             attempt,
-            maxAttempts: _StreamingTranscriptionService.CHUNK_MAX_RETRIES + 1,
+            maxAttempts: StreamingTranscriptionService.CHUNK_MAX_RETRIES + 1,
             reason: errorMessage
           });
-          await this.sleep(_StreamingTranscriptionService.CHUNK_RETRY_DELAY_MS);
+          await this.sleep(StreamingTranscriptionService.CHUNK_RETRY_DELAY_MS);
           continue;
         }
         await RuntimeLogger.log(this.plugin, this.logContext, "chunk_fail", {
           status: "failed",
           chunkId: metadata.id,
           chunkIndex: metadata.index,
-          attempts: _StreamingTranscriptionService.CHUNK_MAX_RETRIES + 1,
+          attempts: StreamingTranscriptionService.CHUNK_MAX_RETRIES + 1,
           reason: error instanceof Error ? error.message : String(error)
         });
         const failureMessage = error instanceof Error ? error.message : String(error);
@@ -277,7 +283,7 @@ var _StreamingTranscriptionService = class {
       try {
         await Promise.race([
           this.processingPromise,
-          this.sleep(_StreamingTranscriptionService.FINALIZE_TIMEOUT_MS).then(() => {
+          this.sleep(StreamingTranscriptionService.FINALIZE_TIMEOUT_MS).then(() => {
             throw new Error("Finalize timed out while waiting for queue drain");
           })
         ]);
@@ -667,7 +673,7 @@ var _StreamingTranscriptionService = class {
     return `${label}: ${text}`;
   }
   isWithinLiveStabilizationWindow() {
-    return Date.now() - this.liveSessionStartTs < _StreamingTranscriptionService.LIVE_DIARIZATION_STABILIZATION_MS;
+    return Date.now() - this.liveSessionStartTs < StreamingTranscriptionService.LIVE_DIARIZATION_STABILIZATION_MS;
   }
   async flushBufferedLiveFinals() {
     if (this.bufferedLiveFinals.length === 0)
@@ -775,10 +781,4 @@ var _StreamingTranscriptionService = class {
     }
     return finalResult;
   }
-};
-var StreamingTranscriptionService = _StreamingTranscriptionService;
-StreamingTranscriptionService.CHUNK_MAX_RETRIES = 2;
-StreamingTranscriptionService.CHUNK_RETRY_DELAY_MS = 1e3;
-StreamingTranscriptionService.FINALIZE_TIMEOUT_MS = 12 * 60 * 1e3;
-StreamingTranscriptionService.FOUR_HUNDRED_FALLBACK_THRESHOLD = 2;
-StreamingTranscriptionService.LIVE_DIARIZATION_STABILIZATION_MS = 2500;
+}

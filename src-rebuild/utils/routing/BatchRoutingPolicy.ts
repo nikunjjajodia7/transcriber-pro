@@ -1,4 +1,4 @@
-var BatchRoutingPolicy = class {
+class BatchRoutingPolicy {
   constructor(settings) {
     this.settings = settings;
   }
@@ -37,4 +37,4 @@ var BatchRoutingPolicy = class {
     }
     return "uploaded";
   }
-};
+}
