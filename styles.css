@@ -525,6 +525,79 @@
 }
 
 /************************************
+ * DESKTOP EXPANDING PILL (floating mic, draggable)
+ ************************************/
+.neurovox-dock-pill.neurovox-dock-pill--desktop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    pointer-events: auto;
+    cursor: grab;
+    background: var(--background-secondary);
+    color: var(--text-normal);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.24), 0 8px 24px rgba(0, 0, 0, 0.18);
+    border: var(--neurovox-border-width) solid var(--background-modifier-border);
+    transition: width 180ms cubic-bezier(0.16, 1, 0.3, 1),
+                transform 180ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.neurovox-dock-pill.neurovox-dock-pill--desktop.is-dragging {
+    cursor: grabbing;
+}
+
+.neurovox-dock-pill.neurovox-dock-pill--desktop[data-state="idle"] {
+    width: 48px;
+    background: var(--neurovox-button-color, var(--interactive-accent));
+    color: var(--text-on-accent);
+}
+
+.neurovox-dock-pill.neurovox-dock-pill--desktop[data-state="idle"]:hover {
+    transform: translateY(var(--neurovox-hover-transform, -1px));
+    box-shadow: var(--shadow-l);
+}
+
+.neurovox-dock-pill.neurovox-dock-pill--desktop[data-state="idle"] .neurovox-dock-pill__idle-icon {
+    color: currentColor;
+}
+
+.neurovox-dock-pill.neurovox-dock-pill--desktop[data-state="expanded"] {
+    width: 216px;
+    cursor: default;
+}
+
+.neurovox-dock-pill.neurovox-dock-pill--desktop[data-state="recording"],
+.neurovox-dock-pill.neurovox-dock-pill--desktop[data-state="paused"] {
+    width: 220px;
+    cursor: default;
+}
+
+.neurovox-dock-pill.neurovox-dock-pill--desktop[data-state="finalizing"] {
+    width: 156px;
+    cursor: default;
+}
+
+.neurovox-dock-pill.neurovox-dock-pill--desktop .neurovox-dock-pill__icon {
+    cursor: pointer;
+}
+
+.neurovox-dock-pill.neurovox-dock-pill--desktop .neurovox-dock-pill__icon:hover {
+    color: var(--text-normal);
+}
+
+.neurovox-dock-pill.neurovox-dock-pill--desktop .neurovox-dock-pill__cancel-jobs {
+    color: var(--text-muted);
+}
+
+.neurovox-dock-pill.neurovox-dock-pill--desktop .neurovox-dock-pill__cancel-jobs:hover {
+    color: var(--color-red, #e64343);
+}
+
+.neurovox-dock-pill.neurovox-dock-pill--desktop.drag-over {
+    outline: 2px dashed var(--interactive-accent);
+    outline-offset: 3px;
+}
+
+/************************************
  * UPLOAD BOTTOM SHEET
  ************************************/
 .neurovox-upload-overlay {
