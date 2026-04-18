@@ -12538,6 +12538,10 @@ var _FloatingButton = class {
     this.deviceDetection = DeviceDetection.getInstance();
     this.isMobileDevice = this.deviceDetection.isMobile();
     this.mobileDefaultsEnsured = false;
+    this.isDisposed = false;
+    this.activeLeafRef = null;
+    this.layoutChangeRef = null;
+    this.resizeRef = null;
     if (_FloatingButton.instance) {
       _FloatingButton.instance.remove();
     }
@@ -12772,48 +12776,55 @@ var _FloatingButton = class {
     this.registerResizeEvent();
   }
   registerActiveLeafChangeEvent() {
-    this.plugin.registerEvent(
-      this.plugin.app.workspace.on("active-leaf-change", () => {
-        requestAnimationFrame(() => this.attachToActiveLeaf());
-      })
-    );
+    this.activeLeafRef = this.plugin.app.workspace.on("active-leaf-change", () => {
+      if (this.isDisposed) return;
+      requestAnimationFrame(() => {
+        if (this.isDisposed) return;
+        this.attachToActiveLeaf();
+      });
+    });
+    this.plugin.registerEvent(this.activeLeafRef);
   }
   registerLayoutChangeEvent() {
-    this.plugin.registerEvent(
-      this.plugin.app.workspace.on("layout-change", () => {
-        requestAnimationFrame(() => {
-          if (this.positionManager && this.activeLeafContainer) {
-            this.positionManager.updateContainer(this.activeLeafContainer);
-          }
-          if (this.mobilePill) {
-            this.mobilePill.measureAndPositionAboveDock();
-          }
-        });
-      })
-    );
+    this.layoutChangeRef = this.plugin.app.workspace.on("layout-change", () => {
+      if (this.isDisposed) return;
+      requestAnimationFrame(() => {
+        if (this.isDisposed) return;
+        if (this.positionManager && this.activeLeafContainer) {
+          this.positionManager.updateContainer(this.activeLeafContainer);
+        }
+        if (this.mobilePill) {
+          this.mobilePill.measureAndPositionAboveDock();
+        }
+      });
+    });
+    this.plugin.registerEvent(this.layoutChangeRef);
   }
   registerResizeEvent() {
-    this.plugin.registerEvent(
-      this.plugin.app.workspace.on("resize", () => {
-        if (this.resizeTimeout) {
-          clearTimeout(this.resizeTimeout);
+    this.resizeRef = this.plugin.app.workspace.on("resize", () => {
+      if (this.isDisposed) return;
+      if (this.resizeTimeout) {
+        clearTimeout(this.resizeTimeout);
+      }
+      this.resizeTimeout = setTimeout(() => {
+        if (this.isDisposed) return;
+        if (this.activeLeafContainer && this.positionManager) {
+          requestAnimationFrame(() => {
+            if (this.isDisposed) return;
+            if (this.positionManager && this.activeLeafContainer) {
+              this.positionManager.updateContainer(this.activeLeafContainer);
+            }
+          });
         }
-        this.resizeTimeout = setTimeout(() => {
-          if (this.activeLeafContainer && this.positionManager) {
-            requestAnimationFrame(() => {
-              if (this.positionManager && this.activeLeafContainer) {
-                this.positionManager.updateContainer(this.activeLeafContainer);
-              }
-            });
-          }
-          if (this.mobilePill) {
-            this.mobilePill.measureAndPositionAboveDock();
-          }
-        }, this.getComputedResizeDelay());
-      })
-    );
+        if (this.mobilePill) {
+          this.mobilePill.measureAndPositionAboveDock();
+        }
+      }, this.getComputedResizeDelay());
+    });
+    this.plugin.registerEvent(this.resizeRef);
   }
   attachToActiveLeaf() {
+    if (this.isDisposed) return;
     if (this.isMobileDevice && this.mobilePill) {
       const activeLeaf = this.plugin.app.workspace.getActiveViewOfType(import_obsidian16.MarkdownView);
       if (!activeLeaf) {
@@ -12981,6 +12992,19 @@ var _FloatingButton = class {
   }
   remove() {
     var _a;
+    this.isDisposed = true;
+    if (this.activeLeafRef) {
+      this.plugin.app.workspace.offref(this.activeLeafRef);
+      this.activeLeafRef = null;
+    }
+    if (this.layoutChangeRef) {
+      this.plugin.app.workspace.offref(this.layoutChangeRef);
+      this.layoutChangeRef = null;
+    }
+    if (this.resizeRef) {
+      this.plugin.app.workspace.offref(this.resizeRef);
+      this.resizeRef = null;
+    }
     if (this.mobilePill) {
       this.mobilePill.dispose();
       this.mobilePill = null;
