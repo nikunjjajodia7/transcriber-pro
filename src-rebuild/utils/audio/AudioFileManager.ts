@@ -1,4 +1,6 @@
-class AudioFileManager {
+import { ensureDirectoryExists, saveAudioFile } from '../FileUtils';
+
+export class AudioFileManager {
   constructor(plugin) {
     this.plugin = plugin;
   }

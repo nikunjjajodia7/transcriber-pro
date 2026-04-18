@@ -1,4 +1,6 @@
-class GroqAdapter extends AIAdapter {
+import { AIAdapter } from './AIAdapter';
+
+export class GroqAdapter extends AIAdapter {
   constructor(settings) {
     super(settings, "groq" /* Groq */);
     this.apiKey = "";

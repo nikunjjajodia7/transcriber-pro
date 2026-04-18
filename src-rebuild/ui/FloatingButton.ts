@@ -1,6 +1,12 @@
-var import_obsidian16 = require("obsidian");
+import { MarkdownView, Modal, Notice, setIcon } from 'obsidian';
+import { AudioRecordingManager } from '../utils/RecordingManager';
+import { ButtonPositionManager } from '../utils/ButtonPositionManager';
+import { DesktopDockPill } from './DesktopDockPill';
+import { DeviceDetection } from '../utils/DeviceDetection';
+import { InlineRecorderPanel } from './InlineRecorderPanel';
+import { MobileDockPill } from './MobileDockPill';
 
-class FloatingButton {
+export class FloatingButton {
   static instance = null;
 
   constructor(plugin, pluginData, onClickCallback) {
@@ -135,7 +141,7 @@ class FloatingButton {
     } else {
       this.buttonEl.setAttribute("aria-label", "Start recording (drag to move)");
     }
-    (0, import_obsidian16.setIcon)(this.buttonEl, "mic");
+    (0, setIcon)(this.buttonEl, "mic");
     this.buttonEl.addEventListener("click", (event) => {
       var _a, _b;
       if (((_a = this.positionManager) == null ? void 0 : _a.isDragging) || ((_b = this.positionManager) == null ? void 0 : _b.hasMoved)) {
@@ -312,7 +318,7 @@ class FloatingButton {
   attachToActiveLeaf() {
     if (this.isDisposed) return;
     if (this.isMobileDevice && this.mobilePill) {
-      const activeLeaf = this.plugin.app.workspace.getActiveViewOfType(import_obsidian16.MarkdownView);
+      const activeLeaf = this.plugin.app.workspace.getActiveViewOfType(MarkdownView);
       if (!activeLeaf) {
         this.mobilePill.hide();
         return;
@@ -331,7 +337,7 @@ class FloatingButton {
       }
       return;
     }
-    const activeLeaf = this.plugin.app.workspace.getActiveViewOfType(import_obsidian16.MarkdownView);
+    const activeLeaf = this.plugin.app.workspace.getActiveViewOfType(MarkdownView);
     if (!activeLeaf) {
       return;
     }
@@ -588,9 +594,9 @@ class FloatingButton {
       this.audioManager.start();
       this.isRecording = true;
       this.updateRecordingState(true);
-      new import_obsidian16.Notice("Recording started");
+      new Notice("Recording started");
     } catch (error) {
-      new import_obsidian16.Notice("Failed to start recording");
+      new Notice("Failed to start recording");
       this.cleanup();
     }
   }
@@ -606,9 +612,9 @@ class FloatingButton {
         return;
       this.isProcessing = true;
       this.updateProcessingState(true);
-      const activeView = this.plugin.app.workspace.getActiveViewOfType(import_obsidian16.MarkdownView);
+      const activeView = this.plugin.app.workspace.getActiveViewOfType(MarkdownView);
       if (!activeView || !activeView.file) {
-        new import_obsidian16.Notice("No active file to insert recording");
+        new Notice("No active file to insert recording");
         return;
       }
       await this.plugin.recordingProcessor.processRecording(
@@ -617,7 +623,7 @@ class FloatingButton {
         activeView.editor.getCursor()
       );
     } catch (error) {
-      new import_obsidian16.Notice("Failed to stop recording");
+      new Notice("Failed to stop recording");
     } finally {
       this.cleanup();
     }
@@ -672,12 +678,12 @@ class FloatingButton {
     const ext = ((_b = file.name.split(".").pop()) == null ? void 0 : _b.toLowerCase()) || "";
     const valid = ["mp3", "wav", "webm", "m4a", "ogg", "mp4"];
     if (!valid.includes(ext) && !file.type.startsWith("audio/")) {
-      new import_obsidian16.Notice("Dropped file is not a supported audio format.");
+      new Notice("Dropped file is not a supported audio format.");
       return;
     }
-    const activeView = this.plugin.app.workspace.getActiveViewOfType(import_obsidian16.MarkdownView);
+    const activeView = this.plugin.app.workspace.getActiveViewOfType(MarkdownView);
     if (!(activeView == null ? void 0 : activeView.file)) {
-      new import_obsidian16.Notice("Open a note first to insert dropped audio transcription.");
+      new Notice("Open a note first to insert dropped audio transcription.");
       return;
     }
     const confirmed = await this.openDropReviewModal(file, activeView.file, source);
@@ -695,10 +701,10 @@ class FloatingButton {
         activeView.editor.getCursor(),
         file.name
       );
-      new import_obsidian16.Notice(`Transcribed dropped audio: ${file.name}`);
+      new Notice(`Transcribed dropped audio: ${file.name}`);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      new import_obsidian16.Notice(`Failed to transcribe dropped audio: ${message}`);
+      new Notice(`Failed to transcribe dropped audio: ${message}`);
     } finally {
       this.isProcessing = false;
       this.updateProcessingState(false);
@@ -720,13 +726,13 @@ class FloatingButton {
       this.inlineRecorderPanel.toggleCollapsed();
       return;
     }
-    const activeView = this.plugin.app.workspace.getActiveViewOfType(import_obsidian16.MarkdownView);
+    const activeView = this.plugin.app.workspace.getActiveViewOfType(MarkdownView);
     if (!activeView || !activeView.file) {
-      new import_obsidian16.Notice("No active note found to insert transcription.");
+      new Notice("No active note found to insert transcription.");
       return;
     }
     if (!this.activeLeafContainer) {
-      new import_obsidian16.Notice("Recorder panel unavailable in this view.");
+      new Notice("Recorder panel unavailable in this view.");
       return;
     }
     const anchor = this.getCurrentPosition();
@@ -764,12 +770,12 @@ class FloatingButton {
     this.plugin.settings.includeTimestamps = true;
     try {
       await this.plugin.saveSettings({ refreshUi: false, triggerFloatingRefresh: false });
-      new import_obsidian16.Notice("Enabled mobile speaker-turn timestamps by default.");
+      new Notice("Enabled mobile speaker-turn timestamps by default.");
     } catch (e) {
     }
   }
 }
-class DropReviewModal extends import_obsidian16.Modal {
+class DropReviewModal extends Modal {
   constructor(appPlugin, file, targetFile, source, onResolve) {
     super(appPlugin.app);
     this.file = file;

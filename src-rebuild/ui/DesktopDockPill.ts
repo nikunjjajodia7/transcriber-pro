@@ -1,4 +1,10 @@
-class DesktopDockPill {
+import { MarkdownView, Notice, setIcon } from 'obsidian';
+import { AudioRecordingManager } from '../utils/RecordingManager';
+import { DeviceDetection } from '../utils/DeviceDetection';
+import { DocumentInserter } from '../utils/document/DocumentInserter';
+import { StreamingTranscriptionService } from '../utils/transcription/StreamingTranscriptionService';
+
+export class DesktopDockPill {
   constructor(plugin) {
     this.plugin = plugin;
     this.state = "idle";
@@ -42,7 +48,7 @@ class DesktopDockPill {
     this.contentEl.classList.add("neurovox-dock-pill__content");
     this.idleIconEl = document.createElement("div");
     this.idleIconEl.classList.add("neurovox-dock-pill__idle-icon");
-    (0, import_obsidian16.setIcon)(this.idleIconEl, "mic");
+    (0, setIcon)(this.idleIconEl, "mic");
     this.contentEl.appendChild(this.idleIconEl);
     this.expandedEl = document.createElement("div");
     this.expandedEl.classList.add("neurovox-dock-pill__expanded");
@@ -78,7 +84,7 @@ class DesktopDockPill {
     this.recordingEl.appendChild(this.pauseBtnEl);
     const stopBtn = document.createElement("div");
     stopBtn.classList.add("neurovox-dock-pill__stop-btn");
-    (0, import_obsidian16.setIcon)(stopBtn, "square");
+    (0, setIcon)(stopBtn, "square");
     this.bindIconTap(stopBtn, () => { void this.handleStopTap(); });
     this.recordingEl.appendChild(stopBtn);
     const closeBtn2 = this.makeIconBtn("x", "neurovox-dock-pill__icon neurovox-dock-pill__close");
@@ -89,7 +95,7 @@ class DesktopDockPill {
     this.finalizingEl.classList.add("neurovox-dock-pill__finalizing");
     const loaderIcon = document.createElement("div");
     loaderIcon.classList.add("neurovox-dock-pill__loader-icon");
-    (0, import_obsidian16.setIcon)(loaderIcon, "loader");
+    (0, setIcon)(loaderIcon, "loader");
     this.finalizingEl.appendChild(loaderIcon);
     const statusText = document.createElement("span");
     statusText.classList.add("neurovox-dock-pill__status-text");
@@ -106,7 +112,7 @@ class DesktopDockPill {
     const btn = document.createElement("div");
     btn.classList.add("clickable-icon");
     cls.split(" ").forEach((c) => btn.classList.add(c));
-    (0, import_obsidian16.setIcon)(btn, iconName);
+    (0, setIcon)(btn, iconName);
     return btn;
   }
   bindIconTap(el, handler) {
@@ -139,7 +145,7 @@ class DesktopDockPill {
     }
   }
   ensureActiveFile() {
-    const activeView = this.plugin.app.workspace.getActiveViewOfType(import_obsidian16.MarkdownView);
+    const activeView = this.plugin.app.workspace.getActiveViewOfType(MarkdownView);
     if (activeView && activeView.file) {
       this.activeFile = activeView.file;
       try {
@@ -151,9 +157,9 @@ class DesktopDockPill {
   }
   handleUploadTap() {
     if (this.state !== "expanded") return;
-    const activeView = this.plugin.app.workspace.getActiveViewOfType(import_obsidian16.MarkdownView);
+    const activeView = this.plugin.app.workspace.getActiveViewOfType(MarkdownView);
     if (!activeView || !activeView.file) {
-      new import_obsidian16.Notice("No active note found to insert transcription.");
+      new Notice("No active note found to insert transcription.");
       return;
     }
     this.activeFile = activeView.file;
@@ -168,11 +174,11 @@ class DesktopDockPill {
         this.setState("finalizing");
         const blob = new Blob([await file.arrayBuffer()], { type: file.type || "audio/wav" });
         await this.plugin.recordingProcessor.processRecording(blob, this.activeFile, this.cursorPosition, file.name);
-        new import_obsidian16.Notice(`Transcribed uploaded audio: ${file.name}`);
+        new Notice(`Transcribed uploaded audio: ${file.name}`);
         this.setState("idle");
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
-        new import_obsidian16.Notice(`Failed to transcribe uploaded audio: ${message}`);
+        new Notice(`Failed to transcribe uploaded audio: ${message}`);
         this.setState("idle");
       }
     };
@@ -187,9 +193,9 @@ class DesktopDockPill {
   }
   async handleMicTap() {
     if (this.state !== "expanded") return;
-    const activeView = this.plugin.app.workspace.getActiveViewOfType(import_obsidian16.MarkdownView);
+    const activeView = this.plugin.app.workspace.getActiveViewOfType(MarkdownView);
     if (!activeView || !activeView.file) {
-      new import_obsidian16.Notice("No active note found to insert transcription.");
+      new Notice("No active note found to insert transcription.");
       return;
     }
     this.activeFile = activeView.file;
@@ -201,13 +207,13 @@ class DesktopDockPill {
     try {
       const pending = await this.plugin.recordingProcessor.getIncompleteJobs();
       if (pending.length === 0) {
-        new import_obsidian16.Notice("No incomplete jobs to cancel.");
+        new Notice("No incomplete jobs to cancel.");
         return;
       }
       await Promise.all(pending.map((job) => this.plugin.recordingProcessor.cancelJob(job.jobId)));
-      new import_obsidian16.Notice(`Canceled ${pending.length} incomplete job(s).`);
+      new Notice(`Canceled ${pending.length} incomplete job(s).`);
     } catch (e) {
-      new import_obsidian16.Notice("Failed to cancel incomplete jobs.");
+      new Notice("Failed to cancel incomplete jobs.");
     }
   }
   async startRecordingSession() {
@@ -223,7 +229,7 @@ class DesktopDockPill {
       if (this.useStreaming && !this.streamingService) {
         this.streamingService = new StreamingTranscriptionService(this.plugin, {
           onMemoryWarning: (usage) => {
-            new import_obsidian16.Notice(`Memory usage high: ${Math.round(usage)}%`);
+            new Notice(`Memory usage high: ${Math.round(usage)}%`);
           },
           onChunkCommitted: async (_chunkText, _metadata, partialResult) => {
             if (!this.plugin.settings.showLiveChunkPreviewInNote) return;
@@ -247,7 +253,7 @@ class DesktopDockPill {
       this.updateTimerDisplay();
       this.startTimer();
       this.setState("recording");
-      new import_obsidian16.Notice("Recording started");
+      new Notice("Recording started");
     } catch (error) {
       this.handleFailure("Failed to start recording", error);
     }
@@ -264,7 +270,7 @@ class DesktopDockPill {
         }
         this.startTimer();
         this.setState("recording");
-        (0, import_obsidian16.setIcon)(this.pauseBtnEl, "pause");
+        (0, setIcon)(this.pauseBtnEl, "pause");
       } else {
         if (this.useStreaming && this.streamingService) {
           this.streamingService.pauseLive();
@@ -274,7 +280,7 @@ class DesktopDockPill {
         }
         this.stopTimer();
         this.setState("paused");
-        (0, import_obsidian16.setIcon)(this.pauseBtnEl, "play");
+        (0, setIcon)(this.pauseBtnEl, "play");
       }
     } catch (error) {
       this.handleFailure("Failed to pause/resume", error);
@@ -371,7 +377,7 @@ class DesktopDockPill {
       this.documentInserter = null;
     }
     if (this.pauseBtnEl) {
-      (0, import_obsidian16.setIcon)(this.pauseBtnEl, "pause");
+      (0, setIcon)(this.pauseBtnEl, "pause");
     }
   }
   setState(state) {
@@ -446,7 +452,7 @@ class DesktopDockPill {
   }
   handleFailure(message, error) {
     const detail = error instanceof Error ? error.message : String(error);
-    new import_obsidian16.Notice(`${message}: ${detail}`);
+    new Notice(`${message}: ${detail}`);
     this.resetRecordingState();
     this.setState("idle");
   }

@@ -1,5 +1,8 @@
-var import_obsidian20 = require("obsidian");
-class DeepgramAdapter extends AIAdapter {
+import { requestUrl } from 'obsidian';
+import { AIAdapter } from './AIAdapter';
+import { toRomanIfNeeded } from '../utils/text/Romanization';
+
+export class DeepgramAdapter extends AIAdapter {
   static MIN_TIMEOUT_MS = 18e4;
   static MAX_TIMEOUT_MS = 18e5;
   static TIMEOUT_PER_MB_MS = 8e3;
@@ -246,7 +249,7 @@ class DeepgramAdapter extends AIAdapter {
         // Deepgram uses "Token" instead of "Bearer"
         ...headers
       };
-      const response = await (0, import_obsidian20.requestUrl)({
+      const response = await (0, requestUrl)({
         url: endpoint,
         method,
         headers: requestHeaders,

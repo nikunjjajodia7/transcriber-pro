@@ -1,6 +1,12 @@
-var import_obsidian15 = require("obsidian");
+import { Notice } from 'obsidian';
+import { AudioRecordingManager } from '../utils/RecordingManager';
+import { DeviceDetection } from '../utils/DeviceDetection';
+import { DocumentInserter } from '../utils/document/DocumentInserter';
+import { RecordingUI } from './RecordingUI';
+import { StreamingTranscriptionService } from '../utils/transcription/StreamingTranscriptionService';
+import { canEditSaveAudio, canPauseToggle, canStartRecording, canStopRecording, canUploadAudio } from '../utils/recorder/RecorderStateMachine';
 
-class InlineRecorderPanel {
+export class InlineRecorderPanel {
   static RECORDER_STOP_TIMEOUT_MS = 12e3;
 
   constructor(options) {
@@ -72,7 +78,7 @@ class InlineRecorderPanel {
       if (this.useStreaming && !this.streamingService) {
         this.streamingService = new StreamingTranscriptionService(this.plugin, {
           onMemoryWarning: (usage) => {
-            new import_obsidian15.Notice(`Memory usage high: ${Math.round(usage)}%`);
+            new Notice(`Memory usage high: ${Math.round(usage)}%`);
           },
           onChunkCommitted: async (_chunkText, _metadata, partialResult) => {
             if (!this.plugin.settings.showLiveChunkPreviewInNote)
@@ -99,7 +105,7 @@ class InlineRecorderPanel {
       (_a = this.ui) == null ? void 0 : _a.updateTimer(this.timerSeconds, Number.POSITIVE_INFINITY, 60);
       this.startTimer();
       this.setState("recording");
-      new import_obsidian15.Notice("Recording started");
+      new Notice("Recording started");
     } catch (error) {
       this.handleFailure("Failed to start recording", error);
     }
@@ -290,7 +296,7 @@ class InlineRecorderPanel {
     checkbox.addEventListener("change", () => {
       if (!canEditSaveAudio(this.state)) {
         checkbox.checked = this.saveAudioForSession;
-        new import_obsidian15.Notice("Save audio can only be changed before recording starts.");
+        new Notice("Save audio can only be changed before recording starts.");
         return;
       }
       this.saveAudioForSession = checkbox.checked;
@@ -311,7 +317,7 @@ class InlineRecorderPanel {
   }
   async handleUploadAudio() {
     if (!canUploadAudio(this.state)) {
-      new import_obsidian15.Notice("Upload audio is available before recording starts.");
+      new Notice("Upload audio is available before recording starts.");
       return;
     }
     const input = document.createElement("input");
@@ -333,11 +339,11 @@ class InlineRecorderPanel {
           this.cursorPosition,
           file.name
         );
-        new import_obsidian15.Notice(`Transcribed uploaded audio: ${file.name}`);
+        new Notice(`Transcribed uploaded audio: ${file.name}`);
         this.dispose();
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
-        new import_obsidian15.Notice(`Failed to transcribe uploaded audio: ${message}`);
+        new Notice(`Failed to transcribe uploaded audio: ${message}`);
         this.setState("ready");
       }
     };
@@ -347,13 +353,13 @@ class InlineRecorderPanel {
     try {
       const pending = await this.plugin.recordingProcessor.getIncompleteJobs();
       if (pending.length === 0) {
-        new import_obsidian15.Notice("No incomplete jobs to cancel.");
+        new Notice("No incomplete jobs to cancel.");
         return;
       }
       await Promise.all(pending.map((job) => this.plugin.recordingProcessor.cancelJob(job.jobId)));
-      new import_obsidian15.Notice(`Canceled ${pending.length} incomplete job(s).`);
+      new Notice(`Canceled ${pending.length} incomplete job(s).`);
     } catch (e) {
-      new import_obsidian15.Notice("Failed to cancel incomplete jobs.");
+      new Notice("Failed to cancel incomplete jobs.");
     }
   }
   positionPanel(panelEl, anchor) {
@@ -472,7 +478,7 @@ class InlineRecorderPanel {
   }
   handleFailure(message, error) {
     const detail = error instanceof Error ? error.message : String(error);
-    new import_obsidian15.Notice(`${message}: ${detail}`);
+    new Notice(`${message}: ${detail}`);
     this.dispose();
   }
   formatTimer(seconds) {

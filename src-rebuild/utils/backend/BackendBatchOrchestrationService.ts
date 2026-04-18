@@ -1,4 +1,7 @@
-var import_obsidian4 = require("obsidian");
+import { requestUrl } from 'obsidian';
+import { RuntimeLogger } from '../telemetry/RuntimeLogger';
+import { clampMonotonicUiState, formatUiStateLabel, mapBackendToUiState } from './BackendStatusMapper';
+import { isCompletedStatus, isFailedTerminalStatus } from './BackendCompletionGate';
 
 function validateBackendUrl(candidateUrl, backendBaseUrl) {
   try {
@@ -12,7 +15,7 @@ function validateBackendUrl(candidateUrl, backendBaseUrl) {
     throw new Error(`Backend returned invalid URL: ${candidateUrl}`);
   }
 }
-class BackendBatchOrchestrationService {
+export class BackendBatchOrchestrationService {
   static CHUNK_SIZE_BYTES = 8 * 1024 * 1024;
 
   constructor(plugin) {
@@ -87,7 +90,7 @@ class BackendBatchOrchestrationService {
     const mimeType = audioBlob.type || "application/octet-stream";
     if (totalChunks === 1) {
       const body = await audioBlob.arrayBuffer();
-      await (0, import_obsidian4.requestUrl)({
+      await (0, requestUrl)({
         url: uploadUrl,
         method: "PUT",
         headers: this.buildHeaders({
@@ -109,7 +112,7 @@ class BackendBatchOrchestrationService {
         this.plugin.showProcessingStatus(
           `Uploading source audio to backend (${chunkIndex + 1}/${totalChunks})`
         );
-        await (0, import_obsidian4.requestUrl)({
+        await (0, requestUrl)({
           url: uploadUrl,
           method: "PUT",
           headers: this.buildHeaders({
@@ -216,7 +219,7 @@ class BackendBatchOrchestrationService {
     );
   }
   async requestJson(url, method, body) {
-    const response = await (0, import_obsidian4.requestUrl)({
+    const response = await (0, requestUrl)({
       url,
       method,
       headers: this.buildHeaders({

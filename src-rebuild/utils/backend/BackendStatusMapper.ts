@@ -6,7 +6,7 @@ var UI_RANK = {
   completed: 4,
   failed: 4
 };
-function mapBackendToUiState(statusRaw, stageRaw) {
+export function mapBackendToUiState(statusRaw, stageRaw) {
   const status = (statusRaw || "").trim().toLowerCase();
   const stage = (stageRaw || "").trim().toLowerCase();
   const probe = `${status} ${stage}`;
@@ -28,7 +28,7 @@ function mapBackendToUiState(statusRaw, stageRaw) {
     return "uploading";
   return "processing";
 }
-function clampMonotonicUiState(previous, next) {
+export function clampMonotonicUiState(previous, next) {
   if (!previous)
     return next;
   if (previous === "failed" || previous === "completed")
@@ -37,7 +37,7 @@ function clampMonotonicUiState(previous, next) {
     return next;
   return UI_RANK[next] >= UI_RANK[previous] ? next : previous;
 }
-function formatUiStateLabel(state) {
+export function formatUiStateLabel(state) {
   switch (state) {
     case "creating":
       return "Creating job";

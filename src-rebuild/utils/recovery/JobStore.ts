@@ -1,4 +1,4 @@
-class JobStore {
+export class JobStore {
   static BASE_DIR = ".obsidian/plugins/neurovox/recovery";
   static FILE = ".obsidian/plugins/neurovox/recovery/jobs.json";
 

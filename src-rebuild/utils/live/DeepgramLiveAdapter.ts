@@ -1,4 +1,4 @@
-class DeepgramLiveAdapter {
+export class DeepgramLiveAdapter {
   static OPEN_TIMEOUT_MS = 12e3;
   static STOP_TIMEOUT_MS = 1e4;
 

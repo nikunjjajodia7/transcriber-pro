@@ -1,6 +1,10 @@
-var import_obsidian3 = require("obsidian");
+import { Notice } from 'obsidian';
+import { TranscriptRenderer } from './TranscriptRenderer';
+import { buildEntryMarkerComment, createEntryMeta } from './TranscriptionEntry';
+import { buildEntrySpeakerMappingSection, extractSpeakerLabels } from './SpeakerMapping';
+import { fromPlainTranscription } from './TranscriptSchema';
 
-class DocumentInserter {
+export class DocumentInserter {
   static LIVE_MARKER_START_PREFIX = "<!-- neurovox:live:start:";
   static LIVE_MARKER_END_PREFIX = "<!-- neurovox:live:end:";
   static liveCalloutCollapsedState = /* @__PURE__ */ new Map();
@@ -60,7 +64,7 @@ ${baseText}`.trim();
       await this.insertAtPositionWithIdempotency(entryMarker, formattedContent, file, position);
     } catch (error) {
       const message = error instanceof Error ? error.message : "Unknown error";
-      new import_obsidian3.Notice(`Content insertion failed: ${message}`);
+      new Notice(`Content insertion failed: ${message}`);
       throw error;
     }
   }

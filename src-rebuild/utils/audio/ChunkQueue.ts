@@ -1,4 +1,6 @@
-class ChunkQueue {
+import { DeviceDetection } from '../DeviceDetection';
+
+export class ChunkQueue {
   constructor(maxQueueSize, memoryLimit, onMemoryWarning) {
     this.queue = [];
     // in bytes

@@ -1,6 +1,7 @@
-var import_obsidian14 = require("obsidian");
+import { setIcon } from 'obsidian';
+import { TouchableButton } from './TouchableButton';
 
-class RecordingUI {
+export class RecordingUI {
   constructor(container, handlers) {
     this.container = container;
     this.handlers = handlers;
@@ -93,7 +94,7 @@ class RecordingUI {
     const iconName = isPaused ? "play" : "pause";
     const label = isPaused ? "Resume recording" : "Pause Recording";
     this.pauseButton.buttonEl.empty();
-    (0, import_obsidian14.setIcon)(this.pauseButton.buttonEl, iconName);
+    (0, setIcon)(this.pauseButton.buttonEl, iconName);
     this.pauseButton.buttonEl.setAttribute("aria-label", label);
     this.pauseButton.buttonEl.toggleClass("is-paused", isPaused);
   }

@@ -1,7 +1,7 @@
 var SPEAKER_MAPPING_HEADER = "## Speaker Mapping";
 var ENTRY_MAPPING_START_PREFIX = "<!-- neurovox:mapping:start:";
 var ENTRY_MAPPING_END_PREFIX = "<!-- neurovox:mapping:end:";
-function extractSpeakerLabels(transcript) {
+export function extractSpeakerLabels(transcript) {
   const labelIds = /* @__PURE__ */ new Set();
   const timePrefix = "(?:(?:\\[[0-9]{2}:[0-9]{2}(?::[0-9]{2})?\\]|\\[\\[t=[0-9]{2}:[0-9]{2}(?::[0-9]{2})?\\]\\])\\s+)?";
   const regex = new RegExp(`(^|\\n)\\s*(?:>\\s*)*${timePrefix}Speaker\\s+(\\d+):`, "g");
@@ -15,10 +15,10 @@ function extractSpeakerLabels(transcript) {
   }
   return Array.from(labelIds).sort((a, b) => a - b).map((id) => `Speaker ${id}`);
 }
-function hasSpeakerMappingSection(noteContent) {
+export function hasSpeakerMappingSection(noteContent) {
   return /^\s*(?:>\s*)*(?:\[[0-9]{2}:[0-9]{2}(?::[0-9]{2})?\]\s+)?## Speaker Mapping\s*$/m.test(noteContent);
 }
-function buildEntrySpeakerMappingSection(labels, entryId) {
+export function buildEntrySpeakerMappingSection(labels, entryId) {
   if (labels.length === 0)
     return "";
   const lines = [
@@ -30,7 +30,7 @@ function buildEntrySpeakerMappingSection(labels, entryId) {
   return `${lines.join("\n")}
 `;
 }
-function applySpeakerMappingToEntry(noteContent, entryId, entryStart, entryEnd) {
+export function applySpeakerMappingToEntry(noteContent, entryId, entryStart, entryEnd) {
   const entryContent = noteContent.slice(entryStart, entryEnd);
   const mappingRegion = findEntryMappingRegion(entryContent, entryId);
   if (!mappingRegion) {
@@ -55,7 +55,7 @@ function applySpeakerMappingToEntry(noteContent, entryId, entryStart, entryEnd) 
     mappedSpeakers: mapping.size
   };
 }
-function hasEntrySpeakerMappingSection(entryContent, entryId) {
+export function hasEntrySpeakerMappingSection(entryContent, entryId) {
   return findEntryMappingRegion(entryContent, entryId) !== null;
 }
 function findEntryMappingRegion(entryContent, entryId) {

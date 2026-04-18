@@ -1,4 +1,4 @@
-class LocalQueueBackend {
+export class LocalQueueBackend {
   static BASE_DIR = ".obsidian/plugins/neurovox/queue";
   static FILE = ".obsidian/plugins/neurovox/queue/local-queue.json";
 

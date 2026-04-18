@@ -1,4 +1,11 @@
-class MobileDockPill {
+import { MarkdownView, Notice, setIcon } from 'obsidian';
+import { AudioRecordingManager } from '../utils/RecordingManager';
+import { DeviceDetection } from '../utils/DeviceDetection';
+import { DocumentInserter } from '../utils/document/DocumentInserter';
+import { StreamingTranscriptionService } from '../utils/transcription/StreamingTranscriptionService';
+import { UploadBottomSheet } from './UploadBottomSheet';
+
+export class MobileDockPill {
   constructor(plugin) {
     this.plugin = plugin;
     this.state = "idle";
@@ -47,7 +54,7 @@ class MobileDockPill {
     // Idle icon
     this.idleIconEl = document.createElement("div");
     this.idleIconEl.classList.add("neurovox-dock-pill__idle-icon");
-    (0, import_obsidian16.setIcon)(this.idleIconEl, "mic");
+    (0, setIcon)(this.idleIconEl, "mic");
     this.contentEl.appendChild(this.idleIconEl);
     // Expanded section
     this.expandedEl = document.createElement("div");
@@ -81,7 +88,7 @@ class MobileDockPill {
     this.recordingEl.appendChild(this.pauseBtnEl);
     const stopBtn = document.createElement("div");
     stopBtn.classList.add("neurovox-dock-pill__stop-btn");
-    (0, import_obsidian16.setIcon)(stopBtn, "square");
+    (0, setIcon)(stopBtn, "square");
     stopBtn.addEventListener("click", (e) => { e.stopPropagation(); this.handleStopTap(); });
     this.recordingEl.appendChild(stopBtn);
     const closeBtn2 = this.makeIconBtn("x", "neurovox-dock-pill__icon neurovox-dock-pill__close");
@@ -93,7 +100,7 @@ class MobileDockPill {
     this.finalizingEl.classList.add("neurovox-dock-pill__finalizing");
     const loaderIcon = document.createElement("div");
     loaderIcon.classList.add("neurovox-dock-pill__loader-icon");
-    (0, import_obsidian16.setIcon)(loaderIcon, "loader");
+    (0, setIcon)(loaderIcon, "loader");
     this.finalizingEl.appendChild(loaderIcon);
     const statusText = document.createElement("span");
     statusText.classList.add("neurovox-dock-pill__status-text");
@@ -112,7 +119,7 @@ class MobileDockPill {
     const btn = document.createElement("div");
     btn.classList.add("clickable-icon");
     cls.split(" ").forEach((c) => btn.classList.add(c));
-    (0, import_obsidian16.setIcon)(btn, iconName);
+    (0, setIcon)(btn, iconName);
     return btn;
   }
   handlePillTap() {
@@ -122,9 +129,9 @@ class MobileDockPill {
   }
   handleUploadTap() {
     if (this.state !== "expanded") return;
-    const activeView = this.plugin.app.workspace.getActiveViewOfType(import_obsidian16.MarkdownView);
+    const activeView = this.plugin.app.workspace.getActiveViewOfType(MarkdownView);
     if (!activeView || !activeView.file) {
-      new import_obsidian16.Notice("No active note found to insert transcription.");
+      new Notice("No active note found to insert transcription.");
       return;
     }
     this.activeFile = activeView.file;
@@ -150,11 +157,11 @@ class MobileDockPill {
       this.setState("finalizing");
       const blob = new Blob([await file.arrayBuffer()], { type: file.type || "audio/wav" });
       await this.plugin.recordingProcessor.processRecording(blob, this.activeFile, this.cursorPosition, file.name);
-      new import_obsidian16.Notice(`Transcribed uploaded audio: ${file.name}`);
+      new Notice(`Transcribed uploaded audio: ${file.name}`);
       this.setState("idle");
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      new import_obsidian16.Notice(`Failed to transcribe: ${message}`);
+      new Notice(`Failed to transcribe: ${message}`);
       this.setState("idle");
     }
   }
@@ -167,9 +174,9 @@ class MobileDockPill {
   }
   async handleMicTap() {
     if (this.state !== "expanded") return;
-    const activeView = this.plugin.app.workspace.getActiveViewOfType(import_obsidian16.MarkdownView);
+    const activeView = this.plugin.app.workspace.getActiveViewOfType(MarkdownView);
     if (!activeView || !activeView.file) {
-      new import_obsidian16.Notice("No active note found to insert transcription.");
+      new Notice("No active note found to insert transcription.");
       return;
     }
     this.activeFile = activeView.file;
@@ -189,7 +196,7 @@ class MobileDockPill {
       if (this.useStreaming && !this.streamingService) {
         this.streamingService = new StreamingTranscriptionService(this.plugin, {
           onMemoryWarning: (usage) => {
-            new import_obsidian16.Notice(`Memory usage high: ${Math.round(usage)}%`);
+            new Notice(`Memory usage high: ${Math.round(usage)}%`);
           },
           onChunkCommitted: async (_chunkText, _metadata, partialResult) => {
             if (!this.plugin.settings.showLiveChunkPreviewInNote) return;
@@ -213,7 +220,7 @@ class MobileDockPill {
       this.updateTimerDisplay();
       this.startTimer();
       this.setState("recording");
-      new import_obsidian16.Notice("Recording started");
+      new Notice("Recording started");
     } catch (error) {
       this.handleFailure("Failed to start recording", error);
     }
@@ -230,7 +237,7 @@ class MobileDockPill {
         }
         this.startTimer();
         this.setState("recording");
-        (0, import_obsidian16.setIcon)(this.pauseBtnEl, "pause");
+        (0, setIcon)(this.pauseBtnEl, "pause");
       } else {
         if (this.useStreaming && this.streamingService) {
           this.streamingService.pauseLive();
@@ -240,7 +247,7 @@ class MobileDockPill {
         }
         this.stopTimer();
         this.setState("paused");
-        (0, import_obsidian16.setIcon)(this.pauseBtnEl, "play");
+        (0, setIcon)(this.pauseBtnEl, "play");
       }
     } catch (error) {
       this.handleFailure("Failed to pause/resume", error);
@@ -337,7 +344,7 @@ class MobileDockPill {
       this.documentInserter = null;
     }
     if (this.pauseBtnEl) {
-      (0, import_obsidian16.setIcon)(this.pauseBtnEl, "pause");
+      (0, setIcon)(this.pauseBtnEl, "pause");
     }
   }
   setState(state) {
@@ -388,7 +395,7 @@ class MobileDockPill {
   }
   handleFailure(message, error) {
     const detail = error instanceof Error ? error.message : String(error);
-    new import_obsidian16.Notice(`${message}: ${detail}`);
+    new Notice(`${message}: ${detail}`);
     this.resetRecordingState();
     this.setState("idle");
   }
@@ -445,7 +452,7 @@ class MobileDockPill {
   }
   hasActiveMarkdownView() {
     try {
-      return !!this.plugin.app.workspace.getActiveViewOfType(import_obsidian16.MarkdownView);
+      return !!this.plugin.app.workspace.getActiveViewOfType(MarkdownView);
     } catch (e) {
       return true;
     }

@@ -1,11 +1,11 @@
-var AudioQuality = /* @__PURE__ */ ((AudioQuality2) => {
+export var AudioQuality = /* @__PURE__ */ ((AudioQuality2) => {
   AudioQuality2["Low"] = "low";
   AudioQuality2["Medium"] = "medium";
   AudioQuality2["High"] = "high";
   return AudioQuality2;
 })(AudioQuality || {});
-var CURRENT_SETTINGS_VERSION = 5;
-var DEFAULT_SETTINGS = {
+export var CURRENT_SETTINGS_VERSION = 5;
+export var DEFAULT_SETTINGS = {
   settingsVersion: CURRENT_SETTINGS_VERSION,
   // AI Providers
   openaiApiKey: "",

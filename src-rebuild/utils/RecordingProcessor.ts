@@ -1,6 +1,16 @@
-var import_obsidian5 = require("obsidian");
+import { Notice, TFile } from 'obsidian';
+import { AudioProcessor } from './audio/AudioProcessor';
+import { BackendBatchOrchestrationService } from './backend/BackendBatchOrchestrationService';
+import { BatchRoutingPolicy } from './routing/BatchRoutingPolicy';
+import { DocumentInserter } from './document/DocumentInserter';
+import { JobStore } from './recovery/JobStore';
+import { LocalQueueBackend } from './queue/LocalQueueBackend';
+import { ProcessingState } from './state/ProcessingState';
+import { RuntimeLogger } from './telemetry/RuntimeLogger';
+import { TranscriptionService } from './transcription/TranscriptionService';
+import { classifyError } from './retry/ErrorClassifier';
 
-class RecordingProcessor {
+export class RecordingProcessor {
   static instance = null;
   static ADAPTER_VALIDATION_TIMEOUT_MS = 4e3;
   static STALE_FAILED_JOB_MAX_AGE_MS = 10 * 60 * 1e3;
@@ -323,7 +333,7 @@ class RecordingProcessor {
     if (!ready || written || !ready.transcript)
       return false;
     const target = this.plugin.app.vault.getAbstractFileByPath(job.targetFile);
-    if (!(target instanceof import_obsidian5.TFile))
+    if (!(target instanceof TFile))
       return false;
     let line = typeof job.insertionLine === "number" ? job.insertionLine : 0;
     let ch = typeof job.insertionCh === "number" ? job.insertionCh : 0;
@@ -333,7 +343,7 @@ class RecordingProcessor {
       const lines = targetContent.split("\n");
       line = Math.max(0, lines.length - 1);
       ch = (_b = (_a = lines[line]) == null ? void 0 : _a.length) != null ? _b : 0;
-      new import_obsidian5.Notice("NeuroVox recovered transcript inserted at end of note because the original cursor anchor changed.");
+      new Notice("NeuroVox recovered transcript inserted at end of note because the original cursor anchor changed.");
     }
     await this.documentInserter.insertContent(
       {
@@ -405,7 +415,7 @@ class RecordingProcessor {
           savedAudioPath = processedAudio.finalPath;
         } catch (saveError) {
           const reason = saveError instanceof Error ? saveError.message : String(saveError);
-          new import_obsidian5.Notice(`NeuroVox: transcript saved, but audio file save failed (${reason})`);
+          new Notice(`NeuroVox: transcript saved, but audio file save failed (${reason})`);
           await RuntimeLogger.log(this.plugin, logContext, "provider_failure", {
             status: "failed",
             reason: `live_audio_save_failed:${reason}`
@@ -443,7 +453,7 @@ class RecordingProcessor {
         cursorPosition
       );
       if (savedAudioPath) {
-        new import_obsidian5.Notice(`NeuroVox: recording saved to ${savedAudioPath}`);
+        new Notice(`NeuroVox: recording saved to ${savedAudioPath}`);
       }
       await RuntimeLogger.log(this.plugin, logContext, "note_render_commit", { status: "success" });
       await this.jobStore.upsertCheckpoint({
@@ -564,7 +574,7 @@ ${transcription}`;
    */
   handleError(context, error) {
     const message = error instanceof Error ? error.message : "Unknown error occurred";
-    new import_obsidian5.Notice(`${context}: ${message}`);
+    new Notice(`${context}: ${message}`);
   }
   async resolveDurationSeconds(audioBlob, transcription, preferredSeconds) {
     if (Number.isFinite(preferredSeconds) && Number(preferredSeconds) > 0) {

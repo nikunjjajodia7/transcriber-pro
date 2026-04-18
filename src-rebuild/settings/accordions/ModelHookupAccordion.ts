@@ -1,5 +1,7 @@
-var import_obsidian8 = require("obsidian");
-class ModelHookupAccordion extends BaseAccordion {
+import { Setting } from 'obsidian';
+import { BaseAccordion } from './BaseAccordion';
+
+export class ModelHookupAccordion extends BaseAccordion {
   constructor(containerEl, settings, getAdapter, plugin) {
     super(
       containerEl,
@@ -21,7 +23,7 @@ class ModelHookupAccordion extends BaseAccordion {
     ]);
   }
   render() {
-    const openaiSetting = new import_obsidian8.Setting(this.contentEl).setName("OpenAI API Key").setDesc("Enter your OpenAI API key").addText((text) => {
+    const openaiSetting = new Setting(this.contentEl).setName("OpenAI API Key").setDesc("Enter your OpenAI API key").addText((text) => {
       text.setPlaceholder("sk-...").setValue(this.settings.openaiApiKey);
       text.inputEl.type = "password";
       text.onChange(async (value) => {
@@ -46,7 +48,7 @@ class ModelHookupAccordion extends BaseAccordion {
         }
       });
     });
-    const groqSetting = new import_obsidian8.Setting(this.contentEl).setName("Groq API Key").setDesc("Enter your Groq API key").addText((text) => {
+    const groqSetting = new Setting(this.contentEl).setName("Groq API Key").setDesc("Enter your Groq API key").addText((text) => {
       text.setPlaceholder("gsk_...").setValue(this.settings.groqApiKey);
       text.inputEl.type = "password";
       text.onChange(async (value) => {
@@ -71,7 +73,7 @@ class ModelHookupAccordion extends BaseAccordion {
         }
       });
     });
-    const deepgramSetting = new import_obsidian8.Setting(this.contentEl).setName("Deepgram API Key").setDesc("Enter your Deepgram API key").addText((text) => {
+    const deepgramSetting = new Setting(this.contentEl).setName("Deepgram API Key").setDesc("Enter your Deepgram API key").addText((text) => {
       text.setPlaceholder("Enter your Deepgram API key...").setValue(this.settings.deepgramApiKey);
       text.inputEl.type = "password";
       text.onChange(async (value) => {

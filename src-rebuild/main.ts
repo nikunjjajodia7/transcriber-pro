@@ -1,6 +1,22 @@
-var import_obsidian21 = require("obsidian");
+import { Events, MarkdownView, Notice, Plugin, TFile, normalizePath } from 'obsidian';
+import { CURRENT_SETTINGS_VERSION, DEFAULT_SETTINGS } from './settings/Settings';
+import { DeepgramAdapter } from './adapters/DeepgramAdapter';
+import { DocumentInserter } from './utils/document/DocumentInserter';
+import { FloatingButton } from './ui/FloatingButton';
+import { GroqAdapter } from './adapters/GroqAdapter';
+import { LocalQueueBackend } from './utils/queue/LocalQueueBackend';
+import { NeuroVoxSettingTab } from './settings/SettingTab';
+import { OpenAIAdapter } from './adapters/OpenAIAdapter';
+import { RecordingProcessor } from './utils/RecordingProcessor';
+import { RecoveryJobsModal } from './modals/RecoveryJobsModal';
+import { RuntimeLogger } from './utils/telemetry/RuntimeLogger';
+import { TimerModal } from './modals/TimerModal';
+import { VideoProcessor } from './utils/VideoProcessor';
+import { applySpeakerMappingToEntry, buildEntrySpeakerMappingSection, extractSpeakerLabels, hasEntrySpeakerMappingSection, hasSpeakerMappingSection } from './utils/document/SpeakerMapping';
+import { findEntryRegionAtPosition, findEntryRegions } from './utils/document/TranscriptionEntry';
+import { migrateAndNormalizeSettings } from './settings/migrations';
 
-class NeuroVoxPlugin extends import_obsidian21.Plugin {
+class NeuroVoxPlugin extends Plugin {
   static STARTUP_VALIDATION_TIMEOUT_MS = 4e3;
   static SPEAKER_AUTO_APPLY_DEBOUNCE_MS = 600;
 
@@ -10,7 +26,7 @@ class NeuroVoxPlugin extends import_obsidian21.Plugin {
     this.activeLeaf = null;
     this.settingTab = null;
     // Custom events emitter
-    this.events = new import_obsidian21.Events();
+    this.events = new Events();
     this.processingStatusEl = null;
     this.processingInterval = null;
     this.statusReconcileInterval = null;
@@ -41,7 +57,7 @@ class NeuroVoxPlugin extends import_obsidian21.Plugin {
       console.debug(`[NeuroVox][Startup] critical startup complete in ${elapsed}ms`);
       this.startDeferredStartupTasks();
     } catch (error) {
-      new import_obsidian21.Notice("Failed to initialize NeuroVox plugin");
+      new Notice("Failed to initialize NeuroVox plugin");
     }
   }
   /**
@@ -51,7 +67,7 @@ class NeuroVoxPlugin extends import_obsidian21.Plugin {
     this.events.on("floating-button-setting-changed", (isEnabled) => {
       this.cleanupUI();
       if (isEnabled) {
-        const activeView = this.app.workspace.getActiveViewOfType(import_obsidian21.MarkdownView);
+        const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
         if (activeView == null ? void 0 : activeView.file) {
           this.createButtonForFile(activeView.file);
         }
@@ -69,16 +85,16 @@ class NeuroVoxPlugin extends import_obsidian21.Plugin {
       if (migration.migrated) {
         await this.persistSettingsBackup(migration.backupSource);
         await this.saveData(this.settings);
-        new import_obsidian21.Notice(
+        new Notice(
           `NeuroVox settings migrated to v${CURRENT_SETTINGS_VERSION} from v${migration.sourceVersion}.`
         );
       }
       if (migration.warnings.length > 0) {
-        new import_obsidian21.Notice("NeuroVox normalized invalid settings values.");
+        new Notice("NeuroVox normalized invalid settings values.");
       }
     } catch (error) {
       this.settings = { ...DEFAULT_SETTINGS };
-      new import_obsidian21.Notice("Failed to load NeuroVox settings. Using defaults.");
+      new Notice("Failed to load NeuroVox settings. Using defaults.");
     }
   }
   /**
@@ -98,7 +114,7 @@ class NeuroVoxPlugin extends import_obsidian21.Plugin {
         this.events.trigger("floating-button-setting-changed", this.settings.showFloatingButton);
       }
     } catch (error) {
-      new import_obsidian21.Notice("Failed to save NeuroVox settings");
+      new Notice("Failed to save NeuroVox settings");
     }
   }
   async validateApiKeys(showInvalidNotices = true) {
@@ -119,13 +135,13 @@ class NeuroVoxPlugin extends import_obsidian21.Plugin {
         await this.validateAdapterWithTimeout(deepgramAdapter);
       }
       if (showInvalidNotices && openaiAdapter && !openaiAdapter.isReady() && this.settings.openaiApiKey) {
-        new import_obsidian21.Notice("\u274C OpenAI API key validation failed");
+        new Notice("\u274C OpenAI API key validation failed");
       }
       if (showInvalidNotices && groqAdapter && !groqAdapter.isReady() && this.settings.groqApiKey) {
-        new import_obsidian21.Notice("\u274C Groq API key validation failed");
+        new Notice("\u274C Groq API key validation failed");
       }
       if (showInvalidNotices && deepgramAdapter && !deepgramAdapter.isReady() && this.settings.deepgramApiKey) {
-        new import_obsidian21.Notice("\u274C Deepgram API key validation failed");
+        new Notice("\u274C Deepgram API key validation failed");
       }
     } catch (error) {
     }
@@ -150,7 +166,7 @@ class NeuroVoxPlugin extends import_obsidian21.Plugin {
       id: "start-recording",
       name: "Start recording",
       checkCallback: (checking) => {
-        const activeView = this.app.workspace.getActiveViewOfType(import_obsidian21.MarkdownView);
+        const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
         if (!(activeView == null ? void 0 : activeView.file))
           return false;
         if (checking)
@@ -165,10 +181,10 @@ class NeuroVoxPlugin extends import_obsidian21.Plugin {
       callback: async () => {
         const activeFile = this.app.workspace.getActiveFile();
         if (!activeFile || !this.isValidAudioFile(activeFile)) {
-          new import_obsidian21.Notice("\u274C Active file is not a valid audio file");
+          new Notice("\u274C Active file is not a valid audio file");
           return;
         }
-        new import_obsidian21.Notice(`\u{1F3B5} Transcribing: ${activeFile.path}`);
+        new Notice(`\u{1F3B5} Transcribing: ${activeFile.path}`);
         await this.processExistingAudioFile(activeFile);
       }
     });
@@ -201,7 +217,7 @@ class NeuroVoxPlugin extends import_obsidian21.Plugin {
           const queue = new LocalQueueBackend(this);
           const jobs = await queue.getSnapshot();
           if (jobs.length === 0) {
-            new import_obsidian21.Notice("NeuroVox queue is empty.");
+            new Notice("NeuroVox queue is empty.");
             return;
           }
           const counts = jobs.reduce((acc, j) => {
@@ -218,14 +234,14 @@ class NeuroVoxPlugin extends import_obsidian21.Plugin {
             `completed=${counts.completed || 0}`,
             `canceled=${counts.canceled || 0}`
           ].join(" | ");
-          new import_obsidian21.Notice(`NeuroVox queue: ${summary}`, 12e3);
+          new Notice(`NeuroVox queue: ${summary}`, 12e3);
           const top = jobs.slice(0, 3).map((j) => `${j.id} ${j.status} attempts=${j.attemptCount}`);
           if (top.length > 0) {
-            new import_obsidian21.Notice(`Recent jobs:
+            new Notice(`Recent jobs:
 ${top.join("\n")}`, 12e3);
           }
         } catch (error) {
-          new import_obsidian21.Notice("Failed to inspect NeuroVox queue.");
+          new Notice("Failed to inspect NeuroVox queue.");
         }
       }
     });
@@ -236,14 +252,14 @@ ${top.join("\n")}`, 12e3);
         try {
           const pending = await this.recordingProcessor.getIncompleteJobs();
           if (pending.length === 0) {
-            new import_obsidian21.Notice("NeuroVox has no incomplete jobs to cancel.");
+            new Notice("NeuroVox has no incomplete jobs to cancel.");
             return;
           }
           await Promise.all(pending.map((job) => this.recordingProcessor.cancelJob(job.jobId)));
           await this.reconcileProcessingStatusFromJobs();
-          new import_obsidian21.Notice(`NeuroVox canceled ${pending.length} incomplete job(s).`);
+          new Notice(`NeuroVox canceled ${pending.length} incomplete job(s).`);
         } catch (error) {
-          new import_obsidian21.Notice("Failed to cancel incomplete NeuroVox jobs.");
+          new Notice("Failed to cancel incomplete NeuroVox jobs.");
         }
       }
     });
@@ -254,7 +270,7 @@ ${top.join("\n")}`, 12e3);
         try {
           await this.openRecoveryJobsModal();
         } catch (e) {
-          new import_obsidian21.Notice("NeuroVox recovery review failed.");
+          new Notice("NeuroVox recovery review failed.");
         }
       }
     });
@@ -264,34 +280,34 @@ ${top.join("\n")}`, 12e3);
       callback: async () => {
         try {
           if (this.settings.transcriptionProvider !== "deepgram" /* Deepgram */) {
-            new import_obsidian21.Notice("Set transcription provider to Deepgram before running diagnosis.");
+            new Notice("Set transcription provider to Deepgram before running diagnosis.");
             return;
           }
           const deepgram = this.aiAdapters.get("deepgram" /* Deepgram */);
           if (!(deepgram instanceof DeepgramAdapter)) {
-            new import_obsidian21.Notice("Deepgram adapter is not available.");
+            new Notice("Deepgram adapter is not available.");
             return;
           }
           if (!deepgram.getApiKey()) {
-            new import_obsidian21.Notice("Deepgram API key is not configured.");
+            new Notice("Deepgram API key is not configured.");
             return;
           }
-          const activeView = this.app.workspace.getActiveViewOfType(import_obsidian21.MarkdownView);
+          const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
           const activeFile = activeView == null ? void 0 : activeView.file;
           if (!activeFile) {
-            new import_obsidian21.Notice("Open a transcript note with source metadata first.");
+            new Notice("Open a transcript note with source metadata first.");
             return;
           }
           const content = await this.app.vault.read(activeFile);
           const sourcePath = this.resolveSourcePathFromNote(content);
           if (!sourcePath) {
-            new import_obsidian21.Notice("No source path found in this note.");
+            new Notice("No source path found in this note.");
             return;
           }
           const adapter = this.app.vault.adapter;
-          const normalizedSource = (0, import_obsidian21.normalizePath)(sourcePath);
+          const normalizedSource = (0, normalizePath)(sourcePath);
           if (!await adapter.exists(normalizedSource)) {
-            new import_obsidian21.Notice(`Source audio file not found: ${normalizedSource}`);
+            new Notice(`Source audio file not found: ${normalizedSource}`);
             return;
           }
           const binary = await adapter.readBinary(normalizedSource);
@@ -305,10 +321,10 @@ ${top.join("\n")}`, 12e3);
             diagnosis,
             normalizedSource
           );
-          new import_obsidian21.Notice(`Deepgram diagnosis saved: ${reportPath}`, 1e4);
+          new Notice(`Deepgram diagnosis saved: ${reportPath}`, 1e4);
         } catch (error) {
           const message = error instanceof Error ? error.message : String(error);
-          new import_obsidian21.Notice(`Deepgram diagnosis failed: ${message}`, 1e4);
+          new Notice(`Deepgram diagnosis failed: ${message}`, 1e4);
         }
       }
     });
@@ -345,35 +361,35 @@ ${top.join("\n")}`, 12e3);
     return validExtensions.includes(file.extension.toLowerCase());
   }
   isFileWithinFolder(filePath, folderPath) {
-    const normalizedFilePath = (0, import_obsidian21.normalizePath)(filePath);
-    const normalizedFolder = (0, import_obsidian21.normalizePath)(folderPath).replace(/\/+$/, "");
+    const normalizedFilePath = (0, normalizePath)(filePath);
+    const normalizedFolder = (0, normalizePath)(folderPath).replace(/\/+$/, "");
     if (!normalizedFolder)
       return false;
     return normalizedFilePath.startsWith(`${normalizedFolder}/`);
   }
   async transcribeLatestIphoneInboxRecording() {
     try {
-      const inboxFolder = (0, import_obsidian21.normalizePath)(
+      const inboxFolder = (0, normalizePath)(
         (this.settings.iphoneInboxFolderPath || "Recordings/Inbox").trim()
       );
       const adapter = this.app.vault.adapter;
       if (!await adapter.exists(inboxFolder)) {
-        new import_obsidian21.Notice(`iPhone inbox folder not found: ${inboxFolder}`);
+        new Notice(`iPhone inbox folder not found: ${inboxFolder}`);
         return;
       }
       const candidates = this.app.vault.getFiles().filter(
         (file) => this.isSupportedInboxAudioFile(file) && this.isFileWithinFolder(file.path, inboxFolder)
       ).sort((a, b) => b.stat.mtime - a.stat.mtime);
       if (candidates.length === 0) {
-        new import_obsidian21.Notice(`No audio files found in iPhone inbox: ${inboxFolder}`);
+        new Notice(`No audio files found in iPhone inbox: ${inboxFolder}`);
         return;
       }
       const latestFile = candidates[0];
-      new import_obsidian21.Notice(`\u{1F3B5} Transcribing latest inbox file: ${latestFile.name}`);
+      new Notice(`\u{1F3B5} Transcribing latest inbox file: ${latestFile.name}`);
       await this.processExistingAudioFile(latestFile);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      new import_obsidian21.Notice(`Failed to transcribe latest iPhone inbox recording: ${message}`);
+      new Notice(`Failed to transcribe latest iPhone inbox recording: ${message}`);
     }
   }
   isValidVideoFile(file) {
@@ -414,7 +430,7 @@ ${top.join("\n")}`, 12e3);
       const baseFileName = `${transcriptsFolder}/${timestamp}-${sanitizedName}.md`;
       let newFileName = baseFileName;
       let count = 1;
-      const normalizedPath = (0, import_obsidian21.normalizePath)(transcriptsFolder);
+      const normalizedPath = (0, normalizePath)(transcriptsFolder);
       if (!await this.app.vault.adapter.exists(normalizedPath)) {
         await this.app.vault.createFolder(normalizedPath);
       }
@@ -433,17 +449,17 @@ ${top.join("\n")}`, 12e3);
       const blob = new Blob([audioBuffer], {
         type: this.getAudioMimeType(file.extension)
       });
-      new import_obsidian21.Notice("\u{1F399}\uFE0F Processing audio file...");
+      new Notice("\u{1F399}\uFE0F Processing audio file...");
       await this.recordingProcessor.processRecording(
         blob,
         newFile,
         { line: initialContent.split("\n").length, ch: 0 },
         file.path
       );
-      new import_obsidian21.Notice("\u2728 Transcription completed successfully!");
+      new Notice("\u2728 Transcription completed successfully!");
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
-      new import_obsidian21.Notice(`\u274C ${errorMessage}`);
+      new Notice(`\u274C ${errorMessage}`);
       return;
     }
   }
@@ -452,7 +468,7 @@ ${top.join("\n")}`, 12e3);
       const videoProcessor = await VideoProcessor.getInstance(this);
       await videoProcessor.processVideo(file);
     } catch (error) {
-      new import_obsidian21.Notice("\u274C Failed to process video file");
+      new Notice("\u274C Failed to process video file");
       throw error;
     }
   }
@@ -633,7 +649,7 @@ ${top.join("\n")}`, 12e3);
   seekNearestAudioFromToken(tokenEl, targetSeconds) {
     const audio = this.findNearestAudioElement(tokenEl);
     if (!audio) {
-      new import_obsidian21.Notice("No audio player found in this note.");
+      new Notice("No audio player found in this note.");
       return;
     }
     try {
@@ -644,7 +660,7 @@ ${top.join("\n")}`, 12e3);
         });
       }
     } catch (e) {
-      new import_obsidian21.Notice("Could not seek audio for this timestamp.");
+      new Notice("Could not seek audio for this timestamp.");
     }
   }
   findNearestAudioElement(tokenEl) {
@@ -679,13 +695,13 @@ ${top.join("\n")}`, 12e3);
       button.remove();
     }
     this.buttonMap.clear();
-    if (this.settings.showFloatingButton && (leaf == null ? void 0 : leaf.view) instanceof import_obsidian21.MarkdownView && leaf.view.file) {
+    if (this.settings.showFloatingButton && (leaf == null ? void 0 : leaf.view) instanceof MarkdownView && leaf.view.file) {
       this.createButtonForFile(leaf.view.file);
     }
   }
   handleLayoutChange() {
     if (this.settings.showFloatingButton) {
-      const activeView = this.app.workspace.getActiveViewOfType(import_obsidian21.MarkdownView);
+      const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
       if (activeView == null ? void 0 : activeView.file) {
         const button = this.buttonMap.get(activeView.file.path);
         if (button) {
@@ -697,7 +713,7 @@ ${top.join("\n")}`, 12e3);
     }
   }
   handleFileDelete(file) {
-    if (file instanceof import_obsidian21.TFile) {
+    if (file instanceof TFile) {
       const button = this.buttonMap.get(file.path);
       if (button) {
         button.remove();
@@ -727,14 +743,14 @@ ${top.join("\n")}`, 12e3);
   }
   handleRecordingStart() {
     var _a;
-    const activeView = this.app.workspace.getActiveViewOfType(import_obsidian21.MarkdownView);
+    const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
     if (!activeView) {
-      new import_obsidian21.Notice("\u274C No active note found to insert transcription.");
+      new Notice("\u274C No active note found to insert transcription.");
       return;
     }
     const activeFile = activeView.file;
     if (!activeFile) {
-      new import_obsidian21.Notice("\u274C No active file found.");
+      new Notice("\u274C No active file found.");
       return;
     }
     const insertionPosition = activeView.editor.getCursor();
@@ -766,7 +782,7 @@ ${top.join("\n")}`, 12e3);
           }
         } catch (error) {
           const errorMessage = error instanceof Error ? error.message : "Unknown error";
-          new import_obsidian21.Notice(`\u274C Failed to process recording: ${errorMessage}`);
+          new Notice(`\u274C Failed to process recording: ${errorMessage}`);
         }
       };
       const originalOnClose = (_a = this.modalInstance.onClose) == null ? void 0 : _a.bind(this.modalInstance);
@@ -842,19 +858,19 @@ ${top.join("\n")}`, 12e3);
       await RuntimeLogger.prune(this);
       await this.cleanupStaleLivePreviewInVault();
     } catch (e) {
-      new import_obsidian21.Notice("NeuroVox startup maintenance skipped due to storage error.");
+      new Notice("NeuroVox startup maintenance skipped due to storage error.");
     }
     try {
       const pending = await this.recordingProcessor.getIncompleteJobs();
       if (pending.length > 0) {
-        new import_obsidian21.Notice(
+        new Notice(
           `NeuroVox found ${pending.length} incomplete job(s). Use command: Review recovery jobs.`,
           12e3
         );
       }
       await this.reconcileProcessingStatusFromJobs();
     } catch (e) {
-      new import_obsidian21.Notice("NeuroVox recovery scan failed at startup.");
+      new Notice("NeuroVox recovery scan failed at startup.");
     } finally {
       const elapsed = Math.round(performance.now() - startedAt);
       console.debug(`[NeuroVox][Startup] deferred maintenance+recovery finished in ${elapsed}ms`);
@@ -878,7 +894,7 @@ ${top.join("\n")}`, 12e3);
       }
     }
     if (removedBlocks > 0) {
-      new import_obsidian21.Notice(
+      new Notice(
         `NeuroVox cleaned ${removedBlocks} stale live preview block(s) across ${cleanedNotes} note(s).`,
         8e3
       );
@@ -888,7 +904,7 @@ ${top.join("\n")}`, 12e3);
     try {
       const pending = await this.recordingProcessor.getIncompleteJobs();
       if (pending.length === 0) {
-        new import_obsidian21.Notice("NeuroVox has no incomplete jobs.");
+        new Notice("NeuroVox has no incomplete jobs.");
         return;
       }
       const ordered = [...pending].sort((a, b) => a.updatedAt < b.updatedAt ? 1 : -1);
@@ -896,7 +912,7 @@ ${top.join("\n")}`, 12e3);
       const action = await modal.chooseAction();
       await this.executeRecoveryAction(action, ordered);
     } catch (error) {
-      new import_obsidian21.Notice("NeuroVox recovery scan failed at startup.");
+      new Notice("NeuroVox recovery scan failed at startup.");
     }
   }
   async executeRecoveryAction(action, ordered) {
@@ -905,7 +921,7 @@ ${top.join("\n")}`, 12e3);
       if (!newest)
         return;
       const resumed = await this.recordingProcessor.resumeJob(newest.jobId);
-      new import_obsidian21.Notice(
+      new Notice(
         resumed ? "NeuroVox resumed the newest incomplete transcript from checkpoint." : "NeuroVox could not resume the newest job automatically."
       );
       return;
@@ -913,12 +929,12 @@ ${top.join("\n")}`, 12e3);
     if (action.type === "cancel_all") {
       await Promise.all(ordered.map((job) => this.recordingProcessor.cancelJob(job.jobId)));
       await this.reconcileProcessingStatusFromJobs();
-      new import_obsidian21.Notice("NeuroVox canceled all incomplete transcription jobs.");
+      new Notice("NeuroVox canceled all incomplete transcription jobs.");
       return;
     }
     if (action.type === "resume") {
       const resumed = await this.recordingProcessor.resumeJob(action.jobId);
-      new import_obsidian21.Notice(
+      new Notice(
         resumed ? "NeuroVox resumed the selected incomplete transcript from checkpoint." : "NeuroVox could not resume this job automatically."
       );
       return;
@@ -926,7 +942,7 @@ ${top.join("\n")}`, 12e3);
     if (action.type === "cancel") {
       await this.recordingProcessor.cancelJob(action.jobId);
       await this.reconcileProcessingStatusFromJobs();
-      new import_obsidian21.Notice("NeuroVox canceled the selected incomplete transcription job.");
+      new Notice("NeuroVox canceled the selected incomplete transcription job.");
     }
   }
   async validateAdapterWithTimeout(adapter) {
@@ -965,7 +981,7 @@ ${top.join("\n")}`, 12e3);
       const backupPath = `${baseDir}/settings-backup-${stamp}.json`;
       await adapter.write(backupPath, JSON.stringify(source, null, 2));
     } catch (error) {
-      new import_obsidian21.Notice("NeuroVox could not write settings backup before migration.");
+      new Notice("NeuroVox could not write settings backup before migration.");
     }
   }
   setProcessingStatus(message) {
@@ -1031,36 +1047,36 @@ ${top.join("\n")}`, 12e3);
   }
   async applySpeakerNamesFromMappingInActiveNote() {
     var _a;
-    const activeView = this.app.workspace.getActiveViewOfType(import_obsidian21.MarkdownView);
+    const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
     const activeFile = activeView == null ? void 0 : activeView.file;
-    if (!(activeFile instanceof import_obsidian21.TFile) || !activeView || activeFile.extension.toLowerCase() !== "md") {
-      new import_obsidian21.Notice("Open a transcript markdown note first.");
+    if (!(activeFile instanceof TFile) || !activeView || activeFile.extension.toLowerCase() !== "md") {
+      new Notice("Open a transcript markdown note first.");
       return;
     }
     try {
       const content = await this.app.vault.read(activeFile);
       const region = findEntryRegionAtPosition(content, activeView.editor.getCursor());
       if (!region || !((_a = region.meta) == null ? void 0 : _a.id)) {
-        new import_obsidian21.Notice("No scoped transcription entry mapping found at cursor.");
+        new Notice("No scoped transcription entry mapping found at cursor.");
         return;
       }
       const result = applySpeakerMappingToEntry(content, region.meta.id, region.start, region.end);
       if (result.mappedSpeakers === 0) {
-        new import_obsidian21.Notice("No speaker names found in the Speaker Mapping section.");
+        new Notice("No speaker names found in the Speaker Mapping section.");
         return;
       }
       if (result.replacedCount === 0) {
-        new import_obsidian21.Notice("No matching speaker labels found in this entry body. Ensure lines use speaker labels (e.g., Speaker 1:).");
+        new Notice("No matching speaker labels found in this entry body. Ensure lines use speaker labels (e.g., Speaker 1:).");
         return;
       }
       await this.app.vault.modify(activeFile, result.updatedContent);
-      new import_obsidian21.Notice(`Applied ${result.replacedCount} speaker label replacement(s).`);
+      new Notice(`Applied ${result.replacedCount} speaker label replacement(s).`);
     } catch (e) {
-      new import_obsidian21.Notice("Failed to apply speaker names from mapping.");
+      new Notice("Failed to apply speaker names from mapping.");
     }
   }
   handleNoteModifyForSpeakerAutoApply(file) {
-    if (!(file instanceof import_obsidian21.TFile) || file.extension.toLowerCase() !== "md") {
+    if (!(file instanceof TFile) || file.extension.toLowerCase() !== "md") {
       return;
     }
     if (this.speakerAutoApplyInFlight.has(file.path)) {
@@ -1081,7 +1097,7 @@ ${top.join("\n")}`, 12e3);
     if (this.speakerAutoApplyInFlight.has(path))
       return;
     const abstract = this.app.vault.getAbstractFileByPath(path);
-    if (!(abstract instanceof import_obsidian21.TFile) || abstract.extension.toLowerCase() !== "md")
+    if (!(abstract instanceof TFile) || abstract.extension.toLowerCase() !== "md")
       return;
     this.speakerAutoApplyInFlight.add(path);
     try {
@@ -1124,27 +1140,27 @@ ${top.join("\n")}`, 12e3);
   }
   async generateSpeakerMappingForActiveNote() {
     var _a;
-    const activeView = this.app.workspace.getActiveViewOfType(import_obsidian21.MarkdownView);
+    const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
     const activeFile = activeView == null ? void 0 : activeView.file;
-    if (!(activeFile instanceof import_obsidian21.TFile) || !activeView || activeFile.extension.toLowerCase() !== "md") {
-      new import_obsidian21.Notice("Open a transcript markdown note first.");
+    if (!(activeFile instanceof TFile) || !activeView || activeFile.extension.toLowerCase() !== "md") {
+      new Notice("Open a transcript markdown note first.");
       return;
     }
     try {
       const content = await this.app.vault.read(activeFile);
       const region = findEntryRegionAtPosition(content, activeView.editor.getCursor());
       if (!region || !((_a = region.meta) == null ? void 0 : _a.id)) {
-        new import_obsidian21.Notice("No transcription entry found at cursor.");
+        new Notice("No transcription entry found at cursor.");
         return;
       }
       const entryContent = content.slice(region.start, region.end);
       if (hasEntrySpeakerMappingSection(entryContent, region.meta.id)) {
-        new import_obsidian21.Notice("Speaker Mapping section already exists in this transcription.");
+        new Notice("Speaker Mapping section already exists in this transcription.");
         return;
       }
       const labels = extractSpeakerLabels(entryContent);
       if (labels.length === 0) {
-        new import_obsidian21.Notice("No diarized speaker labels found in this transcription.");
+        new Notice("No diarized speaker labels found in this transcription.");
         return;
       }
       const section = buildEntrySpeakerMappingSection(labels, region.meta.id).trimEnd();
@@ -1154,23 +1170,23 @@ ${top.join("\n")}`, 12e3);
 `;
       const calloutHeaderMatch = /(>\[![^\]]+\][^\n]*)(\n|$)/.exec(entryContent);
       if (!calloutHeaderMatch || calloutHeaderMatch.index === void 0) {
-        new import_obsidian21.Notice("Could not find transcription callout in this entry.");
+        new Notice("Could not find transcription callout in this entry.");
         return;
       }
       const insertOffsetInEntry = calloutHeaderMatch.index + calloutHeaderMatch[0].length;
       const insertOffset = region.start + insertOffsetInEntry;
       const updated = `${content.slice(0, insertOffset)}${injection}${content.slice(insertOffset)}`;
       await this.app.vault.modify(activeFile, updated);
-      new import_obsidian21.Notice(`Speaker Mapping created for ${labels.length} speaker(s).`);
+      new Notice(`Speaker Mapping created for ${labels.length} speaker(s).`);
     } catch (e) {
-      new import_obsidian21.Notice("Failed to generate Speaker Mapping for this note.");
+      new Notice("Failed to generate Speaker Mapping for this note.");
     }
   }
   async renameCurrentTranscriptionEntry() {
-    const activeView = this.app.workspace.getActiveViewOfType(import_obsidian21.MarkdownView);
+    const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
     const activeFile = activeView == null ? void 0 : activeView.file;
-    if (!(activeFile instanceof import_obsidian21.TFile) || !activeView || activeFile.extension.toLowerCase() !== "md") {
-      new import_obsidian21.Notice("Open a transcript markdown note first.");
+    if (!(activeFile instanceof TFile) || !activeView || activeFile.extension.toLowerCase() !== "md") {
+      new Notice("Open a transcript markdown note first.");
       return;
     }
     const newTitleRaw = window.prompt("Enter transcription title");
@@ -1178,27 +1194,27 @@ ${top.join("\n")}`, 12e3);
       return;
     const newTitle = newTitleRaw.trim();
     if (!newTitle) {
-      new import_obsidian21.Notice("Title cannot be empty.");
+      new Notice("Title cannot be empty.");
       return;
     }
     try {
       const content = await this.app.vault.read(activeFile);
       const region = findEntryRegionAtPosition(content, activeView.editor.getCursor());
       if (!region) {
-        new import_obsidian21.Notice("No transcription entry found at cursor.");
+        new Notice("No transcription entry found at cursor.");
         return;
       }
       const entry = content.slice(region.start, region.end);
       const updatedEntry = this.updateEntryTitle(entry, newTitle);
       if (updatedEntry === entry) {
-        new import_obsidian21.Notice("Could not update this transcription entry title.");
+        new Notice("Could not update this transcription entry title.");
         return;
       }
       const updated = `${content.slice(0, region.start)}${updatedEntry}${content.slice(region.end)}`;
       await this.app.vault.modify(activeFile, updated);
-      new import_obsidian21.Notice("Transcription entry title updated.");
+      new Notice("Transcription entry title updated.");
     } catch (e) {
-      new import_obsidian21.Notice("Failed to rename transcription entry.");
+      new Notice("Failed to rename transcription entry.");
     }
   }
   updateEntryTitle(entryContent, title) {
@@ -1252,12 +1268,12 @@ ${top.join("\n")}`, 12e3);
   }
   async writeDeepgramDiagnosticReport(diagnosis, sourcePath) {
     const adapter = this.app.vault.adapter;
-    const baseDir = (0, import_obsidian21.normalizePath)("neurovox/diagnostics");
+    const baseDir = (0, normalizePath)("neurovox/diagnostics");
     if (!await adapter.exists(baseDir)) {
       await adapter.mkdir(baseDir);
     }
     const stamp = new Date().toISOString().replace(/[:.]/g, "-");
-    const filePath = (0, import_obsidian21.normalizePath)(`${baseDir}/deepgram-diagnosis-${stamp}.md`);
+    const filePath = (0, normalizePath)(`${baseDir}/deepgram-diagnosis-${stamp}.md`);
     const body = [
       "---",
       `date: ${new Date().toISOString()}`,

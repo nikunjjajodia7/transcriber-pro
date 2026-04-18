@@ -1,4 +1,4 @@
-class ButtonPositionManager {
+export class ButtonPositionManager {
   constructor(containerEl, buttonEl, activeContainer, buttonSize, margin, onPositionChange, onDragEnd, onClick) {
     this.containerEl = containerEl;
     this.buttonEl = buttonEl;

@@ -1,5 +1,8 @@
-var import_obsidian10 = require("obsidian");
-class PostProcessingAccordion extends BaseAccordion {
+import { Setting } from 'obsidian';
+import { AIModels, getModelInfo } from '../../adapters/AIAdapter';
+import { BaseAccordion } from './BaseAccordion';
+
+export class PostProcessingAccordion extends BaseAccordion {
   constructor(containerEl, settings, getAdapter, plugin) {
     super(
       containerEl,
@@ -37,7 +40,7 @@ class PostProcessingAccordion extends BaseAccordion {
     this.addTemperatureControl();
   }
   addEnableToggle() {
-    new import_obsidian10.Setting(this.contentEl).setName("Enable AI Post-Processing").setDesc("Automatically generate AI post-processing after transcription").addToggle((toggle) => {
+    new Setting(this.contentEl).setName("Enable AI Post-Processing").setDesc("Automatically generate AI post-processing after transcription").addToggle((toggle) => {
       toggle.setValue(this.settings.generatePostProcessing).onChange(async (value) => {
         this.settings.generatePostProcessing = value;
         await this.plugin.saveSettings();
@@ -48,7 +51,7 @@ class PostProcessingAccordion extends BaseAccordion {
     if (this.modelSetting) {
       this.modelSetting.settingEl.remove();
     }
-    this.modelSetting = new import_obsidian10.Setting(this.contentEl).setName("Post-processing model").setDesc("Select the AI model for post-processing").addDropdown((dropdown) => {
+    this.modelSetting = new Setting(this.contentEl).setName("Post-processing model").setDesc("Select the AI model for post-processing").addDropdown((dropdown) => {
       this.modelDropdown = dropdown;
       this.setupModelDropdown(dropdown);
       dropdown.onChange(async (value) => {
@@ -107,7 +110,7 @@ class PostProcessingAccordion extends BaseAccordion {
     await this.plugin.saveSettings();
   }
   addPromptTemplate() {
-    new import_obsidian10.Setting(this.contentEl).setName("Post-processing template").setDesc("Customize the prompt used for generating summaries. Use {transcript} as a placeholder for the transcribed text.").addTextArea((text) => {
+    new Setting(this.contentEl).setName("Post-processing template").setDesc("Customize the prompt used for generating summaries. Use {transcript} as a placeholder for the transcribed text.").addTextArea((text) => {
       this.promptArea = text;
       text.setPlaceholder("Please process the following transcript: {transcript}").setValue(this.settings.postProcessingPrompt).onChange(async (value) => {
         this.settings.postProcessingPrompt = value;
@@ -118,7 +121,7 @@ class PostProcessingAccordion extends BaseAccordion {
     });
   }
   addSummaryFormat() {
-    new import_obsidian10.Setting(this.contentEl).setName("Post-processing format").setDesc("Customize the post-processing callout format. Use {postProcessing} for the generated content").addTextArea((text) => {
+    new Setting(this.contentEl).setName("Post-processing format").setDesc("Customize the post-processing callout format. Use {postProcessing} for the generated content").addTextArea((text) => {
       text.setPlaceholder(">[!note]- Post-Processing\n>{postProcessing}").setValue(this.settings.postProcessingCalloutFormat).onChange(async (value) => {
         this.settings.postProcessingCalloutFormat = value;
         await this.plugin.saveSettings();
@@ -128,7 +131,7 @@ class PostProcessingAccordion extends BaseAccordion {
     });
   }
   addMaxTokens() {
-    new import_obsidian10.Setting(this.contentEl).setName("Maximum post-processing length").setDesc("Set the maximum number of tokens for the post-processing output").addSlider((slider) => {
+    new Setting(this.contentEl).setName("Maximum post-processing length").setDesc("Set the maximum number of tokens for the post-processing output").addSlider((slider) => {
       this.maxTokensSlider = slider;
       slider.setLimits(100, 4096, 100).setValue(this.settings.postProcessingMaxTokens).setDynamicTooltip().onChange(async (value) => {
         this.settings.postProcessingMaxTokens = value;
@@ -137,7 +140,7 @@ class PostProcessingAccordion extends BaseAccordion {
     });
   }
   addTemperatureControl() {
-    new import_obsidian10.Setting(this.contentEl).setName("Post-processing creativity").setDesc("Adjust the creativity level of the post-processing (0 = more focused, 1 = more creative)").addSlider((slider) => {
+    new Setting(this.contentEl).setName("Post-processing creativity").setDesc("Adjust the creativity level of the post-processing (0 = more focused, 1 = more creative)").addSlider((slider) => {
       this.temperatureSlider = slider;
       slider.setLimits(0, 1, 0.1).setValue(this.settings.postProcessingTemperature).setDynamicTooltip().onChange(async (value) => {
         this.settings.postProcessingTemperature = value;

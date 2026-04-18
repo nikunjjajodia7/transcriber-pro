@@ -1,4 +1,4 @@
-function toRomanIfNeeded(text, enabled) {
+export function toRomanIfNeeded(text, enabled) {
   if (!enabled)
     return text;
   if (!/[\u0900-\u097F]/.test(text))

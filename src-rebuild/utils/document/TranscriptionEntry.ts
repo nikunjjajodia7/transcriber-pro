@@ -1,6 +1,6 @@
 var ENTRY_MARKER_REGEX = /<!--\s*neurovox:entry:([^\n]*?)\s*-->/g;
 var ENTRY_META_REGEX = /<!--\s*neurovox:entry-meta:({[\s\S]*?})\s*-->/;
-function createEntryMeta(title) {
+export function createEntryMeta(title) {
   const recordedAtIso = new Date().toISOString();
   return {
     id: `entry_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`,
@@ -8,11 +8,11 @@ function createEntryMeta(title) {
     recordedAtIso
   };
 }
-function buildEntryMarkerComment(meta, hash) {
+export function buildEntryMarkerComment(meta, hash) {
   const compactPayload = `id=${meta.id};hash=${hash}`;
   return `<!-- neurovox:entry:${compactPayload} -->`;
 }
-function findEntryRegions(noteContent) {
+export function findEntryRegions(noteContent) {
   const markers = Array.from(noteContent.matchAll(ENTRY_MARKER_REGEX));
   if (markers.length === 0)
     return [];
@@ -132,7 +132,7 @@ function parseCompactMarkerPayload(payloadRaw) {
     recordedAtIso: kv.get("recordedAtIso")
   };
 }
-function findEntryRegionAtPosition(noteContent, position) {
+export function findEntryRegionAtPosition(noteContent, position) {
   const entries = findEntryRegions(noteContent);
   if (entries.length === 0)
     return null;

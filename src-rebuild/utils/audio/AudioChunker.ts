@@ -1,4 +1,4 @@
-class AudioChunker {
+export class AudioChunker {
   constructor(sampleRate, bitRate, mimeType = "audio/webm; codecs=opus") {
     this.sampleRate = sampleRate;
     this.bitRate = bitRate;

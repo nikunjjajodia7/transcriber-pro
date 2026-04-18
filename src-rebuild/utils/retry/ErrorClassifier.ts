@@ -1,4 +1,4 @@
-function classifyError(error) {
+export function classifyError(error) {
   const message = toMessage(error);
   if (includesAny(message, [
     "unauthorized",

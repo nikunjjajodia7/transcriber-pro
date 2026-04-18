@@ -1,4 +1,6 @@
-class TranscriptRenderer {
+import { flattenTranscriptText } from './TranscriptSchema';
+
+export class TranscriptRenderer {
   constructor(config) {
     this.config = config;
   }

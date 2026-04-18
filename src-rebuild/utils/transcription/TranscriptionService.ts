@@ -1,4 +1,4 @@
-class TranscriptionService {
+export class TranscriptionService {
   static ADAPTER_VALIDATION_TIMEOUT_MS = 4e3;
 
   constructor(plugin) {

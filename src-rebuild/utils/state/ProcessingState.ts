@@ -1,4 +1,4 @@
-class ProcessingState {
+export class ProcessingState {
   constructor() {
     this.isProcessing = false;
     this.currentStep = null;

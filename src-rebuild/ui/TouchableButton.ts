@@ -1,5 +1,6 @@
-var import_obsidian13 = require("obsidian");
-class TouchableButton extends import_obsidian13.ButtonComponent {
+import { ButtonComponent, setIcon } from 'obsidian';
+
+export class TouchableButton extends ButtonComponent {
   constructor(options) {
     super(options.container);
     this.isProcessingAction = false;
@@ -10,7 +11,7 @@ class TouchableButton extends import_obsidian13.ButtonComponent {
   setupButton(options) {
     this.setButtonText(options.text);
     if (options.icon) {
-      (0, import_obsidian13.setIcon)(this.buttonEl, options.icon);
+      (0, setIcon)(this.buttonEl, options.icon);
     }
     if (options.classes) {
       options.classes.forEach((cls) => this.buttonEl.addClass(cls));

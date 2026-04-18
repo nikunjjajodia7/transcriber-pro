@@ -1,4 +1,6 @@
-class UploadBottomSheet {
+import { setIcon } from 'obsidian';
+
+export class UploadBottomSheet {
   constructor(options) {
     this.plugin = options.plugin;
     this.saveAudioOn = options.saveAudioOn;
@@ -45,7 +47,7 @@ class UploadBottomSheet {
     picker.classList.add("neurovox-upload-sheet__picker");
     const pickerIcon = document.createElement("div");
     pickerIcon.classList.add("neurovox-upload-sheet__picker-icon");
-    (0, import_obsidian16.setIcon)(pickerIcon, "upload");
+    (0, setIcon)(pickerIcon, "upload");
     picker.appendChild(pickerIcon);
     const pickerText = document.createElement("div");
     pickerText.classList.add("neurovox-upload-sheet__picker-text");
@@ -58,7 +60,7 @@ class UploadBottomSheet {
     this.fileCardEl.classList.add("neurovox-upload-sheet__file-card");
     const fileIcon = document.createElement("div");
     fileIcon.classList.add("neurovox-upload-sheet__file-icon");
-    (0, import_obsidian16.setIcon)(fileIcon, "music");
+    (0, setIcon)(fileIcon, "music");
     this.fileCardEl.appendChild(fileIcon);
     const fileInfo = document.createElement("div");
     fileInfo.classList.add("neurovox-upload-sheet__file-info");
@@ -71,7 +73,7 @@ class UploadBottomSheet {
     this.fileCardEl.appendChild(fileInfo);
     const fileCheck = document.createElement("div");
     fileCheck.classList.add("neurovox-upload-sheet__file-check");
-    (0, import_obsidian16.setIcon)(fileCheck, "check-circle");
+    (0, setIcon)(fileCheck, "check-circle");
     this.fileCardEl.appendChild(fileCheck);
     this.sheetEl.appendChild(this.fileCardEl);
     // "Choose a different file" link
@@ -88,7 +90,7 @@ class UploadBottomSheet {
     saveRowLeft.classList.add("neurovox-upload-sheet__save-row-left");
     const saveIcon = document.createElement("div");
     saveIcon.classList.add("neurovox-upload-sheet__save-icon");
-    (0, import_obsidian16.setIcon)(saveIcon, "save");
+    (0, setIcon)(saveIcon, "save");
     saveRowLeft.appendChild(saveIcon);
     const saveLabel = document.createElement("span");
     saveLabel.classList.add("neurovox-upload-sheet__save-label");
@@ -108,7 +110,7 @@ class UploadBottomSheet {
     this.ctaEl = document.createElement("button");
     this.ctaEl.classList.add("neurovox-upload-sheet__cta");
     const sparklesIcon = document.createElement("span");
-    (0, import_obsidian16.setIcon)(sparklesIcon, "sparkles");
+    (0, setIcon)(sparklesIcon, "sparkles");
     this.ctaEl.appendChild(sparklesIcon);
     const ctaText = document.createElement("span");
     ctaText.textContent = "Transcribe";

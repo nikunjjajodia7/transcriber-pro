@@ -1,5 +1,6 @@
-var import_obsidian7 = require("obsidian");
-class BaseAccordion {
+import { Setting, setIcon } from 'obsidian';
+
+export class BaseAccordion {
   constructor(containerEl, title, description = "") {
     this.isOpen = false;
     this.containerEl = containerEl;
@@ -25,11 +26,11 @@ class BaseAccordion {
   }
   updateToggleIcon() {
     this.toggleIcon.empty();
-    (0, import_obsidian7.setIcon)(this.toggleIcon, "chevron-right");
+    (0, setIcon)(this.toggleIcon, "chevron-right");
     this.toggleIcon.classList.toggle("neurovox-accordion-icon-open", this.isOpen);
   }
   createSettingItem(name, desc) {
-    const setting = new import_obsidian7.Setting(this.contentEl);
+    const setting = new Setting(this.contentEl);
     setting.setName(name).setDesc(desc);
     return setting;
   }

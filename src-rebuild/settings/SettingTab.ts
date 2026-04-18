@@ -1,6 +1,9 @@
-var import_obsidian11 = require("obsidian");
+import { PluginSettingTab } from 'obsidian';
+import { ModelHookupAccordion } from './accordions/ModelHookupAccordion';
+import { PostProcessingAccordion } from './accordions/PostProcessingAccordion';
+import { RecordingAccordion } from './accordions/RecordingAccordion';
 
-class NeuroVoxSettingTab extends import_obsidian11.PluginSettingTab {
+export class NeuroVoxSettingTab extends PluginSettingTab {
   constructor(app, plugin) {
     super(app, plugin);
     this.recordingAccordion = null;

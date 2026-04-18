@@ -1,4 +1,7 @@
-class AudioRecordingManager {
+import RecordRTC from 'recordrtc';
+import { DeviceDetection } from './DeviceDetection';
+
+export class AudioRecordingManager {
   constructor(plugin) {
     this.plugin = plugin;
     this.recorder = null;
@@ -53,7 +56,7 @@ class AudioRecordingManager {
     return {
       type: "audio",
       mimeType: "audio/webm",
-      recorderType: import_recordrtc.default.StereoAudioRecorder,
+      recorderType: RecordRTC.StereoAudioRecorder,
       numberOfAudioChannels: 1,
       desiredSampRate: sampleRates[quality] || sampleRates["medium" /* Medium */],
       // Add bitrate control for better compression
@@ -85,7 +88,7 @@ class AudioRecordingManager {
     const config = {
       ...this.getAudioConfig(),
       // MediaStreamRecorder emits timeslice/final chunks more reliably for streaming mode.
-      recorderType: (options == null ? void 0 : options.timeSlice) ? import_recordrtc.default.MediaStreamRecorder : import_recordrtc.default.StereoAudioRecorder,
+      recorderType: (options == null ? void 0 : options.timeSlice) ? RecordRTC.MediaStreamRecorder : RecordRTC.StereoAudioRecorder,
       mimeType: streamingMimeType || this.getAudioConfig().mimeType,
       timeSlice: options == null ? void 0 : options.timeSlice,
       // RecordRTC uses ondataavailable callback for time-sliced recording
@@ -100,7 +103,7 @@ class AudioRecordingManager {
         await task;
       } : void 0
     };
-    this.recorder = new import_recordrtc.default(this.stream, config);
+    this.recorder = new RecordRTC(this.stream, config);
     this.recorder.startRecording();
   }
   getPreferredStreamingMimeType() {

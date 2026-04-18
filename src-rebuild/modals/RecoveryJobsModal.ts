@@ -1,5 +1,6 @@
-var import_obsidian19 = require("obsidian");
-class RecoveryJobsModal extends import_obsidian19.Modal {
+import { Modal } from 'obsidian';
+
+export class RecoveryJobsModal extends Modal {
   constructor(app, jobs) {
     super(app);
     this.jobs = jobs;

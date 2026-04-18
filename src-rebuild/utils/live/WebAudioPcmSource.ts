@@ -1,4 +1,4 @@
-class WebAudioPcmSource {
+export class WebAudioPcmSource {
   constructor(stream, options) {
     this.stream = stream;
     this.audioContext = null;

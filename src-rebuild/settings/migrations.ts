@@ -1,4 +1,7 @@
-function migrateAndNormalizeSettings(data) {
+import { AIProvider } from '../adapters/AIAdapter';
+import { AudioQuality, CURRENT_SETTINGS_VERSION, DEFAULT_SETTINGS } from './Settings';
+
+export function migrateAndNormalizeSettings(data) {
   const raw = isRecord(data) ? data : {};
   const sourceVersion = getSourceVersion(raw);
   const warnings = [];

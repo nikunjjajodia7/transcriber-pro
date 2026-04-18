@@ -1,5 +1,11 @@
-var import_obsidian17 = require("obsidian");
-class TimerModal extends import_obsidian17.Modal {
+import { Modal, Notice, Platform } from 'obsidian';
+import { AudioRecordingManager } from '../utils/RecordingManager';
+import { DeviceDetection } from '../utils/DeviceDetection';
+import { DocumentInserter } from '../utils/document/DocumentInserter';
+import { RecordingUI } from '../ui/RecordingUI';
+import { StreamingTranscriptionService } from '../utils/transcription/StreamingTranscriptionService';
+
+export class TimerModal extends Modal {
   static RECORDER_STOP_TIMEOUT_MS = 12e3;
 
   constructor(plugin, targetFile, insertionPosition) {
@@ -144,13 +150,13 @@ class TimerModal extends import_obsidian17.Modal {
    * Detects if current device is mobile using Obsidian's Platform API
    */
   isMobileDevice() {
-    return import_obsidian17.Platform.isMobile;
+    return Platform.isMobile;
   }
   /**
    * Detects if current device is iOS using Obsidian's Platform API
    */
   isIOSDevice() {
-    return import_obsidian17.Platform.isIosApp || import_obsidian17.Platform.isMobile && /iPhone|iPad|iPod/i.test(navigator.userAgent);
+    return Platform.isIosApp || Platform.isMobile && /iPhone|iPad|iPod/i.test(navigator.userAgent);
   }
   /**
    * Starts or resumes recording with progressive chunk processing
@@ -173,7 +179,7 @@ class TimerModal extends import_obsidian17.Modal {
             this.plugin,
             {
               onMemoryWarning: (usage) => {
-                new import_obsidian17.Notice(`Memory usage high: ${Math.round(usage)}%`);
+                new Notice(`Memory usage high: ${Math.round(usage)}%`);
               },
               onChunkCommitted: async (_chunkText, _metadata, partialResult) => {
                 if (!this.plugin.settings.showLiveChunkPreviewInNote)
@@ -207,9 +213,9 @@ class TimerModal extends import_obsidian17.Modal {
       this.pausedByBackpressure = false;
       if (this.interruptedByLifecycle) {
         this.interruptedByLifecycle = false;
-        new import_obsidian17.Notice("Recording resumed after app interruption");
+        new Notice("Recording resumed after app interruption");
       }
-      new import_obsidian17.Notice("Recording started");
+      new Notice("Recording started");
     } catch (error) {
       this.handleError("Failed to start recording", error);
     }
@@ -240,7 +246,7 @@ class TimerModal extends import_obsidian17.Modal {
       this.pauseTimer();
       this.currentState = "paused";
       this.ui.updateState(this.currentState);
-      new import_obsidian17.Notice(reasonMessage || "Recording paused");
+      new Notice(reasonMessage || "Recording paused");
     } catch (error) {
       this.handleError("Failed to pause recording", error);
     }
@@ -262,7 +268,7 @@ class TimerModal extends import_obsidian17.Modal {
       }
       let result;
       if (this.useStreaming && this.streamingService) {
-        new import_obsidian17.Notice("Finishing transcription...");
+        new Notice("Finishing transcription...");
         result = await this.streamingService.finishProcessing();
         this.streamingService = null;
         if (!result || result.trim().length === 0) {
@@ -322,7 +328,7 @@ class TimerModal extends import_obsidian17.Modal {
       this.updateTimerDisplay();
       if (Number.isFinite(this.CONFIG.maxDuration) && this.seconds >= this.CONFIG.maxDuration) {
         void this.handleStop();
-        new import_obsidian17.Notice("Maximum recording duration reached");
+        new Notice("Maximum recording duration reached");
       }
     }, this.CONFIG.updateInterval);
   }
@@ -355,7 +361,7 @@ class TimerModal extends import_obsidian17.Modal {
         this.updateTimerDisplay();
         if (Number.isFinite(this.CONFIG.maxDuration) && this.seconds >= this.CONFIG.maxDuration) {
           void this.handleStop();
-          new import_obsidian17.Notice("Maximum recording duration reached");
+          new Notice("Maximum recording duration reached");
         }
       }, this.CONFIG.updateInterval);
     }
@@ -457,7 +463,7 @@ class TimerModal extends import_obsidian17.Modal {
       return;
     this.interruptedByLifecycle = true;
     this.pauseRecording();
-    new import_obsidian17.Notice("Recording paused due to app interruption. Resume when back.");
+    new Notice("Recording paused due to app interruption. Resume when back.");
   }
   startBackpressureMonitor() {
     if (this.backpressureMonitorId !== null)
@@ -484,7 +490,7 @@ class TimerModal extends import_obsidian17.Modal {
    */
   handleError(message, error) {
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
-    new import_obsidian17.Notice(`${message}: ${errorMessage}`);
+    new Notice(`${message}: ${errorMessage}`);
     this.cleanup();
     void this.requestClose();
   }

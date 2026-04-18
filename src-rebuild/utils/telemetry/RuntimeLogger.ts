@@ -1,4 +1,4 @@
-class RuntimeLogger {
+export class RuntimeLogger {
   static LOG_DIR = ".obsidian/plugins/neurovox/logs";
   static LOG_FILE = ".obsidian/plugins/neurovox/logs/latest.jsonl";
   static MAX_BYTES_DEFAULT = 10 * 1024 * 1024;

@@ -1,4 +1,4 @@
-class BatchRoutingPolicy {
+export class BatchRoutingPolicy {
   constructor(settings) {
     this.settings = settings;
   }

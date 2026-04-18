@@ -1,6 +1,15 @@
-var import_obsidian12 = require("obsidian");
+import { MarkdownView } from 'obsidian';
+import { ChunkQueue } from '../audio/ChunkQueue';
+import { DeepgramLiveAdapter } from '../live/DeepgramLiveAdapter';
+import { DeviceDetection } from '../DeviceDetection';
+import { JobStore } from '../recovery/JobStore';
+import { ResultCompiler } from './ResultCompiler';
+import { RuntimeLogger } from '../telemetry/RuntimeLogger';
+import { TranscriptionService } from './TranscriptionService';
+import { WebAudioPcmSource } from '../live/WebAudioPcmSource';
+import { toRomanIfNeeded } from '../text/Romanization';
 
-class StreamingTranscriptionService {
+export class StreamingTranscriptionService {
   static CHUNK_MAX_RETRIES = 2;
   static CHUNK_RETRY_DELAY_MS = 1e3;
   static FINALIZE_TIMEOUT_MS = 12 * 60 * 1e3;
@@ -433,7 +442,7 @@ class StreamingTranscriptionService {
   async ensureRecoveryJob() {
     if (this.recoveryJobInitialized)
       return;
-    const activeView = this.plugin.app.workspace.getActiveViewOfType(import_obsidian12.MarkdownView);
+    const activeView = this.plugin.app.workspace.getActiveViewOfType(MarkdownView);
     const activeFile = activeView == null ? void 0 : activeView.file;
     if (!activeFile)
       return;

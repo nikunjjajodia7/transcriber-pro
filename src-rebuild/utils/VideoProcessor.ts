@@ -1,6 +1,9 @@
-var import_obsidian6 = require("obsidian");
+import { Notice } from 'obsidian';
+import { FFmpeg } from '@ffmpeg/ffmpeg';
+import { fetchFile, toBlobURL } from '@ffmpeg/util';
+import { RecordingProcessor } from './RecordingProcessor';
 
-class VideoProcessor {
+export class VideoProcessor {
   static instance = null;
 
   constructor(plugin) {
@@ -28,7 +31,7 @@ class VideoProcessor {
     }
     try {
       this.isProcessing = true;
-      new import_obsidian6.Notice("\u{1F3A5} Starting video processing...");
+      new Notice("\u{1F3A5} Starting video processing...");
       const transcriptFile = await this.createTranscriptFile(file);
       const audioBuffer = await this.extractAudioFromVideo(file);
       const recordingProcessor = RecordingProcessor.getInstance(this.plugin);
@@ -39,11 +42,11 @@ class VideoProcessor {
         { line: 0, ch: 0 },
         file.path
       );
-      new import_obsidian6.Notice("\u2728 Video transcription completed");
+      new Notice("\u2728 Video transcription completed");
       await this.plugin.app.workspace.getLeaf().openFile(transcriptFile);
     } catch (error) {
       const message = error instanceof Error ? error.message : "Unknown error occurred";
-      new import_obsidian6.Notice("\u274C Video processing failed: " + message);
+      new Notice("\u274C Video processing failed: " + message);
       throw error;
     } finally {
       this.isProcessing = false;
@@ -68,7 +71,7 @@ class VideoProcessor {
     return this.plugin.app.vault.create(filePath, "");
   }
   async extractAudioFromVideo(file) {
-    new import_obsidian6.Notice("\u{1F3B5} Extracting audio from video...");
+    new Notice("\u{1F3B5} Extracting audio from video...");
     try {
       const videoData = await this.plugin.app.vault.readBinary(file);
       const videoBlob = new Blob([videoData], { type: this.getVideoMimeType(file.extension) });

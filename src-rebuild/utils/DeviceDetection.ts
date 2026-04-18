@@ -1,4 +1,4 @@
-class DeviceDetection {
+export class DeviceDetection {
   constructor() {
     this.availableMemory = null;
     this.isMobileDevice = this.detectMobile();

@@ -1,4 +1,4 @@
-function fromPlainTranscription(transcription) {
+export function fromPlainTranscription(transcription) {
   return {
     segments: [
       {
@@ -9,7 +9,7 @@ function fromPlainTranscription(transcription) {
     ]
   };
 }
-function flattenTranscriptText(transcript, includeTimestamps = false) {
+export function flattenTranscriptText(transcript, includeTimestamps = false) {
   const lines = transcript.segments.map((segment) => {
     const text = segment.text.trim();
     if (!text)

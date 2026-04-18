@@ -1,4 +1,4 @@
-class ResultCompiler {
+export class ResultCompiler {
   constructor(startTimestamp) {
     this.segments = [];
     this.totalDuration = 0;

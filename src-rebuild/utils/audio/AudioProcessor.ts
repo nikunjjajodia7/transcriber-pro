@@ -1,4 +1,7 @@
-class AudioProcessor {
+import { AudioChunker } from './AudioChunker';
+import { AudioFileManager } from './AudioFileManager';
+
+export class AudioProcessor {
   constructor(plugin) {
     this.plugin = plugin;
     // Maximum audio size before skipping chunking (25MB)

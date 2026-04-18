@@ -1,11 +1,12 @@
-var import_obsidian2 = require("obsidian");
-var AIProvider = /* @__PURE__ */ ((AIProvider2) => {
+import { requestUrl } from 'obsidian';
+
+export var AIProvider = /* @__PURE__ */ ((AIProvider2) => {
   AIProvider2["OpenAI"] = "openai";
   AIProvider2["Groq"] = "groq";
   AIProvider2["Deepgram"] = "deepgram";
   return AIProvider2;
 })(AIProvider || {});
-var AIModels = {
+export var AIModels = {
   ["openai" /* OpenAI */]: [
     { id: "whisper-1", name: "Whisper", category: "transcription" },
     { id: "gpt-4o-mini-transcribe", name: "GPT-4o Mini Transcribe", category: "transcription" },
@@ -33,7 +34,7 @@ var AIModels = {
     { id: "nova-3", name: "Nova-3", category: "transcription" }
   ]
 };
-function getModelInfo(modelId) {
+export function getModelInfo(modelId) {
   for (const models of Object.values(AIModels)) {
     const model = models.find((m) => m.id === modelId);
     if (model)
@@ -41,7 +42,7 @@ function getModelInfo(modelId) {
   }
   return void 0;
 }
-class AIAdapter {
+export class AIAdapter {
   static DEFAULT_REQUEST_TIMEOUT_MS = 3e4;
 
   constructor(settings, provider) {
@@ -149,7 +150,7 @@ class AIAdapter {
         "Authorization": `Bearer ${this.getApiKey()}`,
         ...headers
       };
-      const requestPromise = (0, import_obsidian2.requestUrl)({
+      const requestPromise = (0, requestUrl)({
         url: endpoint,
         method,
         headers: requestHeaders,

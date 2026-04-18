@@ -1,4 +1,6 @@
-class OpenAIAdapter extends AIAdapter {
+import { AIAdapter } from './AIAdapter';
+
+export class OpenAIAdapter extends AIAdapter {
   constructor(settings) {
     super(settings, "openai" /* OpenAI */);
     this.apiKey = "";

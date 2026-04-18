@@ -1,5 +1,6 @@
-var import_obsidian = require("obsidian");
-async function ensureDirectoryExists(app, folderPath) {
+import { TFolder } from 'obsidian';
+
+export async function ensureDirectoryExists(app, folderPath) {
   const normalizedPath = folderPath.replace(/^\/+|\/+$/g, "");
   if (!normalizedPath) {
     return "";
@@ -11,13 +12,13 @@ async function ensureDirectoryExists(app, folderPath) {
     const folder = app.vault.getAbstractFileByPath(currentPath);
     if (!folder) {
       await app.vault.createFolder(currentPath);
-    } else if (!(folder instanceof import_obsidian.TFolder)) {
+    } else if (!(folder instanceof TFolder)) {
       throw new Error(`Path "${currentPath}" exists but is not a folder`);
     }
   }
   return normalizedPath;
 }
-async function saveAudioFile(app, audioBlob, fileName, settings) {
+export async function saveAudioFile(app, audioBlob, fileName, settings) {
   const folderPath = settings.recordingFolderPath || "";
   const normalizedFolder = await ensureDirectoryExists(app, folderPath);
   const filePath = normalizedFolder ? `${normalizedFolder}/${fileName}` : fileName;
