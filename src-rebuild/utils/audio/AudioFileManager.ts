@@ -1,7 +1,8 @@
 import { ensureDirectoryExists, saveAudioFile } from '../FileUtils';
 
 export class AudioFileManager {
-  constructor(plugin) {
+  plugin: any;
+  constructor(plugin: any) {
     this.plugin = plugin;
   }
   /**
@@ -9,7 +10,7 @@ export class AudioFileManager {
    * @param audioBlob The audio data to save
    * @returns Path to the saved audio file
    */
-  async saveAudioFile(audioBlob) {
+  async saveAudioFile(audioBlob: any) {
     const folderPath = this.plugin.settings.recordingFolderPath || "";
     await ensureDirectoryExists(this.plugin.app, folderPath);
     const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
@@ -42,7 +43,7 @@ export class AudioFileManager {
    * Removes temporary chunk files after processing is complete
    * @param paths Array of file paths to remove
    */
-  async removeTemporaryFiles(paths) {
+  async removeTemporaryFiles(paths: any) {
     for (const path of paths) {
       try {
         await this.plugin.app.vault.adapter.remove(path);

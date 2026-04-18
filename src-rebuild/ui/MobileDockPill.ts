@@ -6,7 +6,41 @@ import { StreamingTranscriptionService } from '../utils/transcription/StreamingT
 import { UploadBottomSheet } from './UploadBottomSheet';
 
 export class MobileDockPill {
-  constructor(plugin) {
+  plugin: any;
+  state: any;
+  containerEl: any;
+  pillEl: any;
+  contentEl: any;
+  idleIconEl: any;
+  expandedEl: any;
+  recordingEl: any;
+  finalizingEl: any;
+  timerEl: any;
+  pauseBtnEl: any;
+  saveBtnEl: any;
+  timerSeconds: any;
+  timerId: any;
+  dockTrackingRafId: any;
+  lastDockBottom: any;
+  dockEl: any;
+  isDisposed: any;
+  recordingManager: any;
+  streamingService: any;
+  documentInserter: any;
+  livePreviewMarkerId: any;
+  livePreviewWriteChain: any;
+  liveAudioCaptureActive: any;
+  activeFile: any;
+  cursorPosition: any;
+  onStateChange: any;
+  onDispose: any;
+  uploadSheet: any;
+  overlayObserver: any;
+  deviceDetection: any;
+  saveAudioOn: any;
+  useStreaming: any;
+  overlayCheckPending: any;
+  constructor(plugin: any) {
     this.plugin = plugin;
     this.state = "idle";
     this.containerEl = null;
@@ -54,7 +88,7 @@ export class MobileDockPill {
     // Idle icon
     this.idleIconEl = document.createElement("div");
     this.idleIconEl.classList.add("neurovox-dock-pill__idle-icon");
-    (0, setIcon)(this.idleIconEl, "mic");
+    setIcon(this.idleIconEl, "mic");
     this.contentEl.appendChild(this.idleIconEl);
     // Expanded section
     this.expandedEl = document.createElement("div");
@@ -64,7 +98,7 @@ export class MobileDockPill {
     this.expandedEl.appendChild(uploadBtn);
     this.saveBtnEl = this.makeIconBtn("save", "neurovox-dock-pill__icon neurovox-dock-pill__save");
     if (this.saveAudioOn) this.saveBtnEl.classList.add("active");
-    this.saveBtnEl.addEventListener("click", (e) => { e.stopPropagation(); this.handleSaveTap(); });
+    this.saveBtnEl.addEventListener("click", (e: any) => { e.stopPropagation(); this.handleSaveTap(); });
     this.expandedEl.appendChild(this.saveBtnEl);
     const micBtn = this.makeIconBtn("mic", "neurovox-dock-pill__icon neurovox-dock-pill__mic");
     micBtn.addEventListener("click", (e) => { e.stopPropagation(); this.handleMicTap(); });
@@ -84,11 +118,11 @@ export class MobileDockPill {
     this.timerEl.textContent = "0:00";
     this.recordingEl.appendChild(this.timerEl);
     this.pauseBtnEl = this.makeIconBtn("pause", "neurovox-dock-pill__pause-btn");
-    this.pauseBtnEl.addEventListener("click", (e) => { e.stopPropagation(); this.handlePauseTap(); });
+    this.pauseBtnEl.addEventListener("click", (e: any) => { e.stopPropagation(); this.handlePauseTap(); });
     this.recordingEl.appendChild(this.pauseBtnEl);
     const stopBtn = document.createElement("div");
     stopBtn.classList.add("neurovox-dock-pill__stop-btn");
-    (0, setIcon)(stopBtn, "square");
+    setIcon(stopBtn, "square");
     stopBtn.addEventListener("click", (e) => { e.stopPropagation(); this.handleStopTap(); });
     this.recordingEl.appendChild(stopBtn);
     const closeBtn2 = this.makeIconBtn("x", "neurovox-dock-pill__icon neurovox-dock-pill__close");
@@ -100,7 +134,7 @@ export class MobileDockPill {
     this.finalizingEl.classList.add("neurovox-dock-pill__finalizing");
     const loaderIcon = document.createElement("div");
     loaderIcon.classList.add("neurovox-dock-pill__loader-icon");
-    (0, setIcon)(loaderIcon, "loader");
+    setIcon(loaderIcon, "loader");
     this.finalizingEl.appendChild(loaderIcon);
     const statusText = document.createElement("span");
     statusText.classList.add("neurovox-dock-pill__status-text");
@@ -115,11 +149,11 @@ export class MobileDockPill {
     // Pill tap (for idle state)
     this.pillEl.addEventListener("click", () => { this.handlePillTap(); });
   }
-  makeIconBtn(iconName, cls) {
+  makeIconBtn(iconName: any, cls: any) {
     const btn = document.createElement("div");
     btn.classList.add("clickable-icon");
-    cls.split(" ").forEach((c) => btn.classList.add(c));
-    (0, setIcon)(btn, iconName);
+    cls.split(" ").forEach((c: any) => btn.classList.add(c));
+    setIcon(btn, iconName);
     return btn;
   }
   handlePillTap() {
@@ -139,7 +173,7 @@ export class MobileDockPill {
     this.uploadSheet = new UploadBottomSheet({
       plugin: this.plugin,
       saveAudioOn: this.saveAudioOn,
-      onTranscribe: (file, saveAudio) => {
+      onTranscribe: (file: any, saveAudio: any) => {
         this.saveAudioOn = saveAudio;
         this.plugin.settings.saveLiveRecordingAudio = saveAudio;
         void this.plugin.saveSettings({ refreshUi: false, triggerFloatingRefresh: false }).catch(() => {});
@@ -152,7 +186,7 @@ export class MobileDockPill {
     });
     this.uploadSheet.open();
   }
-  async processUploadedFile(file) {
+  async processUploadedFile(file: any) {
     try {
       this.setState("finalizing");
       const blob = new Blob([await file.arrayBuffer()], { type: file.type || "audio/wav" });
@@ -195,10 +229,10 @@ export class MobileDockPill {
       }
       if (this.useStreaming && !this.streamingService) {
         this.streamingService = new StreamingTranscriptionService(this.plugin, {
-          onMemoryWarning: (usage) => {
+          onMemoryWarning: (usage: any) => {
             new Notice(`Memory usage high: ${Math.round(usage)}%`);
           },
-          onChunkCommitted: async (_chunkText, _metadata, partialResult) => {
+          onChunkCommitted: async (_chunkText: any, _metadata: any, partialResult: any) => {
             if (!this.plugin.settings.showLiveChunkPreviewInNote) return;
             await this.enqueueLivePreviewUpdate(partialResult);
           }
@@ -237,7 +271,7 @@ export class MobileDockPill {
         }
         this.startTimer();
         this.setState("recording");
-        (0, setIcon)(this.pauseBtnEl, "pause");
+        setIcon(this.pauseBtnEl, "pause");
       } else {
         if (this.useStreaming && this.streamingService) {
           this.streamingService.pauseLive();
@@ -247,7 +281,7 @@ export class MobileDockPill {
         }
         this.stopTimer();
         this.setState("paused");
-        (0, setIcon)(this.pauseBtnEl, "play");
+        setIcon(this.pauseBtnEl, "play");
       }
     } catch (error) {
       this.handleFailure("Failed to pause/resume", error);
@@ -344,10 +378,10 @@ export class MobileDockPill {
       this.documentInserter = null;
     }
     if (this.pauseBtnEl) {
-      (0, setIcon)(this.pauseBtnEl, "pause");
+      setIcon(this.pauseBtnEl, "pause");
     }
   }
-  setState(state) {
+  setState(state: any) {
     var _a;
     this.state = state;
     if (this.pillEl) {
@@ -372,12 +406,12 @@ export class MobileDockPill {
     if (!this.timerEl) return;
     this.timerEl.textContent = this.formatTimer(this.timerSeconds);
   }
-  formatTimer(seconds) {
+  formatTimer(seconds: any) {
     const m = Math.floor(seconds / 60);
     const s = (seconds % 60).toString().padStart(2, "0");
     return `${m}:${s}`;
   }
-  async enqueueLivePreviewUpdate(partialResult) {
+  async enqueueLivePreviewUpdate(partialResult: any) {
     const markerId = this.livePreviewMarkerId;
     if (!markerId || !this.documentInserter) return;
     this.livePreviewWriteChain = this.livePreviewWriteChain.then(async () => {
@@ -385,7 +419,7 @@ export class MobileDockPill {
     }).catch(() => {});
     await this.livePreviewWriteChain;
   }
-  async clearLivePreviewBlock(markerIdOverride) {
+  async clearLivePreviewBlock(markerIdOverride: any) {
     const markerId = markerIdOverride != null ? markerIdOverride : this.livePreviewMarkerId;
     if (!markerId || !this.documentInserter) return;
     await this.livePreviewWriteChain.catch(() => {});
@@ -393,13 +427,13 @@ export class MobileDockPill {
       await this.documentInserter.removeLiveTranscriptionBlock(this.activeFile, markerId);
     } catch (e) {}
   }
-  handleFailure(message, error) {
+  handleFailure(message: any, error: any) {
     const detail = error instanceof Error ? error.message : String(error);
     new Notice(`${message}: ${detail}`);
     this.resetRecordingState();
     this.setState("idle");
   }
-  attachTo(viewContent) {
+  attachTo(viewContent: any) {
     if (!this.containerEl) return;
     if (this.containerEl.parentNode !== document.body) {
       document.body.appendChild(this.containerEl);

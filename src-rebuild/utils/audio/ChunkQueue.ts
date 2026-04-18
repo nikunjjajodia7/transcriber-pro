@@ -1,7 +1,18 @@
 import { DeviceDetection } from '../DeviceDetection';
 
 export class ChunkQueue {
-  constructor(maxQueueSize, memoryLimit, onMemoryWarning) {
+  queue: any;
+  currentMemoryUsage: any;
+  processingCount: any;
+  paused: any;
+  lastRejectReason: any;
+  HIGH_WATERMARK: any;
+  LOW_WATERMARK: any;
+  deviceDetection: any;
+  maxQueueSize: any;
+  memoryLimit: any;
+  onMemoryWarning: any;
+  constructor(maxQueueSize: any, memoryLimit: any, onMemoryWarning: any) {
     this.queue = [];
     // in bytes
     this.currentMemoryUsage = 0;
@@ -16,7 +27,7 @@ export class ChunkQueue {
     this.memoryLimit = (memoryLimit || options.memoryLimit) * 1024 * 1024;
     this.onMemoryWarning = onMemoryWarning;
   }
-  async enqueue(chunk, metadata) {
+  async enqueue(chunk: any, metadata: any) {
     const rejectReason = this.getRejectReason(chunk.size);
     if (rejectReason) {
       this.lastRejectReason = rejectReason;
@@ -57,7 +68,7 @@ export class ChunkQueue {
   isPaused() {
     return this.paused;
   }
-  canAcceptChunk(chunkSize) {
+  canAcceptChunk(chunkSize: any) {
     return this.getRejectReason(chunkSize) === null;
   }
   getLastRejectReason() {
@@ -72,7 +83,7 @@ export class ChunkQueue {
       memoryPercent: this.getMemoryUsagePercent()
     };
   }
-  getRejectReason(chunkSize) {
+  getRejectReason(chunkSize: any) {
     if (this.queue.length >= this.maxQueueSize) {
       return "queue_full";
     }
@@ -100,7 +111,7 @@ export class ChunkQueue {
   getMemoryUsagePercent() {
     return this.currentMemoryUsage / this.memoryLimit * 100;
   }
-  setProcessing(count) {
+  setProcessing(count: any) {
     this.processingCount = count;
   }
   getProcessingCount() {

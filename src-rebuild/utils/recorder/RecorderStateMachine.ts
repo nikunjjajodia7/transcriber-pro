@@ -1,15 +1,15 @@
-export function canStartRecording(state) {
+export function canStartRecording(state: any) {
   return state === "ready";
 }
-export function canPauseToggle(state) {
+export function canPauseToggle(state: any) {
   return state === "recording" || state === "paused";
 }
-export function canStopRecording(state) {
+export function canStopRecording(state: any) {
   return state === "recording" || state === "paused";
 }
-export function canUploadAudio(state) {
+export function canUploadAudio(state: any) {
   return state === "ready";
 }
-export function canEditSaveAudio(state) {
+export function canEditSaveAudio(state: any) {
   return state === "ready";
 }

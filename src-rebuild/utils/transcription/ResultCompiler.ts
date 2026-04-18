@@ -1,18 +1,22 @@
 export class ResultCompiler {
-  constructor(startTimestamp) {
+  segments: any;
+  totalDuration: any;
+  durationOverrideMs: any;
+  startTimestamp: any;
+  constructor(startTimestamp?: any) {
     this.segments = [];
     this.totalDuration = 0;
     this.durationOverrideMs = null;
     this.startTimestamp = startTimestamp || Date.now();
   }
-  addSegment(chunk) {
+  addSegment(chunk: any) {
     const segment = {
       startTime: chunk.metadata.timestamp - this.startTimestamp,
       endTime: chunk.metadata.timestamp - this.startTimestamp + chunk.metadata.duration,
       text: chunk.transcript.trim(),
       chunkId: chunk.metadata.id
     };
-    const insertIndex = this.segments.findIndex((s) => s.startTime > segment.startTime);
+    const insertIndex = this.segments.findIndex((s: any) => s.startTime > segment.startTime);
     if (insertIndex === -1) {
       this.segments.push(segment);
     } else {
@@ -62,7 +66,7 @@ export class ResultCompiler {
       return result;
     }
   }
-  normalizeRepeatedSpeakerLabel(text, previousSpeakerLabel) {
+  normalizeRepeatedSpeakerLabel(text: any, previousSpeakerLabel: any) {
     const raw = (text || "").trim();
     if (!raw) {
       return { text: raw, nextSpeakerLabel: previousSpeakerLabel };
@@ -143,7 +147,7 @@ export class ResultCompiler {
       return `[${this.formatTime(turn.startTime)}] ${text}`;
     }).filter(Boolean).join("\n\n");
   }
-  extractSpeakerLabelAndBody(text) {
+  extractSpeakerLabelAndBody(text: any) {
     const match = /^(Speaker\s+\d+):\s*(.*)$/i.exec(text.trim());
     if (!match) {
       return { speakerLabel: null, body: text.trim() };
@@ -178,7 +182,7 @@ export class ResultCompiler {
     result += this.getPartialResult(includeTimestamps);
     return result;
   }
-  formatTime(milliseconds) {
+  formatTime(milliseconds: any) {
     const totalSeconds = Math.floor(milliseconds / 1e3);
     const hours = Math.floor(totalSeconds / 3600);
     const minutes = Math.floor(totalSeconds / 60);
@@ -195,7 +199,7 @@ export class ResultCompiler {
   getTotalDuration() {
     return this.totalDuration;
   }
-  setDurationOverride(milliseconds) {
+  setDurationOverride(milliseconds: any) {
     if (Number.isFinite(milliseconds) && milliseconds >= 0) {
       this.durationOverrideMs = Math.floor(milliseconds);
     }
@@ -206,10 +210,10 @@ export class ResultCompiler {
     this.durationOverrideMs = null;
   }
   // For error recovery - get unprocessed segments
-  getMissingSegments(processedChunkIds) {
+  getMissingSegments(processedChunkIds: any) {
     const allIndices = new Set(Array.from({ length: this.segments.length }, (_, i) => i));
     const processedIndices = new Set(
-      this.segments.map((seg, index) => processedChunkIds.has(seg.chunkId) ? index : -1).filter((index) => index !== -1)
+      this.segments.map((seg: any, index: any) => processedChunkIds.has(seg.chunkId) ? index : -1).filter((index: any) => index !== -1)
     );
     return Array.from(allIndices).filter((index) => !processedIndices.has(index));
   }

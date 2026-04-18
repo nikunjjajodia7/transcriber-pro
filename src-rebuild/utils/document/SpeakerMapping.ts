@@ -1,7 +1,7 @@
 var SPEAKER_MAPPING_HEADER = "## Speaker Mapping";
 var ENTRY_MAPPING_START_PREFIX = "<!-- neurovox:mapping:start:";
 var ENTRY_MAPPING_END_PREFIX = "<!-- neurovox:mapping:end:";
-export function extractSpeakerLabels(transcript) {
+export function extractSpeakerLabels(transcript: any) {
   const labelIds = /* @__PURE__ */ new Set();
   const timePrefix = "(?:(?:\\[[0-9]{2}:[0-9]{2}(?::[0-9]{2})?\\]|\\[\\[t=[0-9]{2}:[0-9]{2}(?::[0-9]{2})?\\]\\])\\s+)?";
   const regex = new RegExp(`(^|\\n)\\s*(?:>\\s*)*${timePrefix}Speaker\\s+(\\d+):`, "g");
@@ -13,24 +13,24 @@ export function extractSpeakerLabels(transcript) {
     }
     match = regex.exec(transcript);
   }
-  return Array.from(labelIds).sort((a, b) => a - b).map((id) => `Speaker ${id}`);
+  return Array.from(labelIds).sort((a: any, b: any) => a - b).map((id: any) => `Speaker ${id}`);
 }
-export function hasSpeakerMappingSection(noteContent) {
+export function hasSpeakerMappingSection(noteContent: any) {
   return /^\s*(?:>\s*)*(?:\[[0-9]{2}:[0-9]{2}(?::[0-9]{2})?\]\s+)?## Speaker Mapping\s*$/m.test(noteContent);
 }
-export function buildEntrySpeakerMappingSection(labels, entryId) {
+export function buildEntrySpeakerMappingSection(labels: any, entryId: any) {
   if (labels.length === 0)
     return "";
   const lines = [
     SPEAKER_MAPPING_HEADER,
     `${ENTRY_MAPPING_START_PREFIX}${entryId} -->`,
-    ...labels.map((label) => `- [ ] ${label}: `),
+    ...labels.map((label: any) => `- [ ] ${label}: `),
     `${ENTRY_MAPPING_END_PREFIX}${entryId} -->`
   ];
   return `${lines.join("\n")}
 `;
 }
-export function applySpeakerMappingToEntry(noteContent, entryId, entryStart, entryEnd) {
+export function applySpeakerMappingToEntry(noteContent: any, entryId: any, entryStart: any, entryEnd: any) {
   const entryContent = noteContent.slice(entryStart, entryEnd);
   const mappingRegion = findEntryMappingRegion(entryContent, entryId);
   if (!mappingRegion) {
@@ -55,10 +55,10 @@ export function applySpeakerMappingToEntry(noteContent, entryId, entryStart, ent
     mappedSpeakers: mapping.size
   };
 }
-export function hasEntrySpeakerMappingSection(entryContent, entryId) {
+export function hasEntrySpeakerMappingSection(entryContent: any, entryId: any) {
   return findEntryMappingRegion(entryContent, entryId) !== null;
 }
-function findEntryMappingRegion(entryContent, entryId) {
+function findEntryMappingRegion(entryContent: any, entryId: any) {
   const startMarker = `${ENTRY_MAPPING_START_PREFIX}${entryId} -->`;
   const endMarker = `${ENTRY_MAPPING_END_PREFIX}${entryId} -->`;
   const startRegex = new RegExp(`^\\s*(?:>\\s*)*${escapeForRegExp(startMarker)}\\s*$`, "m");
@@ -100,7 +100,7 @@ function findEntryMappingRegion(entryContent, entryId) {
     sectionContent: entryContent.slice(headerStart, end)
   };
 }
-function parseSpeakerNameMap(section) {
+function parseSpeakerNameMap(section: any) {
   const map = /* @__PURE__ */ new Map();
   const lines = section.split("\n");
   for (const line of lines) {
@@ -115,17 +115,17 @@ function parseSpeakerNameMap(section) {
   }
   return map;
 }
-function applyMapToText(text, mapping, inferredAliases) {
+function applyMapToText(text: any, mapping: any, inferredAliases: any) {
   let replaced = 0;
   let updated = text;
-  const entries = Array.from(mapping.entries()).sort((a, b) => b[0] - a[0]);
-  const applyLabel = (sourceLabel, targetName) => {
+  const entries: any[] = Array.from(mapping.entries()).sort((a: any, b: any) => b[0] - a[0]);
+  const applyLabel = (sourceLabel: any, targetName: any) => {
     const escapedSource = escapeForRegExp(sourceLabel);
     const pattern = new RegExp(
       `(^|\\n)(\\s*(?:>\\s*)*(?:(?:\\[[0-9]{2}:[0-9]{2}(?::[0-9]{2})?\\]|\\[\\[t=[0-9]{2}:[0-9]{2}(?::[0-9]{2})?\\]\\])\\s+)?)${escapedSource}\\s*:`,
       "gi"
     );
-    updated = updated.replace(pattern, (_match, p1, p2) => {
+    updated = updated.replace(pattern, (_match: any, p1: any, p2: any) => {
       replaced += 1;
       return `${p1}${p2}${targetName}:`;
     });
@@ -147,7 +147,7 @@ function applyMapToText(text, mapping, inferredAliases) {
   }
   return { text: updated, replaced };
 }
-function inferAliasesFromDiarizedLines(content, speakerIds) {
+function inferAliasesFromDiarizedLines(content: any, speakerIds: any) {
   const labelsInOrder = [];
   const seen = /* @__PURE__ */ new Set();
   const lineRegex = /(^|\n)\s*(?:>\s*)*(?:\[[0-9]{2}:[0-9]{2}(?::[0-9]{2})?\]|\[\[t=[0-9]{2}:[0-9]{2}(?::[0-9]{2})?\]\])\s+([^:\n]{1,80}):/g;
@@ -174,6 +174,6 @@ function inferAliasesFromDiarizedLines(content, speakerIds) {
   }
   return out;
 }
-function escapeForRegExp(value) {
+function escapeForRegExp(value: any) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }

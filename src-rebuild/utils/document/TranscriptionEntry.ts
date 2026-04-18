@@ -1,6 +1,6 @@
 var ENTRY_MARKER_REGEX = /<!--\s*neurovox:entry:([^\n]*?)\s*-->/g;
 var ENTRY_META_REGEX = /<!--\s*neurovox:entry-meta:({[\s\S]*?})\s*-->/;
-export function createEntryMeta(title) {
+export function createEntryMeta(title: any) {
   const recordedAtIso = new Date().toISOString();
   return {
     id: `entry_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`,
@@ -8,12 +8,12 @@ export function createEntryMeta(title) {
     recordedAtIso
   };
 }
-export function buildEntryMarkerComment(meta, hash) {
+export function buildEntryMarkerComment(meta: any, hash: any) {
   const compactPayload = `id=${meta.id};hash=${hash}`;
   return `<!-- neurovox:entry:${compactPayload} -->`;
 }
-export function findEntryRegions(noteContent) {
-  const markers = Array.from(noteContent.matchAll(ENTRY_MARKER_REGEX));
+export function findEntryRegions(noteContent: any) {
+  const markers: any[] = Array.from(noteContent.matchAll(ENTRY_MARKER_REGEX));
   if (markers.length === 0)
     return [];
   const starts = markers.map((match) => {
@@ -81,7 +81,7 @@ export function findEntryRegions(noteContent) {
     };
   });
 }
-function parseMetaFromMarkerPayload(payloadRaw) {
+function parseMetaFromMarkerPayload(payloadRaw: any) {
   if (!payloadRaw)
     return null;
   if (payloadRaw[0] !== "{") {
@@ -107,8 +107,8 @@ function parseMetaFromMarkerPayload(payloadRaw) {
     return null;
   }
 }
-function parseCompactMarkerPayload(payloadRaw) {
-  const pairs = payloadRaw.split(";").map((part) => part.trim()).filter(Boolean).map((part) => {
+function parseCompactMarkerPayload(payloadRaw: any) {
+  const pairs = payloadRaw.split(";").map((part: any) => part.trim()).filter(Boolean).map((part: any) => {
     const idx = part.indexOf("=");
     if (idx === -1)
       return null;
@@ -116,7 +116,7 @@ function parseCompactMarkerPayload(payloadRaw) {
       key: part.slice(0, idx).trim(),
       value: part.slice(idx + 1).trim()
     };
-  }).filter((item) => !!item);
+  }).filter((item: any) => !!item);
   if (pairs.length === 0)
     return null;
   const kv = /* @__PURE__ */ new Map();
@@ -132,7 +132,7 @@ function parseCompactMarkerPayload(payloadRaw) {
     recordedAtIso: kv.get("recordedAtIso")
   };
 }
-export function findEntryRegionAtPosition(noteContent, position) {
+export function findEntryRegionAtPosition(noteContent: any, position: any) {
   const entries = findEntryRegions(noteContent);
   if (entries.length === 0)
     return null;
@@ -142,7 +142,7 @@ export function findEntryRegionAtPosition(noteContent, position) {
     return matched;
   return entries[entries.length - 1];
 }
-function positionToOffset(content, position) {
+function positionToOffset(content: any, position: any) {
   var _a, _b, _c, _d;
   const lines = content.split("\n");
   const safeLine = Math.max(0, Math.min(position.line, Math.max(0, lines.length - 1)));

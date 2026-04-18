@@ -10,13 +10,47 @@ import { WebAudioPcmSource } from '../live/WebAudioPcmSource';
 import { toRomanIfNeeded } from '../text/Romanization';
 
 export class StreamingTranscriptionService {
+  plugin: any;
+  isProcessing: any;
+  acceptingChunks: any;
+  processedChunks: any;
+  abortController: any;
+  processingPromise: any;
+  recoveryJobInitialized: any;
+  failedChunks: any;
+  lastChunkError: any;
+  transportProfile: any;
+  consecutive400Errors: any;
+  liveAdapter: any;
+  liveAdapterStartPromise: any;
+  liveAudioSource: any;
+  liveStarted: any;
+  livePaused: any;
+  liveSegmentIndex: any;
+  liveSentChunkCount: any;
+  liveFatalError: any;
+  lastInterimText: any;
+  lastInterimTs: any;
+  lastCommittedText: any;
+  liveReconnectRequired: any;
+  bufferedLiveFinals: any;
+  deviceDetection: any;
+  chunkQueue: any;
+  resultCompiler: any;
+  transcriptionService: any;
+  callbacks: any;
+  logContext: any;
+  jobStore: any;
+  transportMode: any;
+  liveSessionStartTs: any;
+  lastInterimStartedAtSec: any;
   static CHUNK_MAX_RETRIES = 2;
   static CHUNK_RETRY_DELAY_MS = 1e3;
   static FINALIZE_TIMEOUT_MS = 12 * 60 * 1e3;
   static FOUR_HUNDRED_FALLBACK_THRESHOLD = 2;
   static LIVE_DIARIZATION_STABILIZATION_MS = 2500;
 
-  constructor(plugin, callbacks) {
+  constructor(plugin: any, callbacks: any) {
     this.plugin = plugin;
     this.isProcessing = false;
     this.acceptingChunks = true;
@@ -59,7 +93,7 @@ export class StreamingTranscriptionService {
       this.initializeLiveAdapter();
     }
   }
-  async startLiveSession(stream) {
+  async startLiveSession(stream: any) {
     if (this.transportMode !== "deepgram_ws")
       return;
     if (this.liveStarted)
@@ -78,7 +112,7 @@ export class StreamingTranscriptionService {
       forceRomanizedOutput: this.plugin.settings.forceRomanizedOutput,
       deepgramLiveDiarizationProfile: this.plugin.settings.deepgramLiveDiarizationProfile
     });
-    await this.liveAudioSource.start(async (frame) => {
+    await this.liveAudioSource.start(async (frame: any) => {
       var _a;
       if (!this.acceptingChunks || this.livePaused)
         return;
@@ -124,7 +158,7 @@ export class StreamingTranscriptionService {
     }
     (_b = this.liveAudioSource) == null ? void 0 : _b.resume();
   }
-  async addChunk(chunk, metadata) {
+  async addChunk(chunk: any, metadata: any) {
     if (!this.acceptingChunks) {
       await RuntimeLogger.log(this.plugin, this.logContext, "chunk_fail", {
         status: "rejected",
@@ -197,7 +231,7 @@ export class StreamingTranscriptionService {
       this.abortController = null;
     }
   }
-  async processChunkWithRetry(chunk, metadata) {
+  async processChunkWithRetry(chunk: any, metadata: any) {
     let attempt = 0;
     while (attempt <= StreamingTranscriptionService.CHUNK_MAX_RETRIES) {
       try {
@@ -260,7 +294,7 @@ export class StreamingTranscriptionService {
       }
     }
   }
-  async processChunkOnce(chunk, metadata) {
+  async processChunkOnce(chunk: any, metadata: any) {
     const payload = await this.prepareChunkPayload(chunk);
     await RuntimeLogger.log(this.plugin, this.logContext, "provider_request", {
       status: "started",
@@ -372,7 +406,7 @@ export class StreamingTranscriptionService {
     this.liveReconnectRequired = false;
     this.bufferedLiveFinals = [];
   }
-  cleanupBlob(blob) {
+  cleanupBlob(blob: any) {
     try {
       if (blob && typeof URL.revokeObjectURL === "function") {
         URL.revokeObjectURL(blob);
@@ -380,10 +414,10 @@ export class StreamingTranscriptionService {
     } catch (e) {
     }
   }
-  sleep(ms) {
+  sleep(ms: any) {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
-  async prepareChunkPayload(chunk) {
+  async prepareChunkPayload(chunk: any) {
     if (this.transportProfile === "wav_fallback") {
       const isNativeWav = (chunk.type || "").toLowerCase().includes("wav");
       if (isNativeWav) {
@@ -473,7 +507,7 @@ export class StreamingTranscriptionService {
     });
     this.recoveryJobInitialized = true;
   }
-  computeAnchorHash(content, line) {
+  computeAnchorHash(content: any, line: any) {
     const lines = content.split("\n");
     const start = Math.max(0, line - 2);
     const end = Math.min(lines.length - 1, line + 2);
@@ -490,7 +524,7 @@ export class StreamingTranscriptionService {
       settings: this.plugin.settings,
       model: this.plugin.settings.transcriptionModel || "nova-3"
     });
-    adapter.onEvent((event) => {
+    adapter.onEvent((event: any) => {
       void this.handleLiveAdapterEvent(event);
     });
     this.liveAdapter = adapter;
@@ -514,7 +548,7 @@ export class StreamingTranscriptionService {
       this.liveAdapterStartPromise = null;
     }
   }
-  async handleLiveAdapterEvent(event) {
+  async handleLiveAdapterEvent(event: any) {
     if (event.type === "error") {
       this.liveFatalError = event.reason || "live_transport_error";
       this.lastChunkError = {
@@ -576,7 +610,7 @@ export class StreamingTranscriptionService {
       });
     }
   }
-  buildChunkFromLiveFinal(text, startedAtSec) {
+  buildChunkFromLiveFinal(text: any, startedAtSec: any) {
     const duration = this.estimateDurationMs(text);
     const startOffsetMs = typeof startedAtSec === "number" && Number.isFinite(startedAtSec) ? Math.max(0, Math.floor(startedAtSec * 1e3)) : this.resultCompiler.getTotalDuration();
     const metadata = {
@@ -593,13 +627,13 @@ export class StreamingTranscriptionService {
       processed: true
     };
   }
-  estimateDurationMs(text) {
-    const wordCount = text.split(/\s+/).map((t) => t.trim()).filter(Boolean).length;
+  estimateDurationMs(text: any) {
+    const wordCount = text.split(/\s+/).map((t: any) => t.trim()).filter(Boolean).length;
     if (wordCount <= 0)
       return 1e3;
     return Math.min(1e4, Math.max(1e3, wordCount * 350));
   }
-  async commitFinalTranscriptChunk(transcript, metadata) {
+  async commitFinalTranscriptChunk(transcript: any, metadata: any) {
     const normalized = toRomanIfNeeded(
       (transcript || "").trim(),
       this.plugin.settings.forceRomanizedOutput
@@ -644,7 +678,7 @@ export class StreamingTranscriptionService {
       await this.callbacks.onChunkCommitted(normalized, metadata, partial);
     }
   }
-  formatInterimForFallback(event) {
+  formatInterimForFallback(event: any) {
     if (!event.speakerTurns || event.speakerTurns.length === 0) {
       return {
         text: toRomanIfNeeded(
@@ -673,7 +707,7 @@ export class StreamingTranscriptionService {
       startedAtSec: start
     };
   }
-  formatSpeakerTurn(turn) {
+  formatSpeakerTurn(turn: any) {
     const text = (turn.text || "").trim();
     if (!text)
       return "";
@@ -697,7 +731,7 @@ export class StreamingTranscriptionService {
       );
     }
   }
-  async commitLiveFinalEvent(text, startedAtSec, speakerTurns, suppressSpeakerLabels = false) {
+  async commitLiveFinalEvent(text: any, startedAtSec: any, speakerTurns: any, suppressSpeakerLabels = false) {
     if (!suppressSpeakerLabels && speakerTurns && speakerTurns.length > 0) {
       for (const turn of speakerTurns) {
         const formatted = this.formatSpeakerTurn(turn);
@@ -712,7 +746,7 @@ export class StreamingTranscriptionService {
     const chunk = this.buildChunkFromLiveFinal(normalized, startedAtSec);
     await this.commitFinalTranscriptChunk(normalized, chunk.metadata);
   }
-  normalizeSpeakerFormatting(transcript) {
+  normalizeSpeakerFormatting(transcript: any) {
     const raw = (transcript || "").trim();
     if (!raw)
       return "";
@@ -777,7 +811,7 @@ export class StreamingTranscriptionService {
 > Reason: ${this.liveFatalError}`;
     }
     if (this.failedChunks.size > 0) {
-      const failed = Array.from(this.failedChunks.entries()).sort((a, b) => a[0] - b[0]).map(([index, reason]) => `${index}:${reason}`).join("; ");
+      const failed = Array.from(this.failedChunks.entries()).sort((a: any, b: any) => a[0] - b[0]).map(([index, reason]: any) => `${index}:${reason}`).join("; ");
       if (!this.plugin.settings.allowPartialOnStreamFinalizeFailure) {
         throw new Error(`Streaming finalize failed. Uncommitted chunks: ${failed}`);
       }

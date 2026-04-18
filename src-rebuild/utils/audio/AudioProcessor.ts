@@ -2,7 +2,13 @@ import { AudioChunker } from './AudioChunker';
 import { AudioFileManager } from './AudioFileManager';
 
 export class AudioProcessor {
-  constructor(plugin) {
+  plugin: any;
+  MAX_AUDIO_SIZE_BYTES: any;
+  SAMPLE_RATES: any;
+  BIT_RATES: any;
+  audioChunker: any;
+  audioFileManager: any;
+  constructor(plugin: any) {
     this.plugin = plugin;
     // Maximum audio size before skipping chunking (25MB)
     this.MAX_AUDIO_SIZE_BYTES = 25 * 1024 * 1024;
@@ -37,7 +43,7 @@ export class AudioProcessor {
    * @param audioFilePath Optional path to save the audio file
    * @returns Object containing paths to audio files and concatenated blob
    */
-  async processAudio(audioBlob, audioFilePath) {
+  async processAudio(audioBlob: any, audioFilePath: any) {
     try {
       const fileSizeMB = audioBlob.size / (1024 * 1024);
       const provider = this.plugin.settings.transcriptionProvider;
@@ -67,7 +73,7 @@ export class AudioProcessor {
   /**
    * Checks if the provider can handle the given file size
    */
-  canProviderHandleFile(provider, fileSize) {
+  canProviderHandleFile(provider: any, fileSize: any) {
     const MAX_SIZE_25MB = 25 * 1024 * 1024;
     const MAX_SIZE_2GB = 2 * 1024 * 1024 * 1024;
     switch (provider) {
@@ -83,7 +89,7 @@ export class AudioProcessor {
   /**
    * Generates a helpful error message for files that are too large
    */
-  getLargeFileErrorMessage(provider, fileSizeMB) {
+  getLargeFileErrorMessage(provider: any, fileSizeMB: any) {
     const fileSize = fileSizeMB.toFixed(1);
     switch (provider) {
       case "openai" /* OpenAI */:

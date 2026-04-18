@@ -1,6 +1,6 @@
 import { TFolder } from 'obsidian';
 
-export async function ensureDirectoryExists(app, folderPath) {
+export async function ensureDirectoryExists(app: any, folderPath: any) {
   const normalizedPath = folderPath.replace(/^\/+|\/+$/g, "");
   if (!normalizedPath) {
     return "";
@@ -18,7 +18,7 @@ export async function ensureDirectoryExists(app, folderPath) {
   }
   return normalizedPath;
 }
-export async function saveAudioFile(app, audioBlob, fileName, settings) {
+export async function saveAudioFile(app: any, audioBlob: any, fileName: any, settings: any) {
   const folderPath = settings.recordingFolderPath || "";
   const normalizedFolder = await ensureDirectoryExists(app, folderPath);
   const filePath = normalizedFolder ? `${normalizedFolder}/${fileName}` : fileName;

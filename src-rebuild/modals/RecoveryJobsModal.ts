@@ -1,7 +1,9 @@
 import { Modal } from 'obsidian';
 
 export class RecoveryJobsModal extends Modal {
-  constructor(app, jobs) {
+  jobs: any;
+  resolvePromise: any;
+  constructor(app: any, jobs: any) {
     super(app);
     this.jobs = jobs;
     this.resolvePromise = null;
@@ -50,7 +52,7 @@ export class RecoveryJobsModal extends Modal {
       resolve({ type: "dismiss" });
     }
   }
-  finish(action) {
+  finish(action: any) {
     if (this.resolvePromise) {
       const resolve = this.resolvePromise;
       this.resolvePromise = null;

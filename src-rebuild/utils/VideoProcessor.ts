@@ -4,13 +4,15 @@ import { fetchFile, toBlobURL } from '@ffmpeg/util';
 import { RecordingProcessor } from './RecordingProcessor';
 
 export class VideoProcessor {
-  static instance = null;
-
-  constructor(plugin) {
+  plugin: any;
+  isProcessing: any;
+  ffmpeg: any;
+  static instance: any = null;
+  constructor(plugin: any) {
     this.plugin = plugin;
     this.isProcessing = false;
   }
-  static async getInstance(plugin) {
+  static async getInstance(plugin: any) {
     if (!this.instance) {
       this.instance = new VideoProcessor(plugin);
       await this.instance.initializeFFmpeg();
@@ -25,7 +27,7 @@ export class VideoProcessor {
       wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, "application/wasm")
     });
   }
-  async processVideo(file) {
+  async processVideo(file: any) {
     if (this.isProcessing) {
       throw new Error("Video processing is already in progress.");
     }
@@ -52,7 +54,7 @@ export class VideoProcessor {
       this.isProcessing = false;
     }
   }
-  async createTranscriptFile(videoFile) {
+  async createTranscriptFile(videoFile: any) {
     const baseName = videoFile.basename.replace(/[\\/:*?"<>|]/g, "");
     const fileName = `${baseName} - Video Transcript.md`;
     const folderPath = this.plugin.settings.transcriptFolderPath;
@@ -70,7 +72,7 @@ export class VideoProcessor {
     const filePath = folderPath ? `${folderPath}/${fileName}` : fileName;
     return this.plugin.app.vault.create(filePath, "");
   }
-  async extractAudioFromVideo(file) {
+  async extractAudioFromVideo(file: any) {
     new Notice("\u{1F3B5} Extracting audio from video...");
     try {
       const videoData = await this.plugin.app.vault.readBinary(file);
@@ -107,8 +109,8 @@ export class VideoProcessor {
       throw new Error("Failed to extract audio: " + message);
     }
   }
-  getVideoMimeType(extension) {
-    const mimeTypes = {
+  getVideoMimeType(extension: any) {
+    const mimeTypes: Record<string, string> = {
       "mp4": "video/mp4",
       "webm": "video/webm",
       "mov": "video/quicktime"

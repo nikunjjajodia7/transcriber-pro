@@ -1,7 +1,23 @@
 import { setIcon } from 'obsidian';
 
 export class UploadBottomSheet {
-  constructor(options) {
+  plugin: any;
+  saveAudioOn: any;
+  onTranscribe: any;
+  onCancel: any;
+  selectedFile: any;
+  overlayEl: any;
+  sheetEl: any;
+  fileCardEl: any;
+  fileNameEl: any;
+  fileSizeEl: any;
+  ctaEl: any;
+  saveToggleEl: any;
+  fileInputEl: any;
+  chooseLinkEl: any;
+  onEscBound: any;
+  onPopStateBound: any;
+  constructor(options: any) {
     this.plugin = options.plugin;
     this.saveAudioOn = options.saveAudioOn;
     this.onTranscribe = options.onTranscribe;
@@ -47,7 +63,7 @@ export class UploadBottomSheet {
     picker.classList.add("neurovox-upload-sheet__picker");
     const pickerIcon = document.createElement("div");
     pickerIcon.classList.add("neurovox-upload-sheet__picker-icon");
-    (0, setIcon)(pickerIcon, "upload");
+    setIcon(pickerIcon, "upload");
     picker.appendChild(pickerIcon);
     const pickerText = document.createElement("div");
     pickerText.classList.add("neurovox-upload-sheet__picker-text");
@@ -60,7 +76,7 @@ export class UploadBottomSheet {
     this.fileCardEl.classList.add("neurovox-upload-sheet__file-card");
     const fileIcon = document.createElement("div");
     fileIcon.classList.add("neurovox-upload-sheet__file-icon");
-    (0, setIcon)(fileIcon, "music");
+    setIcon(fileIcon, "music");
     this.fileCardEl.appendChild(fileIcon);
     const fileInfo = document.createElement("div");
     fileInfo.classList.add("neurovox-upload-sheet__file-info");
@@ -73,7 +89,7 @@ export class UploadBottomSheet {
     this.fileCardEl.appendChild(fileInfo);
     const fileCheck = document.createElement("div");
     fileCheck.classList.add("neurovox-upload-sheet__file-check");
-    (0, setIcon)(fileCheck, "check-circle");
+    setIcon(fileCheck, "check-circle");
     this.fileCardEl.appendChild(fileCheck);
     this.sheetEl.appendChild(this.fileCardEl);
     // "Choose a different file" link
@@ -90,7 +106,7 @@ export class UploadBottomSheet {
     saveRowLeft.classList.add("neurovox-upload-sheet__save-row-left");
     const saveIcon = document.createElement("div");
     saveIcon.classList.add("neurovox-upload-sheet__save-icon");
-    (0, setIcon)(saveIcon, "save");
+    setIcon(saveIcon, "save");
     saveRowLeft.appendChild(saveIcon);
     const saveLabel = document.createElement("span");
     saveLabel.classList.add("neurovox-upload-sheet__save-label");
@@ -110,7 +126,7 @@ export class UploadBottomSheet {
     this.ctaEl = document.createElement("button");
     this.ctaEl.classList.add("neurovox-upload-sheet__cta");
     const sparklesIcon = document.createElement("span");
-    (0, setIcon)(sparklesIcon, "sparkles");
+    setIcon(sparklesIcon, "sparkles");
     this.ctaEl.appendChild(sparklesIcon);
     const ctaText = document.createElement("span");
     ctaText.textContent = "Transcribe";
@@ -136,7 +152,7 @@ export class UploadBottomSheet {
     });
     document.body.appendChild(this.fileInputEl);
     // Keyboard and back-button dismiss
-    this.onEscBound = (e) => {
+    this.onEscBound = (e: any) => {
       if (e.key === "Escape") {
         e.preventDefault();
         this.close();
@@ -156,7 +172,7 @@ export class UploadBottomSheet {
   openFilePicker() {
     if (this.fileInputEl) this.fileInputEl.click();
   }
-  setFile(file) {
+  setFile(file: any) {
     this.selectedFile = file;
     if (this.fileNameEl) this.fileNameEl.textContent = file.name;
     if (this.fileSizeEl) this.fileSizeEl.textContent = this.formatSize(file.size);
@@ -171,7 +187,7 @@ export class UploadBottomSheet {
     if (this.fileInputEl) this.fileInputEl.value = "";
     if (this.chooseLinkEl) this.chooseLinkEl.style.display = "none";
   }
-  formatSize(bytes) {
+  formatSize(bytes: any) {
     if (bytes < 1024) return `${bytes} B`;
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;

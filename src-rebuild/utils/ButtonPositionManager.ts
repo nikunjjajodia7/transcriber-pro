@@ -1,5 +1,30 @@
 export class ButtonPositionManager {
-  constructor(containerEl, buttonEl, activeContainer, buttonSize, margin, onPositionChange, onDragEnd, onClick) {
+  containerEl: any;
+  buttonEl: any;
+  activeContainer: any;
+  buttonSize: any;
+  margin: any;
+  onPositionChange: any;
+  onDragEnd: any;
+  onClick: any;
+  isDragging: any;
+  hasMoved: any;
+  dragStartX: any;
+  dragStartY: any;
+  currentX: any;
+  currentY: any;
+  lastContainerWidth: any;
+  relativeX: any;
+  relativeY: any;
+  DRAG_THRESHOLD: any;
+  handleDragStart: any;
+  handleDragEnd: any;
+  handleDragMove: any;
+  handleTouchStart: any;
+  handleTouchMove: any;
+  handleTouchEnd: any;
+  _boundHandlers: any;
+  constructor(containerEl: any, buttonEl: any, activeContainer: any, buttonSize: any, margin: any, onPositionChange: any, onDragEnd: any, onClick: any) {
     this.containerEl = containerEl;
     this.buttonEl = buttonEl;
     this.activeContainer = activeContainer;
@@ -18,7 +43,7 @@ export class ButtonPositionManager {
     this.relativeX = 0;
     this.relativeY = 0;
     this.DRAG_THRESHOLD = 5;
-    this.handleDragStart = (e) => {
+    this.handleDragStart = (e: any) => {
       if (e.button !== 0)
         return;
       e.preventDefault();
@@ -32,7 +57,7 @@ export class ButtonPositionManager {
     /**
      * Handles the end of a drag operation
      */
-    this.handleDragEnd = (e) => {
+    this.handleDragEnd = (e: any) => {
       if (!this.isDragging)
         return;
       if (e) {
@@ -54,7 +79,7 @@ export class ButtonPositionManager {
     /**
      * Handles drag movement and determines if threshold is met
      */
-    this.handleDragMove = (e) => {
+    this.handleDragMove = (e: any) => {
       if (!this.isDragging)
         return;
       e.preventDefault();
@@ -70,7 +95,7 @@ export class ButtonPositionManager {
     /**
      * Handles touch events for mobile support
      */
-    this.handleTouchStart = (e) => {
+    this.handleTouchStart = (e: any) => {
       if (e.touches.length !== 1)
         return;
       e.preventDefault();
@@ -81,7 +106,7 @@ export class ButtonPositionManager {
       this.dragStartY = touch.clientY - this.currentY;
       this.buttonEl.classList.add("is-dragging");
     };
-    this.handleTouchMove = (e) => {
+    this.handleTouchMove = (e: any) => {
       if (!this.isDragging || e.touches.length !== 1)
         return;
       e.preventDefault();
@@ -118,7 +143,7 @@ export class ButtonPositionManager {
     };
     this.setupEventListeners();
   }
-  setPosition(x, y, updateRelative = true) {
+  setPosition(x: any, y: any, updateRelative = true) {
     this.currentX = x;
     this.currentY = y;
     if (updateRelative && this.activeContainer) {
@@ -144,7 +169,7 @@ export class ButtonPositionManager {
     const y = Math.max(this.margin, Math.min(targetY, maxY));
     this.setPosition(x, y, false);
   }
-  updateContainer(newContainer) {
+  updateContainer(newContainer: any) {
     if (!newContainer) {
       this.activeContainer = null;
       return;

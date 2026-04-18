@@ -3,7 +3,7 @@ import { RuntimeLogger } from '../telemetry/RuntimeLogger';
 import { clampMonotonicUiState, formatUiStateLabel, mapBackendToUiState } from './BackendStatusMapper';
 import { isCompletedStatus, isFailedTerminalStatus } from './BackendCompletionGate';
 
-function validateBackendUrl(candidateUrl, backendBaseUrl) {
+function validateBackendUrl(candidateUrl: any, backendBaseUrl: any) {
   try {
     const candidateOrigin = new URL(candidateUrl).origin;
     const baseOrigin = new URL(backendBaseUrl).origin;
@@ -16,12 +16,13 @@ function validateBackendUrl(candidateUrl, backendBaseUrl) {
   }
 }
 export class BackendBatchOrchestrationService {
+  plugin: any;
   static CHUNK_SIZE_BYTES = 8 * 1024 * 1024;
 
-  constructor(plugin) {
+  constructor(plugin: any) {
     this.plugin = plugin;
   }
-  async transcribeLargeUpload(audioBlob, sourcePath, targetPath, logContext) {
+  async transcribeLargeUpload(audioBlob: any, sourcePath: any, targetPath: any, logContext: any) {
     const baseUrl = this.plugin.settings.backendBaseUrl.trim().replace(/\/+$/, "");
     if (!baseUrl) {
       throw new Error("Backend base URL is not configured.");
@@ -75,7 +76,7 @@ export class BackendBatchOrchestrationService {
     const result = await this.pollForResult(statusUrl, created.resultUrl, jobId, logContext);
     return result;
   }
-  async uploadSource(uploadUrl, audioBlob, logContext, backendJobId) {
+  async uploadSource(uploadUrl: any, audioBlob: any, logContext: any, backendJobId: any) {
     await RuntimeLogger.log(this.plugin, logContext, "backend_source_upload", {
       status: "started",
       backendJobId,
@@ -90,7 +91,7 @@ export class BackendBatchOrchestrationService {
     const mimeType = audioBlob.type || "application/octet-stream";
     if (totalChunks === 1) {
       const body = await audioBlob.arrayBuffer();
-      await (0, requestUrl)({
+      await requestUrl({
         url: uploadUrl,
         method: "PUT",
         headers: this.buildHeaders({
@@ -112,7 +113,7 @@ export class BackendBatchOrchestrationService {
         this.plugin.showProcessingStatus(
           `Uploading source audio to backend (${chunkIndex + 1}/${totalChunks})`
         );
-        await (0, requestUrl)({
+        await requestUrl({
           url: uploadUrl,
           method: "PUT",
           headers: this.buildHeaders({
@@ -132,7 +133,7 @@ export class BackendBatchOrchestrationService {
       chunkCount: totalChunks
     });
   }
-  async pollForResult(statusUrl, defaultResultUrl, backendJobId, logContext) {
+  async pollForResult(statusUrl: any, defaultResultUrl: any, backendJobId: any, logContext: any) {
     const timeoutMs = this.plugin.settings.backendJobTimeoutSec * 1e3;
     const pollMs = this.plugin.settings.backendPollIntervalMs;
     const startedAt = Date.now();
@@ -218,8 +219,8 @@ export class BackendBatchOrchestrationService {
       `Backend job timed out after ${this.plugin.settings.backendJobTimeoutSec}s`
     );
   }
-  async requestJson(url, method, body) {
-    const response = await (0, requestUrl)({
+  async requestJson(url: any, method: any, body?: any) {
+    const response = await requestUrl({
       url,
       method,
       headers: this.buildHeaders({
@@ -233,7 +234,7 @@ export class BackendBatchOrchestrationService {
     }
     return response.json;
   }
-  buildHeaders(extra) {
+  buildHeaders(extra: any) {
     const headers = { ...extra };
     const token = this.plugin.settings.backendApiKey.trim();
     if (token.length > 0) {
@@ -241,7 +242,7 @@ export class BackendBatchOrchestrationService {
     }
     return headers;
   }
-  sleep(ms) {
+  sleep(ms: any) {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 }

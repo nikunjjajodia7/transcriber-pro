@@ -2,7 +2,17 @@ import RecordRTC from 'recordrtc';
 import { DeviceDetection } from './DeviceDetection';
 
 export class AudioRecordingManager {
-  constructor(plugin) {
+  plugin: any;
+  recorder: any;
+  stream: any;
+  pendingDataCallbacks: any;
+  SAMPLE_RATES: any;
+  MOBILE_SAMPLE_RATES: any;
+  BIT_RATES: any;
+  MOBILE_BIT_RATES: any;
+  deviceDetection: any;
+  currentOptions: any;
+  constructor(plugin: any) {
     this.plugin = plugin;
     this.recorder = null;
     this.stream = null;
@@ -79,7 +89,7 @@ export class AudioRecordingManager {
       throw new Error("Failed to access microphone");
     }
   }
-  start(options) {
+  start(options: any) {
     if (!this.stream) {
       throw new Error("Audio recorder not initialized");
     }
@@ -92,7 +102,7 @@ export class AudioRecordingManager {
       mimeType: streamingMimeType || this.getAudioConfig().mimeType,
       timeSlice: options == null ? void 0 : options.timeSlice,
       // RecordRTC uses ondataavailable callback for time-sliced recording
-      ondataavailable: (options == null ? void 0 : options.onDataAvailable) ? async (blob) => {
+      ondataavailable: (options == null ? void 0 : options.onDataAvailable) ? async (blob: any) => {
         if (!blob || blob.size === 0)
           return;
         const task = Promise.resolve(options.onDataAvailable(blob)).catch(() => {
@@ -103,13 +113,13 @@ export class AudioRecordingManager {
         await task;
       } : void 0
     };
-    this.recorder = new RecordRTC(this.stream, config);
+    this.recorder = new RecordRTC(this.stream, config as any);
     this.recorder.startRecording();
   }
   getPreferredStreamingMimeType() {
     const candidates = ["audio/wav", "audio/webm;codecs=pcm", "audio/webm"];
     const mediaRecorderCtor = window.MediaRecorder;
-    const isSupported = mediaRecorderCtor && typeof mediaRecorderCtor.isTypeSupported === "function" ? (mime) => mediaRecorderCtor.isTypeSupported(mime) : () => false;
+    const isSupported = mediaRecorderCtor && typeof mediaRecorderCtor.isTypeSupported === "function" ? (mime: any) => mediaRecorderCtor.isTypeSupported(mime) : () => false;
     for (const mime of candidates) {
       if (isSupported(mime)) {
         return mime;
@@ -166,7 +176,7 @@ export class AudioRecordingManager {
       await this.sleep(pollMs);
     }
   }
-  sleep(ms) {
+  sleep(ms: any) {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
   cleanup() {
@@ -180,7 +190,7 @@ export class AudioRecordingManager {
     this.pendingDataCallbacks.clear();
     if (this.stream) {
       try {
-        this.stream.getTracks().forEach((track) => track.stop());
+        this.stream.getTracks().forEach((track: any) => track.stop());
       } catch (error) {
       }
       this.stream = null;

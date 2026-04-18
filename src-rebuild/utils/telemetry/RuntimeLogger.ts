@@ -5,8 +5,8 @@ export class RuntimeLogger {
   static MAX_AGE_MS_DEFAULT = 7 * 24 * 60 * 60 * 1e3;
   static logWriteChain = Promise.resolve();
   static dirEnsured = false;
-  static recentWriteFailures = [];
-  static _hasAppend = void 0;
+  static recentWriteFailures: any[] = [];
+  static _hasAppend: any = void 0;
 
   static createContext(prefix = "job") {
     const now = Date.now();
@@ -16,7 +16,7 @@ export class RuntimeLogger {
       correlationId: `corr_${now}_${rand}`
     };
   }
-  static async log(plugin, context, eventName, details = {}) {
+  static async log(plugin: any, context: any, eventName: any, details = {}) {
     const payload = {
       eventName,
       timestamp: new Date().toISOString(),
@@ -56,7 +56,7 @@ export class RuntimeLogger {
     });
     await this.logWriteChain;
   }
-  static async prune(plugin, options) {
+  static async prune(plugin: any, options?: any) {
     var _a, _b;
     const maxBytes = (_a = options == null ? void 0 : options.maxBytes) != null ? _a : this.MAX_BYTES_DEFAULT;
     const maxAgeMs = (_b = options == null ? void 0 : options.maxAgeMs) != null ? _b : this.MAX_AGE_MS_DEFAULT;
@@ -70,7 +70,7 @@ export class RuntimeLogger {
         return;
       const cutoff = Date.now() - maxAgeMs;
       const lines = raw.split("\n").filter(Boolean);
-      const retained = lines.filter((line) => {
+      const retained = lines.filter((line: any) => {
         try {
           const parsed = JSON.parse(line);
           const ts = new Date(parsed.timestamp).getTime();
@@ -96,7 +96,7 @@ export class RuntimeLogger {
     });
     await this.logWriteChain;
   }
-  static async ensureLogDir(adapter) {
+  static async ensureLogDir(adapter: any) {
     if (this.dirEnsured)
       return;
     const exists = await adapter.exists(this.LOG_DIR);

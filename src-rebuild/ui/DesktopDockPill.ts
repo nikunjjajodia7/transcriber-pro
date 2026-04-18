@@ -5,7 +5,35 @@ import { DocumentInserter } from '../utils/document/DocumentInserter';
 import { StreamingTranscriptionService } from '../utils/transcription/StreamingTranscriptionService';
 
 export class DesktopDockPill {
-  constructor(plugin) {
+  plugin: any;
+  state: any;
+  containerEl: any;
+  pillEl: any;
+  contentEl: any;
+  idleIconEl: any;
+  expandedEl: any;
+  recordingEl: any;
+  finalizingEl: any;
+  timerEl: any;
+  pauseBtnEl: any;
+  saveBtnEl: any;
+  timerSeconds: any;
+  timerId: any;
+  isDisposed: any;
+  recordingManager: any;
+  streamingService: any;
+  documentInserter: any;
+  livePreviewMarkerId: any;
+  livePreviewWriteChain: any;
+  liveAudioCaptureActive: any;
+  activeFile: any;
+  cursorPosition: any;
+  onStateChange: any;
+  activeContainer: any;
+  deviceDetection: any;
+  saveAudioOn: any;
+  useStreaming: any;
+  constructor(plugin: any) {
     this.plugin = plugin;
     this.state = "idle";
     this.containerEl = null;
@@ -48,7 +76,7 @@ export class DesktopDockPill {
     this.contentEl.classList.add("neurovox-dock-pill__content");
     this.idleIconEl = document.createElement("div");
     this.idleIconEl.classList.add("neurovox-dock-pill__idle-icon");
-    (0, setIcon)(this.idleIconEl, "mic");
+    setIcon(this.idleIconEl, "mic");
     this.contentEl.appendChild(this.idleIconEl);
     this.expandedEl = document.createElement("div");
     this.expandedEl.classList.add("neurovox-dock-pill__expanded");
@@ -84,7 +112,7 @@ export class DesktopDockPill {
     this.recordingEl.appendChild(this.pauseBtnEl);
     const stopBtn = document.createElement("div");
     stopBtn.classList.add("neurovox-dock-pill__stop-btn");
-    (0, setIcon)(stopBtn, "square");
+    setIcon(stopBtn, "square");
     this.bindIconTap(stopBtn, () => { void this.handleStopTap(); });
     this.recordingEl.appendChild(stopBtn);
     const closeBtn2 = this.makeIconBtn("x", "neurovox-dock-pill__icon neurovox-dock-pill__close");
@@ -95,7 +123,7 @@ export class DesktopDockPill {
     this.finalizingEl.classList.add("neurovox-dock-pill__finalizing");
     const loaderIcon = document.createElement("div");
     loaderIcon.classList.add("neurovox-dock-pill__loader-icon");
-    (0, setIcon)(loaderIcon, "loader");
+    setIcon(loaderIcon, "loader");
     this.finalizingEl.appendChild(loaderIcon);
     const statusText = document.createElement("span");
     statusText.classList.add("neurovox-dock-pill__status-text");
@@ -108,18 +136,18 @@ export class DesktopDockPill {
     this.pillEl.appendChild(this.contentEl);
     this.containerEl.appendChild(this.pillEl);
   }
-  makeIconBtn(iconName, cls) {
+  makeIconBtn(iconName: any, cls: any) {
     const btn = document.createElement("div");
     btn.classList.add("clickable-icon");
-    cls.split(" ").forEach((c) => btn.classList.add(c));
-    (0, setIcon)(btn, iconName);
+    cls.split(" ").forEach((c: any) => btn.classList.add(c));
+    setIcon(btn, iconName);
     return btn;
   }
-  bindIconTap(el, handler) {
-    el.addEventListener("mousedown", (e) => { e.stopPropagation(); });
-    el.addEventListener("click", (e) => { e.stopPropagation(); handler(); });
+  bindIconTap(el: any, handler: any) {
+    el.addEventListener("mousedown", (e: any) => { e.stopPropagation(); });
+    el.addEventListener("click", (e: any) => { e.stopPropagation(); handler(); });
   }
-  setActiveContainer(container) {
+  setActiveContainer(container: any) {
     this.activeContainer = container;
   }
   getContainerEl() {
@@ -131,7 +159,7 @@ export class DesktopDockPill {
   getIdleIconEl() {
     return this.idleIconEl;
   }
-  updateButtonColor(color) {
+  updateButtonColor(color: any) {
     if (this.pillEl && color) {
       this.pillEl.style.setProperty("--neurovox-button-color", color);
     }
@@ -210,7 +238,7 @@ export class DesktopDockPill {
         new Notice("No incomplete jobs to cancel.");
         return;
       }
-      await Promise.all(pending.map((job) => this.plugin.recordingProcessor.cancelJob(job.jobId)));
+      await Promise.all(pending.map((job: any) => this.plugin.recordingProcessor.cancelJob(job.jobId)));
       new Notice(`Canceled ${pending.length} incomplete job(s).`);
     } catch (e) {
       new Notice("Failed to cancel incomplete jobs.");
@@ -228,10 +256,10 @@ export class DesktopDockPill {
       }
       if (this.useStreaming && !this.streamingService) {
         this.streamingService = new StreamingTranscriptionService(this.plugin, {
-          onMemoryWarning: (usage) => {
+          onMemoryWarning: (usage: any) => {
             new Notice(`Memory usage high: ${Math.round(usage)}%`);
           },
-          onChunkCommitted: async (_chunkText, _metadata, partialResult) => {
+          onChunkCommitted: async (_chunkText: any, _metadata: any, partialResult: any) => {
             if (!this.plugin.settings.showLiveChunkPreviewInNote) return;
             await this.enqueueLivePreviewUpdate(partialResult);
           }
@@ -270,7 +298,7 @@ export class DesktopDockPill {
         }
         this.startTimer();
         this.setState("recording");
-        (0, setIcon)(this.pauseBtnEl, "pause");
+        setIcon(this.pauseBtnEl, "pause");
       } else {
         if (this.useStreaming && this.streamingService) {
           this.streamingService.pauseLive();
@@ -280,7 +308,7 @@ export class DesktopDockPill {
         }
         this.stopTimer();
         this.setState("paused");
-        (0, setIcon)(this.pauseBtnEl, "play");
+        setIcon(this.pauseBtnEl, "play");
       }
     } catch (error) {
       this.handleFailure("Failed to pause/resume", error);
@@ -377,10 +405,10 @@ export class DesktopDockPill {
       this.documentInserter = null;
     }
     if (this.pauseBtnEl) {
-      (0, setIcon)(this.pauseBtnEl, "pause");
+      setIcon(this.pauseBtnEl, "pause");
     }
   }
-  setState(state) {
+  setState(state: any) {
     var _a;
     this.state = state;
     if (this.pillEl) {
@@ -395,7 +423,7 @@ export class DesktopDockPill {
       this.pillEl.style.transform = "";
       return;
     }
-    const targetWidths = { expanded: 216, recording: 220, paused: 220, finalizing: 156 };
+    const targetWidths: Record<string, number> = { expanded: 216, recording: 220, paused: 220, finalizing: 156 };
     const targetWidth = targetWidths[this.state] || 48;
     const anchorRect = this.containerEl.getBoundingClientRect();
     const leafRect = this.activeContainer.getBoundingClientRect();
@@ -429,12 +457,12 @@ export class DesktopDockPill {
     if (!this.timerEl) return;
     this.timerEl.textContent = this.formatTimer(this.timerSeconds);
   }
-  formatTimer(seconds) {
+  formatTimer(seconds: any) {
     const m = Math.floor(seconds / 60);
     const s = (seconds % 60).toString().padStart(2, "0");
     return `${m}:${s}`;
   }
-  async enqueueLivePreviewUpdate(partialResult) {
+  async enqueueLivePreviewUpdate(partialResult: any) {
     const markerId = this.livePreviewMarkerId;
     if (!markerId || !this.documentInserter) return;
     this.livePreviewWriteChain = this.livePreviewWriteChain.then(async () => {
@@ -442,7 +470,7 @@ export class DesktopDockPill {
     }).catch(() => {});
     await this.livePreviewWriteChain;
   }
-  async clearLivePreviewBlock(markerIdOverride) {
+  async clearLivePreviewBlock(markerIdOverride: any) {
     const markerId = markerIdOverride != null ? markerIdOverride : this.livePreviewMarkerId;
     if (!markerId || !this.documentInserter) return;
     await this.livePreviewWriteChain.catch(() => {});
@@ -450,7 +478,7 @@ export class DesktopDockPill {
       await this.documentInserter.removeLiveTranscriptionBlock(this.activeFile, markerId);
     } catch (e) {}
   }
-  handleFailure(message, error) {
+  handleFailure(message: any, error: any) {
     const detail = error instanceof Error ? error.message : String(error);
     new Notice(`${message}: ${detail}`);
     this.resetRecordingState();

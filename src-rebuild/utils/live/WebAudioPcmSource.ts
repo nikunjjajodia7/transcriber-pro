@@ -1,5 +1,17 @@
 export class WebAudioPcmSource {
-  constructor(stream, options) {
+  stream: any;
+  audioContext: any;
+  sourceNode: any;
+  processorNode: any;
+  gainNode: any;
+  running: any;
+  paused: any;
+  framesSent: any;
+  samplesSent: any;
+  inputSampleRate: any;
+  targetSampleRate: any;
+  bufferSize: any;
+  constructor(stream: any, options: any) {
     this.stream = stream;
     this.audioContext = null;
     this.sourceNode = null;
@@ -14,7 +26,7 @@ export class WebAudioPcmSource {
     this.targetSampleRate = (_a = options == null ? void 0 : options.targetSampleRate) != null ? _a : 16e3;
     this.bufferSize = (_b = options == null ? void 0 : options.bufferSize) != null ? _b : 4096;
   }
-  async start(onFrame) {
+  async start(onFrame: any) {
     if (this.running)
       return;
     const audioContext = new AudioContext();
@@ -101,7 +113,7 @@ export class WebAudioPcmSource {
       targetSampleRate: this.targetSampleRate
     };
   }
-  resample(input, inputRate, outputRate) {
+  resample(input: any, inputRate: any, outputRate: any) {
     if (inputRate === outputRate) {
       return input;
     }
@@ -117,7 +129,7 @@ export class WebAudioPcmSource {
     }
     return output;
   }
-  floatTo16BitPcm(input) {
+  floatTo16BitPcm(input: any) {
     const output = new Int16Array(input.length);
     for (let i = 0; i < input.length; i++) {
       const s = Math.max(-1, Math.min(1, input[i]));

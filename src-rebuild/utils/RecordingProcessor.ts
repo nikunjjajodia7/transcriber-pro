@@ -11,11 +11,21 @@ import { TranscriptionService } from './transcription/TranscriptionService';
 import { classifyError } from './retry/ErrorClassifier';
 
 export class RecordingProcessor {
-  static instance = null;
+  plugin: any;
+  config: any;
+  processingState: any;
+  audioProcessor: any;
+  transcriptionService: any;
+  documentInserter: any;
+  jobStore: any;
+  queueBackend: any;
+  batchRoutingPolicy: any;
+  backendBatchOrchestrationService: any;
+  static instance: any = null;
   static ADAPTER_VALIDATION_TIMEOUT_MS = 4e3;
   static STALE_FAILED_JOB_MAX_AGE_MS = 10 * 60 * 1e3;
 
-  constructor(plugin) {
+  constructor(plugin: any) {
     this.plugin = plugin;
     this.config = {
       maxRetries: 3,
@@ -30,14 +40,14 @@ export class RecordingProcessor {
     this.batchRoutingPolicy = new BatchRoutingPolicy(plugin.settings);
     this.backendBatchOrchestrationService = new BackendBatchOrchestrationService(plugin);
   }
-  static getInstance(plugin) {
+  static getInstance(plugin: any) {
     var _a;
     return (_a = this.instance) != null ? _a : this.instance = new RecordingProcessor(plugin);
   }
   /**
    * Processes a recording: transcribes audio and inserts the content into the document
    */
-  async processRecording(audioBlob, activeFile, cursorPosition, audioFilePath) {
+  async processRecording(audioBlob: any, activeFile: any, cursorPosition: any, audioFilePath: any) {
     const logContext = RuntimeLogger.createContext("batch");
     const now = new Date().toISOString();
     const resumeAnchor = await this.createResumeAnchor(activeFile, cursorPosition);
@@ -154,7 +164,7 @@ export class RecordingProcessor {
             }),
             0,
             {
-              onRetry: async (attempt, error) => {
+              onRetry: async (attempt: any, error: any) => {
                 this.plugin.showProcessingStatus(
                   `Retrying transcription ${attempt}/${this.config.maxRetries + 1}`
                 );
@@ -168,7 +178,7 @@ export class RecordingProcessor {
                   reason: error instanceof Error ? error.message : String(error)
                 });
               },
-              onFailed: async (attempts, error, classification) => {
+              onFailed: async (attempts: any, error: any, classification: any) => {
                 await RuntimeLogger.log(this.plugin, logContext, "provider_failure", {
                   status: "failed",
                   attempts,
@@ -198,7 +208,7 @@ export class RecordingProcessor {
           }),
           0,
           {
-            onRetry: async (attempt, error) => {
+            onRetry: async (attempt: any, error: any) => {
               this.plugin.showProcessingStatus(
                 `Retrying transcription ${attempt}/${this.config.maxRetries + 1}`
               );
@@ -212,7 +222,7 @@ export class RecordingProcessor {
                 reason: error instanceof Error ? error.message : String(error)
               });
             },
-            onFailed: async (attempts, error, classification) => {
+            onFailed: async (attempts: any, error: any, classification: any) => {
               await RuntimeLogger.log(this.plugin, logContext, "provider_failure", {
                 status: "failed",
                 attempts,
@@ -320,10 +330,10 @@ export class RecordingProcessor {
     await this.queueBackend.prune();
     await this.reconcileQueueAndRecoveryStates();
   }
-  async cancelJob(jobId) {
+  async cancelJob(jobId: any) {
     await this.jobStore.updateJobStatus(jobId, "canceled");
   }
-  async resumeJob(jobId) {
+  async resumeJob(jobId: any) {
     var _a, _b;
     const job = await this.jobStore.getJob(jobId);
     if (!job || !job.targetFile)
@@ -368,7 +378,7 @@ export class RecordingProcessor {
   /**
    * Processes a streaming transcription result: inserts pre-transcribed content into the document
    */
-  async processStreamingResult(transcriptionResult, activeFile, cursorPosition, options) {
+  async processStreamingResult(transcriptionResult: any, activeFile: any, cursorPosition: any, options: any) {
     const logContext = RuntimeLogger.createContext("stream");
     const existingStreamJob = await this.jobStore.getLatestIncompleteJob("stream", activeFile.path);
     const recoveryJobId = (existingStreamJob == null ? void 0 : existingStreamJob.jobId) || logContext.jobId;
@@ -490,7 +500,7 @@ export class RecordingProcessor {
   /**
    * Generates post-processing content using the configured AI adapter
    */
-  async generatePostProcessing(transcription) {
+  async generatePostProcessing(transcription: any) {
     const adapter = await this.getAdapter(
       this.plugin.settings.postProcessingProvider,
       "language"
@@ -510,7 +520,7 @@ ${transcription}`;
   /**
    * Gets and validates the appropriate AI adapter
    */
-  async getAdapter(provider, category) {
+  async getAdapter(provider: any, category: any) {
     const adapter = this.plugin.aiAdapters.get(provider);
     if (!adapter) {
       throw new Error(`${provider} adapter not found`);
@@ -530,7 +540,7 @@ ${transcription}`;
     }
     return adapter;
   }
-  async validateAdapterWithTimeout(adapter) {
+  async validateAdapterWithTimeout(adapter: any) {
     const timeoutMs = RecordingProcessor.ADAPTER_VALIDATION_TIMEOUT_MS;
     return await Promise.race([
       adapter.validateApiKey().catch(() => false),
@@ -542,7 +552,7 @@ ${transcription}`;
   /**
    * Executes an operation with retry logic
    */
-  async executeWithRetry(operation, retryCount = 0, hooks) {
+  async executeWithRetry(operation: any, retryCount = 0, hooks?: any): Promise<any> {
     try {
       return await operation();
     } catch (error) {
@@ -563,7 +573,7 @@ ${transcription}`;
       throw error;
     }
   }
-  getRetryDelayMs(errorClass, attempt) {
+  getRetryDelayMs(errorClass: any, attempt: any) {
     const base = this.config.retryDelay;
     const multiplier = errorClass === "rate_limit" ? 2.5 : errorClass === "timeout" ? 2 : errorClass === "server" ? 1.8 : errorClass === "network" ? 1.6 : 1.5;
     const delay = Math.round(base * Math.pow(multiplier, Math.max(0, attempt - 1)));
@@ -572,11 +582,11 @@ ${transcription}`;
   /**
    * Handles error display
    */
-  handleError(context, error) {
+  handleError(context: any, error: any) {
     const message = error instanceof Error ? error.message : "Unknown error occurred";
     new Notice(`${context}: ${message}`);
   }
-  async resolveDurationSeconds(audioBlob, transcription, preferredSeconds) {
+  async resolveDurationSeconds(audioBlob: any, transcription: any, preferredSeconds?: any) {
     if (Number.isFinite(preferredSeconds) && Number(preferredSeconds) > 0) {
       return Math.max(1, Math.round(Number(preferredSeconds)));
     }
@@ -588,10 +598,10 @@ ${transcription}`;
       return tokenMax;
     return null;
   }
-  async estimateAudioDurationFromBlob(audioBlob) {
+  async estimateAudioDurationFromBlob(audioBlob: any) {
     if (!audioBlob || audioBlob.size <= 0)
       return null;
-    const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
+    const AudioContextCtor = window.AudioContext || (window as any).webkitAudioContext;
     if (!AudioContextCtor)
       return null;
     let audioContext = null;
@@ -615,7 +625,7 @@ ${transcription}`;
       }
     }
   }
-  estimateDurationFromTimestampTokens(transcription) {
+  estimateDurationFromTimestampTokens(transcription: any) {
     if (!transcription || typeof transcription !== "string")
       return null;
     const tokenRegex = /\[(\d{2}):(\d{2}):(\d{2})\]/g;
@@ -632,7 +642,7 @@ ${transcription}`;
     }
     return max >= 0 ? max : null;
   }
-  buildDurationEntryTitle(durationSeconds) {
+  buildDurationEntryTitle(durationSeconds: any) {
     if (!Number.isFinite(durationSeconds) || Number(durationSeconds) <= 0)
       return null;
     const total = Math.max(1, Math.round(Number(durationSeconds)));
@@ -647,9 +657,9 @@ ${transcription}`;
       this.jobStore.getIncompleteJobs(),
       this.queueBackend.getSnapshot()
     ]);
-    const queueById = new Map(queueSnapshot.map((q) => [q.id, q]));
-    const queueByRecoveryId = new Map(
-      queueSnapshot.filter((q) => !!q.payload.recoveryJobId).map((q) => [q.payload.recoveryJobId, q])
+    const queueById = new Map<any, any>(queueSnapshot.map((q: any): [any, any] => [q.id, q]));
+    const queueByRecoveryId = new Map<any, any>(
+      queueSnapshot.filter((q: any) => !!q.payload.recoveryJobId).map((q: any): [any, any] => [q.payload.recoveryJobId, q])
     );
     for (const job of jobs) {
       const queueJob = (job.queueJobId ? queueById.get(job.queueJobId) : void 0) || queueByRecoveryId.get(job.jobId);
@@ -672,7 +682,7 @@ ${transcription}`;
       }
     }
   }
-  async createResumeAnchor(file, position) {
+  async createResumeAnchor(file: any, position: any) {
     try {
       const content = await this.plugin.app.vault.read(file);
       return {
@@ -684,7 +694,7 @@ ${transcription}`;
       return void 0;
     }
   }
-  async isResumeAnchorValid(file, job) {
+  async isResumeAnchorValid(file: any, job: any) {
     if (!job.resumeAnchor)
       return true;
     try {
@@ -695,7 +705,7 @@ ${transcription}`;
       return false;
     }
   }
-  computeAnchorHash(content, line) {
+  computeAnchorHash(content: any, line: any) {
     const lines = content.split("\n");
     const start = Math.max(0, line - 2);
     const end = Math.min(lines.length - 1, line + 2);

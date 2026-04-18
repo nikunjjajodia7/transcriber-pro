@@ -1280,16 +1280,16 @@ var require_RecordRTC = __commonJS({
       }
     }
     var lastTime;
-    var cancelAnimationFrame = window.cancelAnimationFrame;
-    if (typeof cancelAnimationFrame === "undefined") {
+    var cancelAnimationFrame2 = window.cancelAnimationFrame;
+    if (typeof cancelAnimationFrame2 === "undefined") {
       if (typeof webkitCancelAnimationFrame !== "undefined") {
-        cancelAnimationFrame = webkitCancelAnimationFrame;
+        cancelAnimationFrame2 = webkitCancelAnimationFrame;
       } else if (typeof mozCancelAnimationFrame !== "undefined") {
-        cancelAnimationFrame = mozCancelAnimationFrame;
+        cancelAnimationFrame2 = mozCancelAnimationFrame;
       } else if (typeof msCancelAnimationFrame !== "undefined") {
-        cancelAnimationFrame = msCancelAnimationFrame;
-      } else if (typeof cancelAnimationFrame === "undefined") {
-        cancelAnimationFrame = function(id) {
+        cancelAnimationFrame2 = msCancelAnimationFrame;
+      } else if (typeof cancelAnimationFrame2 === "undefined") {
+        cancelAnimationFrame2 = function(id) {
           clearTimeout(id);
         };
       }
@@ -3181,7 +3181,7 @@ var require_RecordRTC = __commonJS({
         callback = callback || function() {
         };
         if (lastAnimationFrame) {
-          cancelAnimationFrame(lastAnimationFrame);
+          cancelAnimationFrame2(lastAnimationFrame);
         }
         endTime = Date.now();
         this.blob = new Blob([new Uint8Array(gifEncoder.stream().bin)], {
@@ -4069,671 +4069,85 @@ var require_RecordRTC = __commonJS({
   }
 });
 
-// src/main.ts
+// src-rebuild/main.ts
 var main_exports = {};
 __export(main_exports, {
-  default: () => NeuroVoxPlugin
+  default: () => main_default
 });
 module.exports = __toCommonJS(main_exports);
-var import_obsidian21 = require("obsidian");
+var import_obsidian23 = require("obsidian");
 
-// src/utils/VideoProcessor.ts
-var import_obsidian6 = require("obsidian");
-
-// node_modules/@ffmpeg/ffmpeg/dist/esm/const.js
-var CORE_VERSION = "0.12.9";
-var CORE_URL = `https://unpkg.com/@ffmpeg/core@${CORE_VERSION}/dist/umd/ffmpeg-core.js`;
-var FFMessageType;
-(function(FFMessageType2) {
-  FFMessageType2["LOAD"] = "LOAD";
-  FFMessageType2["EXEC"] = "EXEC";
-  FFMessageType2["FFPROBE"] = "FFPROBE";
-  FFMessageType2["WRITE_FILE"] = "WRITE_FILE";
-  FFMessageType2["READ_FILE"] = "READ_FILE";
-  FFMessageType2["DELETE_FILE"] = "DELETE_FILE";
-  FFMessageType2["RENAME"] = "RENAME";
-  FFMessageType2["CREATE_DIR"] = "CREATE_DIR";
-  FFMessageType2["LIST_DIR"] = "LIST_DIR";
-  FFMessageType2["DELETE_DIR"] = "DELETE_DIR";
-  FFMessageType2["ERROR"] = "ERROR";
-  FFMessageType2["DOWNLOAD"] = "DOWNLOAD";
-  FFMessageType2["PROGRESS"] = "PROGRESS";
-  FFMessageType2["LOG"] = "LOG";
-  FFMessageType2["MOUNT"] = "MOUNT";
-  FFMessageType2["UNMOUNT"] = "UNMOUNT";
-})(FFMessageType || (FFMessageType = {}));
-
-// node_modules/@ffmpeg/ffmpeg/dist/esm/utils.js
-var getMessageID = (() => {
-  let messageID = 0;
-  return () => messageID++;
-})();
-
-// node_modules/@ffmpeg/ffmpeg/dist/esm/errors.js
-var ERROR_UNKNOWN_MESSAGE_TYPE = new Error("unknown message type");
-var ERROR_NOT_LOADED = new Error("ffmpeg is not loaded, call `await ffmpeg.load()` first");
-var ERROR_TERMINATED = new Error("called FFmpeg.terminate()");
-var ERROR_IMPORT_FAILURE = new Error("failed to import ffmpeg-core.js");
-
-// node_modules/@ffmpeg/ffmpeg/dist/esm/classes.js
-var import_meta = {};
-var _worker, _resolves, _rejects, _logEventCallbacks, _progressEventCallbacks, _registerHandlers, _send;
-var FFmpeg = class {
-  constructor() {
-    __privateAdd(this, _worker, null);
-    /**
-     * #resolves and #rejects tracks Promise resolves and rejects to
-     * be called when we receive message from web worker.
-     */
-    __privateAdd(this, _resolves, {});
-    __privateAdd(this, _rejects, {});
-    __privateAdd(this, _logEventCallbacks, []);
-    __privateAdd(this, _progressEventCallbacks, []);
-    __publicField(this, "loaded", false);
-    /**
-     * register worker message event handlers.
-     */
-    __privateAdd(this, _registerHandlers, () => {
-      if (__privateGet(this, _worker)) {
-        __privateGet(this, _worker).onmessage = ({ data: { id, type, data } }) => {
-          switch (type) {
-            case FFMessageType.LOAD:
-              this.loaded = true;
-              __privateGet(this, _resolves)[id](data);
-              break;
-            case FFMessageType.MOUNT:
-            case FFMessageType.UNMOUNT:
-            case FFMessageType.EXEC:
-            case FFMessageType.FFPROBE:
-            case FFMessageType.WRITE_FILE:
-            case FFMessageType.READ_FILE:
-            case FFMessageType.DELETE_FILE:
-            case FFMessageType.RENAME:
-            case FFMessageType.CREATE_DIR:
-            case FFMessageType.LIST_DIR:
-            case FFMessageType.DELETE_DIR:
-              __privateGet(this, _resolves)[id](data);
-              break;
-            case FFMessageType.LOG:
-              __privateGet(this, _logEventCallbacks).forEach((f) => f(data));
-              break;
-            case FFMessageType.PROGRESS:
-              __privateGet(this, _progressEventCallbacks).forEach((f) => f(data));
-              break;
-            case FFMessageType.ERROR:
-              __privateGet(this, _rejects)[id](data);
-              break;
-          }
-          delete __privateGet(this, _resolves)[id];
-          delete __privateGet(this, _rejects)[id];
-        };
-      }
-    });
-    /**
-     * Generic function to send messages to web worker.
-     */
-    __privateAdd(this, _send, ({ type, data }, trans = [], signal) => {
-      if (!__privateGet(this, _worker)) {
-        return Promise.reject(ERROR_NOT_LOADED);
-      }
-      return new Promise((resolve, reject) => {
-        const id = getMessageID();
-        __privateGet(this, _worker) && __privateGet(this, _worker).postMessage({ id, type, data }, trans);
-        __privateGet(this, _resolves)[id] = resolve;
-        __privateGet(this, _rejects)[id] = reject;
-        signal == null ? void 0 : signal.addEventListener("abort", () => {
-          reject(new DOMException(`Message # ${id} was aborted`, "AbortError"));
-        }, { once: true });
-      });
-    });
-    /**
-     * Loads ffmpeg-core inside web worker. It is required to call this method first
-     * as it initializes WebAssembly and other essential variables.
-     *
-     * @category FFmpeg
-     * @returns `true` if ffmpeg core is loaded for the first time.
-     */
-    __publicField(this, "load", ({ classWorkerURL, ...config } = {}, { signal } = {}) => {
-      if (!__privateGet(this, _worker)) {
-        __privateSet(this, _worker, classWorkerURL ? new Worker(new URL(classWorkerURL, import_meta.url), {
-          type: "module"
-        }) : (
-          // We need to duplicated the code here to enable webpack
-          // to bundle worekr.js here.
-          new Worker(new URL("./worker.js", import_meta.url), {
-            type: "module"
-          })
-        ));
-        __privateGet(this, _registerHandlers).call(this);
-      }
-      return __privateGet(this, _send).call(this, {
-        type: FFMessageType.LOAD,
-        data: config
-      }, void 0, signal);
-    });
-    /**
-     * Execute ffmpeg command.
-     *
-     * @remarks
-     * To avoid common I/O issues, ["-nostdin", "-y"] are prepended to the args
-     * by default.
-     *
-     * @example
-     * ```ts
-     * const ffmpeg = new FFmpeg();
-     * await ffmpeg.load();
-     * await ffmpeg.writeFile("video.avi", ...);
-     * // ffmpeg -i video.avi video.mp4
-     * await ffmpeg.exec(["-i", "video.avi", "video.mp4"]);
-     * const data = ffmpeg.readFile("video.mp4");
-     * ```
-     *
-     * @returns `0` if no error, `!= 0` if timeout (1) or error.
-     * @category FFmpeg
-     */
-    __publicField(this, "exec", (args, timeout = -1, { signal } = {}) => __privateGet(this, _send).call(this, {
-      type: FFMessageType.EXEC,
-      data: { args, timeout }
-    }, void 0, signal));
-    /**
-     * Execute ffprobe command.
-     *
-     * @example
-     * ```ts
-     * const ffmpeg = new FFmpeg();
-     * await ffmpeg.load();
-     * await ffmpeg.writeFile("video.avi", ...);
-     * // Getting duration of a video in seconds: ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 video.avi -o output.txt
-     * await ffmpeg.ffprobe(["-v", "error", "-show_entries", "format=duration", "-of", "default=noprint_wrappers=1:nokey=1", "video.avi", "-o", "output.txt"]);
-     * const data = ffmpeg.readFile("output.txt");
-     * ```
-     *
-     * @returns `0` if no error, `!= 0` if timeout (1) or error.
-     * @category FFmpeg
-     */
-    __publicField(this, "ffprobe", (args, timeout = -1, { signal } = {}) => __privateGet(this, _send).call(this, {
-      type: FFMessageType.FFPROBE,
-      data: { args, timeout }
-    }, void 0, signal));
-    /**
-     * Terminate all ongoing API calls and terminate web worker.
-     * `FFmpeg.load()` must be called again before calling any other APIs.
-     *
-     * @category FFmpeg
-     */
-    __publicField(this, "terminate", () => {
-      const ids = Object.keys(__privateGet(this, _rejects));
-      for (const id of ids) {
-        __privateGet(this, _rejects)[id](ERROR_TERMINATED);
-        delete __privateGet(this, _rejects)[id];
-        delete __privateGet(this, _resolves)[id];
-      }
-      if (__privateGet(this, _worker)) {
-        __privateGet(this, _worker).terminate();
-        __privateSet(this, _worker, null);
-        this.loaded = false;
-      }
-    });
-    /**
-     * Write data to ffmpeg.wasm.
-     *
-     * @example
-     * ```ts
-     * const ffmpeg = new FFmpeg();
-     * await ffmpeg.load();
-     * await ffmpeg.writeFile("video.avi", await fetchFile("../video.avi"));
-     * await ffmpeg.writeFile("text.txt", "hello world");
-     * ```
-     *
-     * @category File System
-     */
-    __publicField(this, "writeFile", (path, data, { signal } = {}) => {
-      const trans = [];
-      if (data instanceof Uint8Array) {
-        trans.push(data.buffer);
-      }
-      return __privateGet(this, _send).call(this, {
-        type: FFMessageType.WRITE_FILE,
-        data: { path, data }
-      }, trans, signal);
-    });
-    __publicField(this, "mount", (fsType, options, mountPoint) => {
-      const trans = [];
-      return __privateGet(this, _send).call(this, {
-        type: FFMessageType.MOUNT,
-        data: { fsType, options, mountPoint }
-      }, trans);
-    });
-    __publicField(this, "unmount", (mountPoint) => {
-      const trans = [];
-      return __privateGet(this, _send).call(this, {
-        type: FFMessageType.UNMOUNT,
-        data: { mountPoint }
-      }, trans);
-    });
-    /**
-     * Read data from ffmpeg.wasm.
-     *
-     * @example
-     * ```ts
-     * const ffmpeg = new FFmpeg();
-     * await ffmpeg.load();
-     * const data = await ffmpeg.readFile("video.mp4");
-     * ```
-     *
-     * @category File System
-     */
-    __publicField(this, "readFile", (path, encoding = "binary", { signal } = {}) => __privateGet(this, _send).call(this, {
-      type: FFMessageType.READ_FILE,
-      data: { path, encoding }
-    }, void 0, signal));
-    /**
-     * Delete a file.
-     *
-     * @category File System
-     */
-    __publicField(this, "deleteFile", (path, { signal } = {}) => __privateGet(this, _send).call(this, {
-      type: FFMessageType.DELETE_FILE,
-      data: { path }
-    }, void 0, signal));
-    /**
-     * Rename a file or directory.
-     *
-     * @category File System
-     */
-    __publicField(this, "rename", (oldPath, newPath, { signal } = {}) => __privateGet(this, _send).call(this, {
-      type: FFMessageType.RENAME,
-      data: { oldPath, newPath }
-    }, void 0, signal));
-    /**
-     * Create a directory.
-     *
-     * @category File System
-     */
-    __publicField(this, "createDir", (path, { signal } = {}) => __privateGet(this, _send).call(this, {
-      type: FFMessageType.CREATE_DIR,
-      data: { path }
-    }, void 0, signal));
-    /**
-     * List directory contents.
-     *
-     * @category File System
-     */
-    __publicField(this, "listDir", (path, { signal } = {}) => __privateGet(this, _send).call(this, {
-      type: FFMessageType.LIST_DIR,
-      data: { path }
-    }, void 0, signal));
-    /**
-     * Delete an empty directory.
-     *
-     * @category File System
-     */
-    __publicField(this, "deleteDir", (path, { signal } = {}) => __privateGet(this, _send).call(this, {
-      type: FFMessageType.DELETE_DIR,
-      data: { path }
-    }, void 0, signal));
-  }
-  on(event, callback) {
-    if (event === "log") {
-      __privateGet(this, _logEventCallbacks).push(callback);
-    } else if (event === "progress") {
-      __privateGet(this, _progressEventCallbacks).push(callback);
-    }
-  }
-  off(event, callback) {
-    if (event === "log") {
-      __privateSet(this, _logEventCallbacks, __privateGet(this, _logEventCallbacks).filter((f) => f !== callback));
-    } else if (event === "progress") {
-      __privateSet(this, _progressEventCallbacks, __privateGet(this, _progressEventCallbacks).filter((f) => f !== callback));
-    }
-  }
-};
-_worker = new WeakMap();
-_resolves = new WeakMap();
-_rejects = new WeakMap();
-_logEventCallbacks = new WeakMap();
-_progressEventCallbacks = new WeakMap();
-_registerHandlers = new WeakMap();
-_send = new WeakMap();
-
-// node_modules/@ffmpeg/ffmpeg/dist/esm/types.js
-var FFFSType;
-(function(FFFSType2) {
-  FFFSType2["MEMFS"] = "MEMFS";
-  FFFSType2["NODEFS"] = "NODEFS";
-  FFFSType2["NODERAWFS"] = "NODERAWFS";
-  FFFSType2["IDBFS"] = "IDBFS";
-  FFFSType2["WORKERFS"] = "WORKERFS";
-  FFFSType2["PROXYFS"] = "PROXYFS";
-})(FFFSType || (FFFSType = {}));
-
-// node_modules/@ffmpeg/util/dist/esm/errors.js
-var ERROR_RESPONSE_BODY_READER = new Error("failed to get response body reader");
-var ERROR_INCOMPLETED_DOWNLOAD = new Error("failed to complete download");
-
-// node_modules/@ffmpeg/util/dist/esm/const.js
-var HeaderContentLength = "Content-Length";
-
-// node_modules/@ffmpeg/util/dist/esm/index.js
-var readFromBlobOrFile = (blob) => new Promise((resolve, reject) => {
-  const fileReader = new FileReader();
-  fileReader.onload = () => {
-    const { result } = fileReader;
-    if (result instanceof ArrayBuffer) {
-      resolve(new Uint8Array(result));
-    } else {
-      resolve(new Uint8Array());
-    }
-  };
-  fileReader.onerror = (event) => {
-    var _a, _b;
-    reject(Error(`File could not be read! Code=${((_b = (_a = event == null ? void 0 : event.target) == null ? void 0 : _a.error) == null ? void 0 : _b.code) || -1}`));
-  };
-  fileReader.readAsArrayBuffer(blob);
-});
-var fetchFile = async (file) => {
-  let data;
-  if (typeof file === "string") {
-    if (/data:_data\/([a-zA-Z]*);base64,([^"]*)/.test(file)) {
-      data = atob(file.split(",")[1]).split("").map((c) => c.charCodeAt(0));
-    } else {
-      data = await (await fetch(file)).arrayBuffer();
-    }
-  } else if (file instanceof URL) {
-    data = await (await fetch(file)).arrayBuffer();
-  } else if (file instanceof File || file instanceof Blob) {
-    data = await readFromBlobOrFile(file);
-  } else {
-    return new Uint8Array();
-  }
-  return new Uint8Array(data);
-};
-var downloadWithProgress = async (url, cb) => {
-  var _a;
-  const resp = await fetch(url);
-  let buf;
-  try {
-    const total = parseInt(resp.headers.get(HeaderContentLength) || "-1");
-    const reader = (_a = resp.body) == null ? void 0 : _a.getReader();
-    if (!reader)
-      throw ERROR_RESPONSE_BODY_READER;
-    const chunks = [];
-    let received = 0;
-    for (; ; ) {
-      const { done, value } = await reader.read();
-      const delta = value ? value.length : 0;
-      if (done) {
-        if (total != -1 && total !== received)
-          throw ERROR_INCOMPLETED_DOWNLOAD;
-        cb && cb({ url, total, received, delta, done });
-        break;
-      }
-      chunks.push(value);
-      received += delta;
-      cb && cb({ url, total, received, delta, done });
-    }
-    const data = new Uint8Array(received);
-    let position = 0;
-    for (const chunk of chunks) {
-      data.set(chunk, position);
-      position += chunk.length;
-    }
-    buf = data.buffer;
-  } catch (e) {
-    console.log(`failed to send download progress event: `, e);
-    buf = await resp.arrayBuffer();
-    cb && cb({
-      url,
-      total: buf.byteLength,
-      received: buf.byteLength,
-      delta: 0,
-      done: true
-    });
-  }
-  return buf;
-};
-var toBlobURL = async (url, mimeType, progress = false, cb) => {
-  const buf = progress ? await downloadWithProgress(url, cb) : await (await fetch(url)).arrayBuffer();
-  const blob = new Blob([buf], { type: mimeType });
-  return URL.createObjectURL(blob);
+// src-rebuild/settings/Settings.ts
+var AudioQuality = /* @__PURE__ */ ((AudioQuality2) => {
+  AudioQuality2["Low"] = "low";
+  AudioQuality2["Medium"] = "medium";
+  AudioQuality2["High"] = "high";
+  return AudioQuality2;
+})(AudioQuality || {});
+var CURRENT_SETTINGS_VERSION = 5;
+var DEFAULT_SETTINGS = {
+  settingsVersion: CURRENT_SETTINGS_VERSION,
+  // AI Providers
+  openaiApiKey: "",
+  groqApiKey: "",
+  deepgramApiKey: "",
+  // Recording
+  audioQuality: "medium",
+  recordingFolderPath: "Recordings",
+  iphoneInboxFolderPath: "Recordings/Inbox",
+  transcriptFolderPath: "Transcripts",
+  showFloatingButton: true,
+  useRecordingModal: true,
+  showToolbarButton: false,
+  micButtonColor: "#4B4B4B",
+  transcriptionModel: "whisper-1",
+  transcriptionProvider: "openai",
+  transcriptionCalloutFormat: ">[!info]- Transcription\n>![[{audioPath}]]\n>{transcription}",
+  showTimer: true,
+  autoStopEnabled: false,
+  autoStopDuration: 5,
+  // Post-Processing
+  generatePostProcessing: true,
+  postProcessingPrompt: "Process the following transcript to extract key insights and information.",
+  postProcessingMaxTokens: 500,
+  postProcessingModel: "gpt-4o-mini",
+  postProcessingProvider: "openai",
+  postProcessingTemperature: 0.7,
+  postProcessingCalloutFormat: ">[!note]- Post-Processing\n>{postProcessing}",
+  // Current Provider
+  currentProvider: "openai",
+  streamingMode: true,
+  // Auto-detected based on device
+  includeTimestamps: false,
+  enableSpeakerDiarization: false,
+  deepgramDetectLanguage: true,
+  deepgramLanguageHints: "en,hi",
+  forceRomanizedOutput: true,
+  deepgramLiveDiarizationProfile: "accuracy_first",
+  showLiveChunkPreviewInNote: true,
+  saveLiveRecordingAudio: false,
+  allowPartialOnStreamFinalizeFailure: true,
+  streamTransportFallbackEnabled: true,
+  useExpandableFloatingRecorder: true,
+  enableBatchChunkingForUploads: true,
+  batchChunkThresholdMB: 25,
+  batchChunkDurationSec: 360,
+  batchChunkOverlapSec: 2,
+  allowSingleRequestOverride: true,
+  enableBackendOrchestration: false,
+  preferBackendForLargeUploads: true,
+  backendBaseUrl: "",
+  backendApiKey: "",
+  backendPollIntervalMs: 3e3,
+  backendJobTimeoutSec: 1800,
+  backendFailOpenToDirect: true
 };
 
-// src/utils/RecordingProcessor.ts
-var import_obsidian5 = require("obsidian");
-
-// src/utils/audio/AudioChunker.ts
-var AudioChunker = class {
-  constructor(sampleRate, bitRate, mimeType = "audio/webm; codecs=opus") {
-    this.sampleRate = sampleRate;
-    this.bitRate = bitRate;
-    this.mimeType = mimeType;
-    this.MAX_AUDIO_SIZE_MB = 25;
-    this.MAX_AUDIO_SIZE_BYTES = this.MAX_AUDIO_SIZE_MB * 1024 * 1024;
-    this.CHUNK_OVERLAP_SECONDS = 2;
-  }
-  /**
-   * Splits an audio blob into smaller chunks if necessary
-   * @param audioBlob The audio blob to potentially split
-   * @returns Array of audio blobs (single item if no split needed)
-   */
-  async splitAudioBlob(audioBlob) {
-    if (audioBlob.size <= this.MAX_AUDIO_SIZE_BYTES) {
-      return [audioBlob];
-    }
-    try {
-      const chunks = [];
-      const chunkSize = this.MAX_AUDIO_SIZE_BYTES;
-      let offset = 0;
-      while (offset < audioBlob.size) {
-        const end = Math.min(offset + chunkSize, audioBlob.size);
-        const chunk = audioBlob.slice(offset, end);
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)({
-          sampleRate: this.sampleRate
-        });
-        const arrayBuffer = await chunk.arrayBuffer();
-        const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-        const processedChunk = await this.bufferToBlob(audioContext, audioBuffer, audioBlob.type);
-        chunks.push(processedChunk);
-        await audioContext.close();
-        offset += chunkSize;
-      }
-      return chunks;
-    } catch (error) {
-      return [audioBlob];
-    }
-  }
-  /**
-   * Concatenates multiple audio chunks back into a single blob
-   * @param chunks Array of audio blobs to combine
-   * @returns Single concatenated audio blob
-   */
-  async concatenateAudioChunks(chunks) {
-    try {
-      const firstChunk = chunks[0];
-      const audioContext = new (window.AudioContext || window.webkitAudioContext)({
-        sampleRate: this.sampleRate
-      });
-      const processedChunks = [];
-      for (const chunk of chunks) {
-        const processedChunk = await this.processChunk(chunk, firstChunk.type, audioContext);
-        processedChunks.push(processedChunk);
-      }
-      await audioContext.close();
-      return new Blob(processedChunks, { type: firstChunk.type });
-    } catch (error) {
-      return chunks[0];
-    }
-  }
-  /**
-   * Creates a chunk from the audio buffer
-   */
-  async createChunk(audioContext, audioBuffer, startTime, endTime, mimeType) {
-    const chunkBuffer = audioContext.createBuffer(
-      audioBuffer.numberOfChannels,
-      Math.ceil((endTime - startTime) * audioBuffer.sampleRate),
-      audioBuffer.sampleRate
-    );
-    for (let channel = 0; channel < audioBuffer.numberOfChannels; channel++) {
-      const channelData = audioBuffer.getChannelData(channel);
-      const chunkData = chunkBuffer.getChannelData(channel);
-      const startSample = Math.floor(startTime * audioBuffer.sampleRate);
-      const endSample = Math.ceil(endTime * audioBuffer.sampleRate);
-      chunkData.set(channelData.subarray(startSample, endSample));
-    }
-    return await this.bufferToBlob(audioContext, chunkBuffer, mimeType);
-  }
-  /**
-   * Processes a single chunk for concatenation
-   */
-  async processChunk(chunk, mimeType, audioContext) {
-    try {
-      const arrayBuffer = await chunk.arrayBuffer();
-      const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-      return await this.bufferToBlob(audioContext, audioBuffer, mimeType);
-    } catch (error) {
-      return chunk;
-    }
-  }
-  /**
-   * Converts an AudioBuffer to a Blob using MediaRecorder
-   */
-  async bufferToBlob(audioContext, buffer, mimeType) {
-    if (!buffer.duration || !Number.isFinite(buffer.duration) || buffer.duration <= 0) {
-      throw new Error("bufferToBlob: invalid buffer duration");
-    }
-    return new Promise((resolve, reject) => {
-      const source = audioContext.createBufferSource();
-      source.buffer = buffer;
-      const destination = audioContext.createMediaStreamDestination();
-      source.connect(destination);
-      const recorder = new MediaRecorder(destination.stream, {
-        mimeType: this.mimeType,
-        bitsPerSecond: this.bitRate
-      });
-      const chunks = [];
-      let settled = false;
-      const safetyTimeout = setTimeout(() => {
-        if (!settled) {
-          settled = true;
-          reject(new Error("bufferToBlob: timed out waiting for MediaRecorder"));
-        }
-      }, buffer.duration * 1e3 + 1e4);
-      recorder.ondataavailable = (e) => {
-        if (e.data.size > 0)
-          chunks.push(e.data);
-      };
-      recorder.onerror = (e) => {
-        if (!settled) {
-          settled = true;
-          clearTimeout(safetyTimeout);
-          reject(new Error("bufferToBlob: MediaRecorder error"));
-        }
-      };
-      recorder.onstop = () => {
-        if (!settled) {
-          settled = true;
-          clearTimeout(safetyTimeout);
-          resolve(new Blob(chunks, { type: mimeType }));
-        }
-      };
-      recorder.start();
-      source.start(0);
-      setTimeout(() => {
-        try { source.stop(); } catch (e) {}
-        try { recorder.stop(); } catch (e) {}
-      }, buffer.duration * 1e3);
-    });
-  }
-};
-
-// src/utils/FileUtils.ts
-var import_obsidian = require("obsidian");
-async function ensureDirectoryExists(app, folderPath) {
-  const normalizedPath = folderPath.replace(/^\/+|\/+$/g, "");
-  if (!normalizedPath) {
-    return "";
-  }
-  const parts = normalizedPath.split("/");
-  let currentPath = "";
-  for (const part of parts) {
-    currentPath = currentPath ? `${currentPath}/${part}` : part;
-    const folder = app.vault.getAbstractFileByPath(currentPath);
-    if (!folder) {
-      await app.vault.createFolder(currentPath);
-    } else if (!(folder instanceof import_obsidian.TFolder)) {
-      throw new Error(`Path "${currentPath}" exists but is not a folder`);
-    }
-  }
-  return normalizedPath;
-}
-async function saveAudioFile(app, audioBlob, fileName, settings) {
-  const folderPath = settings.recordingFolderPath || "";
-  const normalizedFolder = await ensureDirectoryExists(app, folderPath);
-  const filePath = normalizedFolder ? `${normalizedFolder}/${fileName}` : fileName;
-  const arrayBuffer = await audioBlob.arrayBuffer();
-  const uint8Array = new Uint8Array(arrayBuffer);
-  const file = await app.vault.createBinary(filePath, uint8Array);
-  if (!file) {
-    throw new Error(`Failed to create audio file: ${filePath}`);
-  }
-  return file;
-}
-
-// src/utils/audio/AudioFileManager.ts
-var AudioFileManager = class {
-  constructor(plugin) {
-    this.plugin = plugin;
-  }
-  /**
-   * Saves an audio blob to the configured recordings folder with a unique name
-   * @param audioBlob The audio data to save
-   * @returns Path to the saved audio file
-   */
-  async saveAudioFile(audioBlob) {
-    const folderPath = this.plugin.settings.recordingFolderPath || "";
-    await ensureDirectoryExists(this.plugin.app, folderPath);
-    const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-    const baseFileName = `recording-${timestamp}.webm`;
-    let fileName = baseFileName;
-    let filePath = folderPath ? `${folderPath}/${fileName}` : fileName;
-    let count = 1;
-    while (await this.plugin.app.vault.adapter.exists(filePath)) {
-      fileName = `recording-${timestamp}-${count}.webm`;
-      filePath = folderPath ? `${folderPath}/${fileName}` : fileName;
-      count++;
-    }
-    try {
-      const file = await saveAudioFile(
-        this.plugin.app,
-        audioBlob,
-        fileName,
-        this.plugin.settings
-      );
-      if (!file) {
-        throw new Error("Failed to create audio file");
-      }
-      return file.path;
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Unknown error";
-      throw new Error(`Failed to save audio file: ${message}`);
-    }
-  }
-  /**
-   * Removes temporary chunk files after processing is complete
-   * @param paths Array of file paths to remove
-   */
-  async removeTemporaryFiles(paths) {
-    for (const path of paths) {
-      try {
-        await this.plugin.app.vault.adapter.remove(path);
-      } catch (error) {
-      }
-    }
-  }
-};
-
-// src/adapters/AIAdapter.ts
+// src-rebuild/adapters/DeepgramAdapter.ts
 var import_obsidian2 = require("obsidian");
+
+// src-rebuild/adapters/AIAdapter.ts
+var import_obsidian = require("obsidian");
 var AIProvider = /* @__PURE__ */ ((AIProvider2) => {
   AIProvider2["OpenAI"] = "openai";
   AIProvider2["Groq"] = "groq";
@@ -4741,7 +4155,10 @@ var AIProvider = /* @__PURE__ */ ((AIProvider2) => {
   return AIProvider2;
 })(AIProvider || {});
 var AIModels = {
-  ["openai" /* OpenAI */]: [
+  [
+    "openai"
+    /* OpenAI */
+  ]: [
     { id: "whisper-1", name: "Whisper", category: "transcription" },
     { id: "gpt-4o-mini-transcribe", name: "GPT-4o Mini Transcribe", category: "transcription" },
     { id: "gpt-4o-transcribe", name: "GPT-4o Transcribe", category: "transcription" },
@@ -4751,7 +4168,10 @@ var AIModels = {
     { id: "gpt-5-mini", name: "GPT 5 Mini", category: "language", maxTokens: 4e5 },
     { id: "gpt-5-nano", name: "GPT 5 Nano", category: "language", maxTokens: 4e5 }
   ],
-  ["groq" /* Groq */]: [
+  [
+    "groq"
+    /* Groq */
+  ]: [
     { id: "whisper-large-v3-turbo", name: "Whisper Large v3 Turbo", category: "transcription" },
     { id: "whisper-large-v3", name: "Whisper Large v3", category: "transcription" },
     { id: "llama-3.3-70b-versatile", name: "Llama 3.3 70B Versatile", category: "language", maxTokens: 32768 },
@@ -4763,7 +4183,10 @@ var AIModels = {
     { id: "openai/gpt-oss-20b", name: "OpenAI GPT-OSS 20B", category: "language", maxTokens: 32768 },
     { id: "openai/gpt-oss-120b", name: "OpenAI GPT-OSS 120B", category: "language", maxTokens: 32768 }
   ],
-  ["deepgram" /* Deepgram */]: [
+  [
+    "deepgram"
+    /* Deepgram */
+  ]: [
     { id: "nova-2", name: "Nova-2", category: "transcription" },
     { id: "nova-3", name: "Nova-3", category: "transcription" }
   ]
@@ -4882,7 +4305,7 @@ var _AIAdapter = class {
         "Authorization": `Bearer ${this.getApiKey()}`,
         ...headers
       };
-      const requestPromise = (0, import_obsidian2.requestUrl)({
+      const requestPromise = (0, import_obsidian.requestUrl)({
         url: endpoint,
         method,
         headers: requestHeaders,
@@ -4947,280 +4370,407 @@ var _AIAdapter = class {
 var AIAdapter = _AIAdapter;
 AIAdapter.DEFAULT_REQUEST_TIMEOUT_MS = 3e4;
 
-// src/settings/Settings.ts
-var AudioQuality = /* @__PURE__ */ ((AudioQuality2) => {
-  AudioQuality2["Low"] = "low";
-  AudioQuality2["Medium"] = "medium";
-  AudioQuality2["High"] = "high";
-  return AudioQuality2;
-})(AudioQuality || {});
-var CURRENT_SETTINGS_VERSION = 5;
-var DEFAULT_SETTINGS = {
-  settingsVersion: CURRENT_SETTINGS_VERSION,
-  // AI Providers
-  openaiApiKey: "",
-  groqApiKey: "",
-  deepgramApiKey: "",
-  // Recording
-  audioQuality: "medium" /* Medium */,
-  recordingFolderPath: "Recordings",
-  iphoneInboxFolderPath: "Recordings/Inbox",
-  transcriptFolderPath: "Transcripts",
-  showFloatingButton: true,
-  useRecordingModal: true,
-  showToolbarButton: false,
-  micButtonColor: "#4B4B4B",
-  transcriptionModel: "whisper-1",
-  transcriptionProvider: "openai" /* OpenAI */,
-  transcriptionCalloutFormat: ">[!info]- Transcription\n>![[{audioPath}]]\n>{transcription}",
-  showTimer: true,
-  autoStopEnabled: false,
-  autoStopDuration: 5,
-  // Post-Processing
-  generatePostProcessing: true,
-  postProcessingPrompt: "Process the following transcript to extract key insights and information.",
-  postProcessingMaxTokens: 500,
-  postProcessingModel: "gpt-4o-mini",
-  postProcessingProvider: "openai" /* OpenAI */,
-  postProcessingTemperature: 0.7,
-  postProcessingCalloutFormat: ">[!note]- Post-Processing\n>{postProcessing}",
-  // Current Provider
-  currentProvider: "openai" /* OpenAI */,
-  streamingMode: true,
-  // Auto-detected based on device
-  includeTimestamps: false,
-  enableSpeakerDiarization: false,
-  deepgramDetectLanguage: true,
-  deepgramLanguageHints: "en,hi",
-  forceRomanizedOutput: true,
-  deepgramLiveDiarizationProfile: "accuracy_first",
-  showLiveChunkPreviewInNote: true,
-  saveLiveRecordingAudio: false,
-  allowPartialOnStreamFinalizeFailure: true,
-  streamTransportFallbackEnabled: true,
-  useExpandableFloatingRecorder: true,
-  enableBatchChunkingForUploads: true,
-  batchChunkThresholdMB: 25,
-  batchChunkDurationSec: 360,
-  batchChunkOverlapSec: 2,
-  allowSingleRequestOverride: true,
-  enableBackendOrchestration: false,
-  preferBackendForLargeUploads: true,
-  backendBaseUrl: "",
-  backendApiKey: "",
-  backendPollIntervalMs: 3e3,
-  backendJobTimeoutSec: 1800,
-  backendFailOpenToDirect: true
-};
-
-// src/utils/audio/AudioProcessor.ts
-var AudioProcessor = class {
-  constructor(plugin) {
-    this.plugin = plugin;
-    // Maximum audio size before skipping chunking (25MB)
-    this.MAX_AUDIO_SIZE_BYTES = 25 * 1024 * 1024;
-    // Audio quality settings (sample rates in Hz)
-    this.SAMPLE_RATES = {
-      ["low" /* Low */]: 22050,
-      // Voice optimized (smaller files)
-      ["medium" /* Medium */]: 32e3,
-      // High quality voice (balanced)
-      ["high" /* High */]: 44100
-      // CD quality (larger files)
-    };
-    // Bitrate settings for different quality levels (bits per second)
-    this.BIT_RATES = {
-      ["low" /* Low */]: 64e3,
-      // Good for voice
-      ["medium" /* Medium */]: 128e3,
-      // Excellent voice quality
-      ["high" /* High */]: 192e3
-      // Studio quality
-    };
-    this.audioChunker = new AudioChunker(
-      this.getSampleRate(),
-      this.getBitRate(),
-      "audio/webm; codecs=opus"
-    );
-    this.audioFileManager = new AudioFileManager(plugin);
+// src-rebuild/utils/text/Romanization.ts
+function toRomanIfNeeded(text, enabled) {
+  if (!enabled)
+    return text;
+  if (!/[\u0900-\u097F]/.test(text))
+    return text;
+  return transliterateDevanagariToRoman(text);
+}
+function transliterateDevanagariToRoman(input) {
+  const independentVowels = {
+    "\u0905": "a",
+    "\u0906": "aa",
+    "\u0907": "i",
+    "\u0908": "ii",
+    "\u0909": "u",
+    "\u090A": "uu",
+    "\u090B": "ri",
+    "\u090F": "e",
+    "\u0910": "ai",
+    "\u0913": "o",
+    "\u0914": "au"
+  };
+  const consonants = {
+    "\u0915": "k",
+    "\u0916": "kh",
+    "\u0917": "g",
+    "\u0918": "gh",
+    "\u0919": "ng",
+    "\u091A": "ch",
+    "\u091B": "chh",
+    "\u091C": "j",
+    "\u091D": "jh",
+    "\u091E": "ny",
+    "\u091F": "t",
+    "\u0920": "th",
+    "\u0921": "d",
+    "\u0922": "dh",
+    "\u0923": "n",
+    "\u0924": "t",
+    "\u0925": "th",
+    "\u0926": "d",
+    "\u0927": "dh",
+    "\u0928": "n",
+    "\u092A": "p",
+    "\u092B": "ph",
+    "\u092C": "b",
+    "\u092D": "bh",
+    "\u092E": "m",
+    "\u092F": "y",
+    "\u0930": "r",
+    "\u0932": "l",
+    "\u0935": "v",
+    "\u0936": "sh",
+    "\u0937": "sh",
+    "\u0938": "s",
+    "\u0939": "h",
+    "\u0933": "l",
+    "\u0915\u094D\u0937": "ksh",
+    "\u091C\u094D\u091E": "gy"
+  };
+  const matras = {
+    "\u093E": "aa",
+    "\u093F": "i",
+    "\u0940": "ii",
+    "\u0941": "u",
+    "\u0942": "uu",
+    "\u0943": "ri",
+    "\u0947": "e",
+    "\u0948": "ai",
+    "\u094B": "o",
+    "\u094C": "au"
+  };
+  const specials = {
+    "\u0902": "n",
+    "\u0901": "n",
+    "\u0903": "h"
+  };
+  const virama = "\u094D";
+  const chars = Array.from(input);
+  let out = "";
+  for (let i = 0; i < chars.length; i++) {
+    const ch = chars[i];
+    if (independentVowels[ch]) {
+      out += independentVowels[ch];
+      continue;
+    }
+    if (specials[ch]) {
+      out += specials[ch];
+      continue;
+    }
+    if (consonants[ch]) {
+      const base = consonants[ch];
+      const next = chars[i + 1];
+      if (next === virama) {
+        out += base;
+        i += 1;
+        continue;
+      }
+      if (next && matras[next]) {
+        out += `${base}${matras[next]}`;
+        i += 1;
+        continue;
+      }
+      out += `${base}a`;
+      continue;
+    }
+    if (matras[ch]) {
+      out += matras[ch];
+      continue;
+    }
+    out += ch;
   }
-  /**
-   * Processes an audio blob, handling large files by chunking if necessary
-   * @param audioBlob The audio blob to process
-   * @param audioFilePath Optional path to save the audio file
-   * @returns Object containing paths to audio files and concatenated blob
-   */
-  async processAudio(audioBlob, audioFilePath) {
+  return out.replace(/[ \t]+/g, " ").replace(/\n{3,}/g, "\n\n").trim();
+}
+
+// src-rebuild/adapters/DeepgramAdapter.ts
+var _DeepgramAdapter = class extends AIAdapter {
+  constructor(settings) {
+    super(
+      settings,
+      "deepgram"
+      /* Deepgram */
+    );
+    this.apiKey = "";
+  }
+  getApiKey() {
+    return this.apiKey;
+  }
+  setApiKeyInternal(key) {
+    this.apiKey = key;
+  }
+  getApiBaseUrl() {
+    return "https://api.deepgram.com";
+  }
+  getTextGenerationEndpoint() {
+    return "";
+  }
+  getTranscriptionEndpoint() {
+    return "/v1/listen";
+  }
+  async validateApiKeyImpl() {
+    if (!this.apiKey) {
+      return false;
+    }
     try {
-      const fileSizeMB = audioBlob.size / (1024 * 1024);
-      const provider = this.plugin.settings.transcriptionProvider;
-      if (this.canProviderHandleFile(provider, audioBlob.size)) {
-        const finalPath = audioFilePath || await this.audioFileManager.saveAudioFile(audioBlob);
-        return { finalPath, audioBlob };
-      } else {
-        throw new Error(this.getLargeFileErrorMessage(provider, fileSizeMB));
-      }
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Unknown error";
-      throw new Error(`Failed to process audio: ${message}`);
-    }
-  }
-  /**
-   * Gets the sample rate based on the current audio quality setting
-   */
-  getSampleRate() {
-    return this.SAMPLE_RATES[this.plugin.settings.audioQuality] || this.SAMPLE_RATES["medium" /* Medium */];
-  }
-  /**
-   * Gets the bit rate based on the current audio quality setting
-   */
-  getBitRate() {
-    return this.BIT_RATES[this.plugin.settings.audioQuality] || this.BIT_RATES["medium" /* Medium */];
-  }
-  /**
-   * Checks if the provider can handle the given file size
-   */
-  canProviderHandleFile(provider, fileSize) {
-    const MAX_SIZE_25MB = 25 * 1024 * 1024;
-    const MAX_SIZE_2GB = 2 * 1024 * 1024 * 1024;
-    switch (provider) {
-      case "deepgram" /* Deepgram */:
-        return fileSize <= MAX_SIZE_2GB;
-      case "openai" /* OpenAI */:
-      case "groq" /* Groq */:
-        return fileSize <= MAX_SIZE_25MB;
-      default:
-        return fileSize <= MAX_SIZE_25MB;
-    }
-  }
-  /**
-   * Generates a helpful error message for files that are too large
-   */
-  getLargeFileErrorMessage(provider, fileSizeMB) {
-    const fileSize = fileSizeMB.toFixed(1);
-    switch (provider) {
-      case "openai" /* OpenAI */:
-        return `File too large (${fileSize}MB) for OpenAI. Switch to Deepgram for large files.`;
-      case "groq" /* Groq */:
-        return `File too large (${fileSize}MB) for Groq. Switch to Deepgram for large files.`;
-      case "deepgram" /* Deepgram */:
-        return `File too large (${fileSize}MB). Split the audio file into smaller segments.`;
-      default:
-        return `File too large (${fileSize}MB). Switch to Deepgram for large files.`;
-    }
-  }
-};
-
-// src/utils/transcription/TranscriptionService.ts
-var _TranscriptionService = class {
-  constructor(plugin) {
-    this.plugin = plugin;
-  }
-  /**
-   * Transcribes audio content and optionally generates post-processing
-   * @param audioBuffer The audio data to transcribe
-   * @returns The transcription result
-   */
-  async transcribeContent(audioBuffer, options) {
-    try {
-      const transcription = await this.transcribeAudioOnly(audioBuffer, options);
-      const postProcessing = await this.generatePostProcessingFromTranscript(transcription);
-      return {
-        transcription,
-        postProcessing
-      };
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Unknown error";
-      throw new Error(`Transcription failed: ${message}`);
-    }
-  }
-  async transcribeAudioOnly(audioBuffer, options) {
-    return this.transcribeAudio(audioBuffer, options);
-  }
-  async generatePostProcessingFromTranscript(transcription) {
-    if (!this.plugin.settings.generatePostProcessing) {
-      return void 0;
-    }
-    return this.generatePostProcessing(transcription);
-  }
-  /**
-   * Transcribes audio using the configured AI adapter
-   */
-  async transcribeAudio(audioBuffer, options) {
-    const adapter = await this.getAdapter(
-      this.plugin.settings.transcriptionProvider,
-      "transcription"
-    );
-    const transcription = await adapter.transcribeAudio(
-      audioBuffer,
-      this.plugin.settings.transcriptionModel,
-      options
-    );
-    if (!(options == null ? void 0 : options.allowEmptyTranscription) && (!transcription || !transcription.trim())) {
-      throw new Error("Transcription is empty");
-    }
-    return transcription;
-  }
-  /**
-   * Generates post-processing content using the configured AI adapter
-   */
-  async generatePostProcessing(transcription) {
-    const adapter = await this.getAdapter(
-      this.plugin.settings.postProcessingProvider,
-      "language"
-    );
-    const prompt = `${this.plugin.settings.postProcessingPrompt}
-
-${transcription}`;
-    return adapter.generateResponse(
-      prompt,
-      this.plugin.settings.postProcessingModel,
-      {
-        maxTokens: this.plugin.settings.postProcessingMaxTokens,
-        temperature: this.plugin.settings.postProcessingTemperature
-      }
-    );
-  }
-  /**
-   * Gets and validates the appropriate AI adapter
-   */
-  async getAdapter(provider, category) {
-    const adapter = this.plugin.aiAdapters.get(provider);
-    if (!adapter) {
-      throw new Error(`${provider} adapter not found`);
-    }
-    if (!adapter.isReady(category)) {
-      const apiKey = adapter.getApiKey();
-      if (!apiKey) {
-        throw new Error(`${provider} API key is not configured`);
-      }
-      const validated = await this.validateAdapterWithTimeout(adapter);
-      if (validated && adapter.isReady(category)) {
-        return adapter;
-      }
-      throw new Error(
-        `${provider} adapter is not ready for ${category}. Please check your settings and model availability.`
+      const response = await this.makeAPIRequest(
+        `${this.getApiBaseUrl()}/v1/projects`,
+        "GET",
+        {},
+        null
       );
+      return response && Array.isArray(response.projects);
+    } catch (error) {
+      return false;
     }
-    return adapter;
   }
-  async validateAdapterWithTimeout(adapter) {
-    const timeoutMs = _TranscriptionService.ADAPTER_VALIDATION_TIMEOUT_MS;
-    return await Promise.race([
-      adapter.validateApiKey().catch(() => false),
-      new Promise((resolve) => {
-        window.setTimeout(() => resolve(false), timeoutMs);
-      })
-    ]);
+  parseTextGenerationResponse(response) {
+    throw new Error("Text generation not supported by Deepgram");
+  }
+  parseTranscriptionResponse(response) {
+    return this.parseTranscriptionResponseWithOptions(response, false);
+  }
+  parseTranscriptionResponseWithOptions(response, allowEmptyTranscription) {
+    var _a, _b, _c, _d, _e, _f;
+    let transcript = "";
+    if (this.settings.enableSpeakerDiarization) {
+      const utterances = (_a = response == null ? void 0 : response.results) == null ? void 0 : _a.utterances;
+      if (Array.isArray(utterances) && utterances.length > 0) {
+        transcript = this.formatDiarizedTranscript(utterances);
+      }
+    }
+    if (!transcript && ((_f = (_e = (_d = (_c = (_b = response == null ? void 0 : response.results) == null ? void 0 : _b.channels) == null ? void 0 : _c[0]) == null ? void 0 : _d.alternatives) == null ? void 0 : _e[0]) == null ? void 0 : _f.transcript)) {
+      transcript = response.results.channels[0].alternatives[0].transcript;
+    }
+    if (!transcript) {
+      if (allowEmptyTranscription) {
+        return "";
+      }
+      throw new Error("Invalid transcription response format from Deepgram");
+    }
+    transcript = this.normalizeSpeakerFormatting(transcript);
+    if (this.settings.forceRomanizedOutput) {
+      transcript = toRomanIfNeeded(transcript, true);
+    }
+    return transcript;
+  }
+  // Override the transcribeAudio method since Deepgram has a different API structure
+  async transcribeAudio(audioArrayBuffer, model, options) {
+    var _a;
+    try {
+      const query = new URLSearchParams({
+        model,
+        punctuate: "true",
+        smart_format: "true"
+      });
+      this.applyLanguageSettings(query, model);
+      if (this.settings.enableSpeakerDiarization) {
+        query.set("diarize", "true");
+        query.set("utterances", "true");
+      }
+      const endpoint = `${this.getApiBaseUrl()}${this.getTranscriptionEndpoint()}?${query.toString()}`;
+      const contentType = ((_a = options == null ? void 0 : options.mimeType) == null ? void 0 : _a.trim()) || "application/octet-stream";
+      const timeoutMs = this.calculateTimeoutMs(audioArrayBuffer.byteLength);
+      const response = await this.requestWithTimeout(
+        endpoint,
+        {
+          "Content-Type": contentType
+        },
+        audioArrayBuffer,
+        timeoutMs
+      );
+      const transcript = this.parseTranscriptionResponseWithOptions(
+        response,
+        (options == null ? void 0 : options.allowEmptyTranscription) === true
+      );
+      if (!(options == null ? void 0 : options.allowEmptyTranscription) && (!transcript || !transcript.trim())) {
+        throw new Error("Deepgram returned an empty transcript");
+      }
+      return transcript;
+    } catch (error) {
+      const message = this.getDeepgramErrorMessage(error);
+      throw new Error(`Failed to transcribe audio with Deepgram: ${message}`);
+    }
+  }
+  async diagnoseAudio(audioArrayBuffer, model, options) {
+    var _a, _b, _c, _d, _e, _f;
+    const query = new URLSearchParams({
+      model,
+      punctuate: "true",
+      smart_format: "true"
+    });
+    this.applyLanguageSettings(query, model);
+    if (this.settings.enableSpeakerDiarization) {
+      query.set("diarize", "true");
+      query.set("utterances", "true");
+    }
+    const endpoint = `${this.getApiBaseUrl()}${this.getTranscriptionEndpoint()}?${query.toString()}`;
+    const contentType = ((_a = options == null ? void 0 : options.mimeType) == null ? void 0 : _a.trim()) || "application/octet-stream";
+    const timeoutMs = this.calculateTimeoutMs(audioArrayBuffer.byteLength);
+    const response = await this.requestWithTimeout(
+      endpoint,
+      { "Content-Type": contentType },
+      audioArrayBuffer,
+      timeoutMs
+    );
+    const utterances = Array.isArray((_b = response == null ? void 0 : response.results) == null ? void 0 : _b.utterances) ? response.results.utterances : [];
+    const channel = (_d = (_c = response == null ? void 0 : response.results) == null ? void 0 : _c.channels) == null ? void 0 : _d[0];
+    const alternatives = Array.isArray(channel == null ? void 0 : channel.alternatives) ? channel.alternatives : [];
+    const transcript = (typeof ((_e = alternatives == null ? void 0 : alternatives[0]) == null ? void 0 : _e.transcript) === "string" ? alternatives[0].transcript : "") || "";
+    const speakerTagCount = (transcript.match(/Speaker\s+\d+:/g) || []).length;
+    const diarizeRequested = this.settings.enableSpeakerDiarization;
+    const fallbackPathUsed = diarizeRequested && utterances.length === 0 && transcript.length > 0;
+    return {
+      endpoint,
+      requestParams: Object.fromEntries(query.entries()),
+      utterancesPresent: utterances.length > 0,
+      utterancesCount: utterances.length,
+      channelsCount: Array.isArray((_f = response == null ? void 0 : response.results) == null ? void 0 : _f.channels) ? response.results.channels.length : 0,
+      alternativesCount: alternatives.length,
+      transcriptLength: transcript.length,
+      speakerTagCountInTranscript: speakerTagCount,
+      diarizeRequested,
+      fallbackPathUsed,
+      detectedLanguage: (channel == null ? void 0 : channel.detected_language) || null
+    };
+  }
+  calculateTimeoutMs(sizeBytes) {
+    const sizeMb = Math.max(1, Math.ceil(sizeBytes / (1024 * 1024)));
+    const computed = sizeMb * _DeepgramAdapter.TIMEOUT_PER_MB_MS;
+    return Math.min(
+      _DeepgramAdapter.MAX_TIMEOUT_MS,
+      Math.max(_DeepgramAdapter.MIN_TIMEOUT_MS, computed)
+    );
+  }
+  applyLanguageSettings(query, model) {
+    const languageHints = (this.settings.deepgramLanguageHints || "").split(",").map((s) => s.trim()).filter(Boolean);
+    const hintSet = new Set(languageHints.map((hint) => hint.toLowerCase()));
+    const supportsMulti = /^nova-(2|3)/i.test(model);
+    const shouldUseMulti = supportsMulti && (hintSet.has("multi") || languageHints.length > 1);
+    if (shouldUseMulti) {
+      query.set("language", "multi");
+      return;
+    }
+    if (this.settings.deepgramDetectLanguage) {
+      query.set("detect_language", "true");
+      if (languageHints.length > 0) {
+        query.set("languages", languageHints.join(","));
+      }
+      return;
+    }
+    if (languageHints.length > 0) {
+      query.set("language", languageHints[0]);
+    }
+  }
+  async requestWithTimeout(endpoint, headers, body, timeoutMs) {
+    let timeoutHandle = null;
+    try {
+      return await Promise.race([
+        this.makeAPIRequest(endpoint, "POST", headers, body),
+        new Promise((_, reject) => {
+          timeoutHandle = setTimeout(() => {
+            reject(
+              new Error(
+                `Deepgram request timed out after ${Math.round(timeoutMs / 1e3)}s`
+              )
+            );
+          }, timeoutMs);
+        })
+      ]);
+    } finally {
+      if (timeoutHandle) {
+        clearTimeout(timeoutHandle);
+      }
+    }
+  }
+  formatDiarizedTranscript(utterances) {
+    let currentSpeaker = null;
+    const lines = [];
+    for (const utt of utterances) {
+      const text = typeof (utt == null ? void 0 : utt.transcript) === "string" ? utt.transcript.trim() : "";
+      if (!text)
+        continue;
+      const speakerId = typeof (utt == null ? void 0 : utt.speaker) === "number" ? utt.speaker + 1 : 0;
+      const speakerLabel = speakerId > 0 ? `Speaker ${speakerId}` : "Speaker";
+      const timestamp = this.formatTimestampToken(utt == null ? void 0 : utt.start);
+      if (speakerLabel !== currentSpeaker) {
+        if (lines.length > 0) {
+          lines.push("");
+        }
+        lines.push(`${timestamp} ${speakerLabel}: ${text}`);
+        currentSpeaker = speakerLabel;
+      } else {
+        const lastIndex = lines.length - 1;
+        lines[lastIndex] = `${lines[lastIndex]} ${text}`;
+      }
+    }
+    return lines.join("\n").trim();
+  }
+  normalizeSpeakerFormatting(transcript) {
+    const speakerMatches = transcript.match(/Speaker\s+\d+:/g);
+    if (!speakerMatches || speakerMatches.length < 2) {
+      return transcript;
+    }
+    let normalized = transcript.replace(/\s*(Speaker\s+\d+:)/g, "\n$1").trim();
+    normalized = normalized.replace(/\n{3,}/g, "\n\n");
+    return normalized;
+  }
+  formatTimestampToken(startSeconds) {
+    const raw = typeof startSeconds === "number" && Number.isFinite(startSeconds) ? startSeconds : 0;
+    const total = Math.max(0, Math.floor(raw));
+    const hours = Math.floor(total / 3600).toString().padStart(2, "0");
+    const minutes = Math.floor(total % 3600 / 60).toString().padStart(2, "0");
+    const seconds = (total % 60).toString().padStart(2, "0");
+    return `[${hours}:${minutes}:${seconds}]`;
+  }
+  // Override the makeAPIRequest method to handle Deepgram's authorization header format
+  async makeAPIRequest(endpoint, method, headers, body) {
+    try {
+      const requestHeaders = {
+        "Authorization": `Token ${this.getApiKey()}`,
+        // Deepgram uses "Token" instead of "Bearer"
+        ...headers
+      };
+      const response = await (0, import_obsidian2.requestUrl)({
+        url: endpoint,
+        method,
+        headers: requestHeaders,
+        body: body || void 0,
+        throw: true
+      });
+      if (!response.json) {
+        throw new Error("Invalid response format");
+      }
+      return response.json;
+    } catch (error) {
+      throw error;
+    }
+  }
+  getDeepgramErrorMessage(error) {
+    if (!(error instanceof Error)) {
+      return this.getErrorMessage(error);
+    }
+    const raw = error.message || "Unknown error";
+    const statusMatch = raw.match(/\bstatus\s+(\d{3})\b/i);
+    const status = statusMatch ? statusMatch[1] : "";
+    let compact = raw.replace(/\s+/g, " ").trim();
+    if (compact.length > 280) {
+      compact = `${compact.slice(0, 280)}...`;
+    }
+    return status ? `status ${status} - ${compact}` : compact;
   }
 };
-var TranscriptionService = _TranscriptionService;
-TranscriptionService.ADAPTER_VALIDATION_TIMEOUT_MS = 4e3;
+var DeepgramAdapter = _DeepgramAdapter;
+DeepgramAdapter.MIN_TIMEOUT_MS = 18e4;
+DeepgramAdapter.MAX_TIMEOUT_MS = 18e5;
+DeepgramAdapter.TIMEOUT_PER_MB_MS = 8e3;
 
-// src/utils/document/DocumentInserter.ts
+// src-rebuild/utils/document/DocumentInserter.ts
 var import_obsidian3 = require("obsidian");
 
-// src/utils/document/TranscriptSchema.ts
+// src-rebuild/utils/document/TranscriptSchema.ts
 function fromPlainTranscription(transcription) {
   return {
     segments: [
@@ -5253,7 +4803,7 @@ function formatTimestamp(ms) {
   return `[${m}:${s}]`;
 }
 
-// src/utils/document/TranscriptRenderer.ts
+// src-rebuild/utils/document/TranscriptRenderer.ts
 var TranscriptRenderer = class {
   constructor(config) {
     this.config = config;
@@ -5295,7 +4845,165 @@ ${postContent}
   }
 };
 
-// src/utils/document/SpeakerMapping.ts
+// src-rebuild/utils/document/TranscriptionEntry.ts
+var ENTRY_MARKER_REGEX = /<!--\s*neurovox:entry:([^\n]*?)\s*-->/g;
+var ENTRY_META_REGEX = /<!--\s*neurovox:entry-meta:({[\s\S]*?})\s*-->/;
+function createEntryMeta(title) {
+  const recordedAtIso = new Date().toISOString();
+  return {
+    id: `entry_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`,
+    title,
+    recordedAtIso
+  };
+}
+function buildEntryMarkerComment(meta, hash) {
+  const compactPayload = `id=${meta.id};hash=${hash}`;
+  return `<!-- neurovox:entry:${compactPayload} -->`;
+}
+function findEntryRegions(noteContent) {
+  const markers = Array.from(noteContent.matchAll(ENTRY_MARKER_REGEX));
+  if (markers.length === 0)
+    return [];
+  const starts = markers.map((match) => {
+    var _a;
+    const markerStart = (_a = match.index) != null ? _a : 0;
+    const markerLineStart = noteContent.lastIndexOf("\n", markerStart) + 1;
+    const markerLineEnd = noteContent.indexOf("\n", markerStart);
+    const markerLine = markerLineEnd === -1 ? noteContent.slice(markerLineStart) : noteContent.slice(markerLineStart, markerLineEnd);
+    const inQuotedCallout = /^\s*>\s*<!--\s*neurovox:entry:/i.test(markerLine);
+    if (!inQuotedCallout)
+      return markerStart;
+    const before = noteContent.slice(0, markerStart);
+    const calloutHeaderRegex = /^>\[![^\]]+\][^\n]*$/gm;
+    let calloutHeaderMatch = calloutHeaderRegex.exec(before);
+    let lastHeader = null;
+    while (calloutHeaderMatch) {
+      lastHeader = calloutHeaderMatch;
+      calloutHeaderMatch = calloutHeaderRegex.exec(before);
+    }
+    return lastHeader && lastHeader.index !== void 0 ? lastHeader.index : markerStart;
+  });
+  return markers.map((match, index) => {
+    var _a, _b;
+    const markerText = match[0];
+    const markerPayload = (match[1] || "").trim();
+    const markerStart = (_a = match.index) != null ? _a : 0;
+    const start = (_b = starts[index]) != null ? _b : markerStart;
+    const nextStart = starts[index + 1];
+    const end = typeof nextStart === "number" ? nextStart : noteContent.length;
+    const raw = noteContent.slice(start, end);
+    let meta = null;
+    const markerMeta = parseMetaFromMarkerPayload(markerPayload);
+    if (markerMeta) {
+      meta = markerMeta;
+    } else {
+      const metaMatch = raw.match(ENTRY_META_REGEX);
+      if (!(metaMatch == null ? void 0 : metaMatch[1])) {
+        return {
+          markerStart,
+          start,
+          end,
+          markerLine: markerText,
+          meta
+        };
+      }
+      try {
+        const parsed = JSON.parse(metaMatch[1]);
+        if (parsed && typeof parsed.id === "string") {
+          meta = {
+            id: parsed.id,
+            title: typeof parsed.title === "string" ? parsed.title : "",
+            recordedAtIso: typeof parsed.recordedAtIso === "string" ? parsed.recordedAtIso : ""
+          };
+        }
+      } catch (e) {
+        meta = null;
+      }
+    }
+    return {
+      markerStart,
+      start,
+      end,
+      markerLine: markerText,
+      meta
+    };
+  });
+}
+function parseMetaFromMarkerPayload(payloadRaw) {
+  if (!payloadRaw)
+    return null;
+  if (payloadRaw[0] !== "{") {
+    const compact = parseCompactMarkerPayload(payloadRaw);
+    if (!compact)
+      return null;
+    return {
+      id: compact.id,
+      title: compact.title || "",
+      recordedAtIso: compact.recordedAtIso || ""
+    };
+  }
+  try {
+    const parsed = JSON.parse(payloadRaw);
+    if (!parsed || typeof parsed.id !== "string")
+      return null;
+    return {
+      id: parsed.id,
+      title: typeof parsed.title === "string" ? parsed.title : "",
+      recordedAtIso: typeof parsed.recordedAtIso === "string" ? parsed.recordedAtIso : ""
+    };
+  } catch (e) {
+    return null;
+  }
+}
+function parseCompactMarkerPayload(payloadRaw) {
+  const pairs = payloadRaw.split(";").map((part) => part.trim()).filter(Boolean).map((part) => {
+    const idx = part.indexOf("=");
+    if (idx === -1)
+      return null;
+    return {
+      key: part.slice(0, idx).trim(),
+      value: part.slice(idx + 1).trim()
+    };
+  }).filter((item) => !!item);
+  if (pairs.length === 0)
+    return null;
+  const kv = /* @__PURE__ */ new Map();
+  for (const pair of pairs) {
+    kv.set(pair.key, pair.value);
+  }
+  const id = kv.get("id");
+  if (!id)
+    return null;
+  return {
+    id,
+    title: kv.get("title"),
+    recordedAtIso: kv.get("recordedAtIso")
+  };
+}
+function findEntryRegionAtPosition(noteContent, position) {
+  const entries = findEntryRegions(noteContent);
+  if (entries.length === 0)
+    return null;
+  const offset = positionToOffset(noteContent, position);
+  const matched = entries.find((entry) => offset >= entry.start && offset < entry.end);
+  if (matched)
+    return matched;
+  return entries[entries.length - 1];
+}
+function positionToOffset(content, position) {
+  var _a, _b, _c, _d;
+  const lines = content.split("\n");
+  const safeLine = Math.max(0, Math.min(position.line, Math.max(0, lines.length - 1)));
+  const safeCh = Math.max(0, Math.min(position.ch, (_b = (_a = lines[safeLine]) == null ? void 0 : _a.length) != null ? _b : 0));
+  let offset = 0;
+  for (let i = 0; i < safeLine; i++) {
+    offset += ((_d = (_c = lines[i]) == null ? void 0 : _c.length) != null ? _d : 0) + 1;
+  }
+  offset += safeCh;
+  return offset;
+}
+
+// src-rebuild/utils/document/SpeakerMapping.ts
 var SPEAKER_MAPPING_HEADER = "## Speaker Mapping";
 var ENTRY_MAPPING_START_PREFIX = "<!-- neurovox:mapping:start:";
 var ENTRY_MAPPING_END_PREFIX = "<!-- neurovox:mapping:end:";
@@ -5476,165 +5184,7 @@ function escapeForRegExp(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-// src/utils/document/TranscriptionEntry.ts
-var ENTRY_MARKER_REGEX = /<!--\s*neurovox:entry:([^\n]*?)\s*-->/g;
-var ENTRY_META_REGEX = /<!--\s*neurovox:entry-meta:({[\s\S]*?})\s*-->/;
-function createEntryMeta(title) {
-  const recordedAtIso = new Date().toISOString();
-  return {
-    id: `entry_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`,
-    title,
-    recordedAtIso
-  };
-}
-function buildEntryMarkerComment(meta, hash) {
-  const compactPayload = `id=${meta.id};hash=${hash}`;
-  return `<!-- neurovox:entry:${compactPayload} -->`;
-}
-function findEntryRegions(noteContent) {
-  const markers = Array.from(noteContent.matchAll(ENTRY_MARKER_REGEX));
-  if (markers.length === 0)
-    return [];
-  const starts = markers.map((match) => {
-    var _a;
-    const markerStart = (_a = match.index) != null ? _a : 0;
-    const markerLineStart = noteContent.lastIndexOf("\n", markerStart) + 1;
-    const markerLineEnd = noteContent.indexOf("\n", markerStart);
-    const markerLine = markerLineEnd === -1 ? noteContent.slice(markerLineStart) : noteContent.slice(markerLineStart, markerLineEnd);
-    const inQuotedCallout = /^\s*>\s*<!--\s*neurovox:entry:/i.test(markerLine);
-    if (!inQuotedCallout)
-      return markerStart;
-    const before = noteContent.slice(0, markerStart);
-    const calloutHeaderRegex = /^>\[![^\]]+\][^\n]*$/gm;
-    let calloutHeaderMatch = calloutHeaderRegex.exec(before);
-    let lastHeader = null;
-    while (calloutHeaderMatch) {
-      lastHeader = calloutHeaderMatch;
-      calloutHeaderMatch = calloutHeaderRegex.exec(before);
-    }
-    return lastHeader && lastHeader.index !== void 0 ? lastHeader.index : markerStart;
-  });
-  return markers.map((match, index) => {
-    var _a, _b;
-    const markerText = match[0];
-    const markerPayload = (match[1] || "").trim();
-    const markerStart = (_a = match.index) != null ? _a : 0;
-    const start = (_b = starts[index]) != null ? _b : markerStart;
-    const nextStart = starts[index + 1];
-    const end = typeof nextStart === "number" ? nextStart : noteContent.length;
-    const raw = noteContent.slice(start, end);
-    let meta = null;
-    const markerMeta = parseMetaFromMarkerPayload(markerPayload);
-    if (markerMeta) {
-      meta = markerMeta;
-    } else {
-      const metaMatch = raw.match(ENTRY_META_REGEX);
-      if (!(metaMatch == null ? void 0 : metaMatch[1])) {
-        return {
-          markerStart,
-          start,
-          end,
-          markerLine: markerText,
-          meta
-        };
-      }
-      try {
-        const parsed = JSON.parse(metaMatch[1]);
-        if (parsed && typeof parsed.id === "string") {
-          meta = {
-            id: parsed.id,
-            title: typeof parsed.title === "string" ? parsed.title : "",
-            recordedAtIso: typeof parsed.recordedAtIso === "string" ? parsed.recordedAtIso : ""
-          };
-        }
-      } catch (e) {
-        meta = null;
-      }
-    }
-    return {
-      markerStart,
-      start,
-      end,
-      markerLine: markerText,
-      meta
-    };
-  });
-}
-function parseMetaFromMarkerPayload(payloadRaw) {
-  if (!payloadRaw)
-    return null;
-  if (payloadRaw[0] !== "{") {
-    const compact = parseCompactMarkerPayload(payloadRaw);
-    if (!compact)
-      return null;
-    return {
-      id: compact.id,
-      title: compact.title || "",
-      recordedAtIso: compact.recordedAtIso || ""
-    };
-  }
-  try {
-    const parsed = JSON.parse(payloadRaw);
-    if (!parsed || typeof parsed.id !== "string")
-      return null;
-    return {
-      id: parsed.id,
-      title: typeof parsed.title === "string" ? parsed.title : "",
-      recordedAtIso: typeof parsed.recordedAtIso === "string" ? parsed.recordedAtIso : ""
-    };
-  } catch (e) {
-    return null;
-  }
-}
-function parseCompactMarkerPayload(payloadRaw) {
-  const pairs = payloadRaw.split(";").map((part) => part.trim()).filter(Boolean).map((part) => {
-    const idx = part.indexOf("=");
-    if (idx === -1)
-      return null;
-    return {
-      key: part.slice(0, idx).trim(),
-      value: part.slice(idx + 1).trim()
-    };
-  }).filter((item) => !!item);
-  if (pairs.length === 0)
-    return null;
-  const kv = /* @__PURE__ */ new Map();
-  for (const pair of pairs) {
-    kv.set(pair.key, pair.value);
-  }
-  const id = kv.get("id");
-  if (!id)
-    return null;
-  return {
-    id,
-    title: kv.get("title"),
-    recordedAtIso: kv.get("recordedAtIso")
-  };
-}
-function findEntryRegionAtPosition(noteContent, position) {
-  const entries = findEntryRegions(noteContent);
-  if (entries.length === 0)
-    return null;
-  const offset = positionToOffset(noteContent, position);
-  const matched = entries.find((entry) => offset >= entry.start && offset < entry.end);
-  if (matched)
-    return matched;
-  return entries[entries.length - 1];
-}
-function positionToOffset(content, position) {
-  var _a, _b, _c, _d;
-  const lines = content.split("\n");
-  const safeLine = Math.max(0, Math.min(position.line, Math.max(0, lines.length - 1)));
-  const safeCh = Math.max(0, Math.min(position.ch, (_b = (_a = lines[safeLine]) == null ? void 0 : _a.length) != null ? _b : 0));
-  let offset = 0;
-  for (let i = 0; i < safeLine; i++) {
-    offset += ((_d = (_c = lines[i]) == null ? void 0 : _c.length) != null ? _d : 0) + 1;
-  }
-  offset += safeCh;
-  return offset;
-}
-
-// src/utils/document/DocumentInserter.ts
+// src-rebuild/utils/document/DocumentInserter.ts
 var _DocumentInserter = class {
   constructor(plugin) {
     this.plugin = plugin;
@@ -5968,2697 +5518,13 @@ DocumentInserter.LIVE_MARKER_START_PREFIX = "<!-- neurovox:live:start:";
 DocumentInserter.LIVE_MARKER_END_PREFIX = "<!-- neurovox:live:end:";
 DocumentInserter.liveCalloutCollapsedState = /* @__PURE__ */ new Map();
 
-// src/utils/state/ProcessingState.ts
-var ProcessingState = class {
-  constructor() {
-    this.isProcessing = false;
-    this.currentStep = null;
-    this.steps = [];
-    this.startTime = Date.now();
-  }
-  /**
-   * Records the start of a processing step
-   */
-  startStep(name) {
-    this.currentStep = { name, startTime: performance.now() };
-    this.steps.push(this.currentStep);
-  }
-  /**
-   * Records the completion of the current step
-   */
-  completeStep() {
-    if (this.currentStep) {
-      this.currentStep.endTime = performance.now();
-    }
-  }
-  /**
-   * Returns timings for all completed steps
-   */
-  getTimings() {
-    return Object.fromEntries(
-      this.steps.filter((step) => step.endTime).map((step) => [
-        step.name,
-        step.endTime - step.startTime
-      ])
-    );
-  }
-  /**
-   * Updates chunk processing progress
-   */
-  updateProgress(processed, total) {
-    this.processedChunks = processed;
-    this.totalChunks = total;
-  }
-  /**
-   * Records an error that occurred during processing
-   */
-  setError(error) {
-    this.error = error instanceof Error ? error.message : error;
-  }
-  /**
-   * Gets the current processing progress
-   */
-  getProgress() {
-    return {
-      processed: this.processedChunks,
-      total: this.totalChunks
-    };
-  }
-  /**
-   * Gets whether processing is currently active
-   */
-  getIsProcessing() {
-    return this.isProcessing;
-  }
-  /**
-   * Sets the processing state
-   */
-  setIsProcessing(value) {
-    this.isProcessing = value;
-  }
-  /**
-   * Gets the current error if any
-   */
-  getError() {
-    return this.error;
-  }
-  /**
-   * Gets how long processing has been running
-   */
-  getDuration() {
-    return Date.now() - this.startTime;
-  }
-  /**
-   * Gets the name of the current processing step
-   */
-  getCurrentStepName() {
-    var _a;
-    return ((_a = this.currentStep) == null ? void 0 : _a.name) || null;
-  }
-  /**
-   * Resets the state to initial values
-   */
-  reset() {
-    this.isProcessing = false;
-    this.currentStep = null;
-    this.audioBlob = void 0;
-    this.transcription = void 0;
-    this.postProcessing = void 0;
-    this.startTime = Date.now();
-    this.error = void 0;
-    this.processedChunks = void 0;
-    this.totalChunks = void 0;
-    this.steps = [];
-  }
-  /**
-   * Converts the state to a JSON-compatible object for storage
-   */
-  toJSON() {
-    return {
-      isProcessing: this.isProcessing,
-      currentStep: this.currentStep,
-      transcription: this.transcription,
-      postProcessing: this.postProcessing,
-      startTime: this.startTime,
-      error: this.error,
-      processedChunks: this.processedChunks,
-      totalChunks: this.totalChunks
-    };
-  }
-  /**
-   * Restores state from a saved JSON object
-   */
-  fromJSON(data) {
-    var _a, _b, _c;
-    this.isProcessing = (_a = data.isProcessing) != null ? _a : false;
-    this.currentStep = (_b = data.currentStep) != null ? _b : null;
-    this.transcription = data.transcription;
-    this.postProcessing = data.postProcessing;
-    this.startTime = (_c = data.startTime) != null ? _c : Date.now();
-    this.error = data.error;
-    this.processedChunks = data.processedChunks;
-    this.totalChunks = data.totalChunks;
-  }
-};
-
-// src/utils/telemetry/RuntimeLogger.ts
-var RuntimeLogger = class {
-  static createContext(prefix = "job") {
-    const now = Date.now();
-    const rand = Math.random().toString(36).slice(2, 8);
-    return {
-      jobId: `${prefix}_${now}_${rand}`,
-      correlationId: `corr_${now}_${rand}`
-    };
-  }
-  static async log(plugin, context, eventName, details = {}) {
-    const payload = {
-      eventName,
-      timestamp: new Date().toISOString(),
-      jobId: context.jobId,
-      correlationId: context.correlationId,
-      provider: plugin.settings.transcriptionProvider,
-      model: plugin.settings.transcriptionModel,
-      ...details
-    };
-    console.debug("[NeuroVox][Runtime]", payload);
-    this.logWriteChain = this.logWriteChain.then(async () => {
-      const adapter = plugin.app.vault.adapter;
-      await this.ensureLogDir(adapter);
-      const line = `${JSON.stringify(payload)}
-`;
-      if (this._hasAppend === void 0) {
-        this._hasAppend = typeof adapter.append === "function";
-      }
-      if (this._hasAppend) {
-        await adapter.append(this.LOG_FILE, line);
-        return;
-      }
-      const exists = await adapter.exists(this.LOG_FILE);
-      if (exists) {
-        const prev = await adapter.read(this.LOG_FILE);
-        await adapter.write(this.LOG_FILE, `${prev}${line}`);
-        return;
-      }
-      await adapter.write(this.LOG_FILE, line);
-    }).catch((error) => {
-      const reason = error instanceof Error ? error.message : String(error);
-      this.recentWriteFailures.push({ at: new Date().toISOString(), error: reason });
-      if (this.recentWriteFailures.length > 50) {
-        this.recentWriteFailures = this.recentWriteFailures.slice(-50);
-      }
-      console.error("[NeuroVox][Runtime] log write failed", { reason, payload });
-    });
-    await this.logWriteChain;
-  }
-  static async prune(plugin, options) {
-    var _a, _b;
-    const maxBytes = (_a = options == null ? void 0 : options.maxBytes) != null ? _a : this.MAX_BYTES_DEFAULT;
-    const maxAgeMs = (_b = options == null ? void 0 : options.maxAgeMs) != null ? _b : this.MAX_AGE_MS_DEFAULT;
-    this.logWriteChain = this.logWriteChain.then(async () => {
-      const adapter = plugin.app.vault.adapter;
-      const exists = await adapter.exists(this.LOG_FILE);
-      if (!exists)
-        return;
-      const raw = await adapter.read(this.LOG_FILE);
-      if (!raw)
-        return;
-      const cutoff = Date.now() - maxAgeMs;
-      const lines = raw.split("\n").filter(Boolean);
-      const retained = lines.filter((line) => {
-        try {
-          const parsed = JSON.parse(line);
-          const ts = new Date(parsed.timestamp).getTime();
-          return Number.isFinite(ts) && ts >= cutoff;
-        } catch (e) {
-          return false;
-        }
-      });
-      let pruned = retained.join("\n");
-      if (pruned.length > 0)
-        pruned += "\n";
-      if (pruned.length > maxBytes) {
-        pruned = pruned.slice(pruned.length - maxBytes);
-        const firstNewline = pruned.indexOf("\n");
-        if (firstNewline >= 0) {
-          pruned = pruned.slice(firstNewline + 1);
-        }
-      }
-      await adapter.write(this.LOG_FILE, pruned);
-    }).catch((error) => {
-      const reason = error instanceof Error ? error.message : String(error);
-      console.error("[NeuroVox][Runtime] prune failed", { reason });
-    });
-    await this.logWriteChain;
-  }
-  static async ensureLogDir(adapter) {
-    if (this.dirEnsured)
-      return;
-    const exists = await adapter.exists(this.LOG_DIR);
-    if (!exists) {
-      await adapter.mkdir(this.LOG_DIR);
-    }
-    this.dirEnsured = true;
-  }
-};
-RuntimeLogger.LOG_DIR = ".obsidian/plugins/neurovox/logs";
-RuntimeLogger.LOG_FILE = ".obsidian/plugins/neurovox/logs/latest.jsonl";
-RuntimeLogger.MAX_BYTES_DEFAULT = 10 * 1024 * 1024;
-RuntimeLogger.MAX_AGE_MS_DEFAULT = 7 * 24 * 60 * 60 * 1e3;
-RuntimeLogger.logWriteChain = Promise.resolve();
-RuntimeLogger.dirEnsured = false;
-RuntimeLogger.recentWriteFailures = [];
-RuntimeLogger._hasAppend = void 0;
-
-// src/utils/recovery/JobStore.ts
-var _JobStore = class {
-  constructor(plugin) {
-    this.plugin = plugin;
-    this.writeChain = Promise.resolve();
-  }
-  async upsertJob(job) {
-    await this.withState(async (state) => {
-      const idx = state.jobs.findIndex((j) => j.jobId === job.jobId);
-      if (idx >= 0) {
-        state.jobs[idx] = { ...state.jobs[idx], ...job, updatedAt: new Date().toISOString() };
-      } else {
-        state.jobs.push(job);
-      }
-    });
-  }
-  async updateJobStatus(jobId, status, error) {
-    await this.withState(async (state) => {
-      const idx = state.jobs.findIndex((j) => j.jobId === jobId);
-      if (idx < 0)
-        return;
-      state.jobs[idx] = {
-        ...state.jobs[idx],
-        status,
-        updatedAt: new Date().toISOString(),
-        error
-      };
-    });
-  }
-  async upsertCheckpoint(checkpoint) {
-    await this.withState(async (state) => {
-      const idx = state.checkpoints.findIndex(
-        (c) => c.jobId === checkpoint.jobId && c.index === checkpoint.index
-      );
-      if (idx >= 0) {
-        state.checkpoints[idx] = {
-          ...state.checkpoints[idx],
-          ...checkpoint,
-          updatedAt: new Date().toISOString()
-        };
-      } else {
-        state.checkpoints.push(checkpoint);
-      }
-    });
-  }
-  async getIncompleteJobs() {
-    const state = await this.readState();
-    return state.jobs.filter((j) => j.status === "queued" || j.status === "running" || j.status === "failed");
-  }
-  async getLatestIncompleteJob(kind, targetFile) {
-    const jobs = await this.getIncompleteJobs();
-    return jobs.filter((j) => kind ? j.kind === kind : true).filter((j) => targetFile ? j.targetFile === targetFile : true).sort((a, b) => a.updatedAt < b.updatedAt ? 1 : -1)[0];
-  }
-  async getJob(jobId) {
-    const state = await this.readState();
-    return state.jobs.find((j) => j.jobId === jobId);
-  }
-  async getCheckpoints(jobId) {
-    const state = await this.readState();
-    return state.checkpoints.filter((c) => c.jobId === jobId).sort((a, b) => a.index - b.index);
-  }
-  async getLatestCommittedCheckpoint(jobId, stage) {
-    const checkpoints = await this.getCheckpoints(jobId);
-    return checkpoints.filter((c) => c.stage === stage && c.status === "committed").sort((a, b) => {
-      if (a.index !== b.index)
-        return b.index - a.index;
-      return a.updatedAt < b.updatedAt ? 1 : -1;
-    })[0];
-  }
-  async prune(options) {
-    var _a, _b, _c;
-    const maxJobs = (_a = options == null ? void 0 : options.maxJobs) != null ? _a : 500;
-    const maxCheckpoints = (_b = options == null ? void 0 : options.maxCheckpoints) != null ? _b : 2e3;
-    const maxAgeMs = (_c = options == null ? void 0 : options.maxAgeMs) != null ? _c : 14 * 24 * 60 * 60 * 1e3;
-    const cutoff = Date.now() - maxAgeMs;
-    await this.withState(async (state) => {
-      state.jobs = state.jobs.filter((job) => {
-        if (job.status === "queued" || job.status === "running")
-          return true;
-        return new Date(job.updatedAt).getTime() >= cutoff;
-      }).sort((a, b) => a.updatedAt < b.updatedAt ? 1 : -1).slice(0, maxJobs);
-      const keepJobIds = new Set(state.jobs.map((j) => j.jobId));
-      state.checkpoints = state.checkpoints.filter((cp) => keepJobIds.has(cp.jobId)).sort((a, b) => a.updatedAt < b.updatedAt ? 1 : -1).slice(0, maxCheckpoints);
-    });
-  }
-  async demoteStaleFailedToCanceled(maxAgeMs) {
-    let changed = 0;
-    const cutoff = Date.now() - Math.max(0, maxAgeMs);
-    await this.withState(async (state) => {
-      const nowIso = new Date().toISOString();
-      for (const job of state.jobs) {
-        if (job.status !== "failed")
-          continue;
-        const updatedAtMs = new Date(job.updatedAt).getTime();
-        if (!Number.isFinite(updatedAtMs) || updatedAtMs > cutoff)
-          continue;
-        job.status = "canceled";
-        job.updatedAt = nowIso;
-        changed += 1;
-      }
-    });
-    return changed;
-  }
-  async withState(mutator) {
-    const run = this.writeChain.then(async () => {
-      const state = await this.readState();
-      await mutator(state);
-      await this.writeState(state);
-    });
-    this.writeChain = run.catch((err) => {
-      console.error("[NeuroVox][JobStore] State write failed:", err);
-    });
-    await run;
-  }
-  async readState() {
-    const adapter = this.plugin.app.vault.adapter;
-    await this.ensureDir(adapter);
-    if (!await adapter.exists(_JobStore.FILE)) {
-      return { jobs: [], checkpoints: [] };
-    }
-    try {
-      const raw = await adapter.read(_JobStore.FILE);
-      let parsed;
-      try {
-        parsed = JSON.parse(raw);
-      } catch (e) {
-        await this.quarantineCorruptFile(adapter, _JobStore.FILE, raw);
-        return { jobs: [], checkpoints: [] };
-      }
-      return {
-        jobs: Array.isArray(parsed == null ? void 0 : parsed.jobs) ? parsed.jobs : [],
-        checkpoints: Array.isArray(parsed == null ? void 0 : parsed.checkpoints) ? parsed.checkpoints : []
-      };
-    } catch (e) {
-      return { jobs: [], checkpoints: [] };
-    }
-  }
-  async writeState(state) {
-    const adapter = this.plugin.app.vault.adapter;
-    await this.ensureDir(adapter);
-    await adapter.write(_JobStore.FILE, JSON.stringify(state, null, 2));
-  }
-  async ensureDir(adapter) {
-    if (!await adapter.exists(_JobStore.BASE_DIR)) {
-      await adapter.mkdir(_JobStore.BASE_DIR);
-    }
-  }
-  async quarantineCorruptFile(adapter, path, raw) {
-    try {
-      const quarantinePath = `${path}.corrupt.${Date.now()}.json`;
-      await adapter.write(quarantinePath, raw);
-      await adapter.remove(path);
-    } catch (e) {
-    }
-  }
-};
-var JobStore = _JobStore;
-JobStore.BASE_DIR = ".obsidian/plugins/neurovox/recovery";
-JobStore.FILE = ".obsidian/plugins/neurovox/recovery/jobs.json";
-
-// src/utils/queue/LocalQueueBackend.ts
-var _LocalQueueBackend = class {
-  constructor(plugin) {
-    this.plugin = plugin;
-    this.writeChain = Promise.resolve();
-    this.dirEnsured = false;
-  }
-  async enqueue(payload) {
-    const now = new Date().toISOString();
-    const job = {
-      id: `q_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
-      status: "queued",
-      payload,
-      attemptCount: 0,
-      createdAt: now,
-      updatedAt: now
-    };
-    await this.withState(async (state) => {
-      state.jobs.push(job);
-    });
-    return job;
-  }
-  async claim(workerId, leaseMs, preferredJobId) {
-    let result = null;
-    await this.withState(async (state) => {
-      const nowMs = Date.now();
-      const claimable = state.jobs.filter((j) => this.canBeClaimed(j, nowMs)).sort((a, b) => a.createdAt < b.createdAt ? -1 : 1);
-      const next = (preferredJobId ? claimable.find((j) => j.id === preferredJobId) : void 0) || claimable[0];
-      if (!next)
-        return;
-      const leaseToken = this.newLeaseToken();
-      next.status = "claimed";
-      next.leaseOwner = workerId;
-      next.leaseToken = leaseToken;
-      next.leaseExpiresAt = new Date(nowMs + leaseMs).toISOString();
-      next.updatedAt = new Date().toISOString();
-      next.attemptCount += 1;
-      result = { job: { ...next }, leaseToken };
-    });
-    return result;
-  }
-  async heartbeat(jobId, workerId, leaseToken, leaseMs) {
-    await this.withState(async (state) => {
-      const job = this.mustGetJob(state, jobId);
-      this.assertLease(job, workerId, leaseToken);
-      if (job.status !== "claimed" && job.status !== "running")
-        return;
-      job.status = "running";
-      job.leaseExpiresAt = new Date(Date.now() + leaseMs).toISOString();
-      job.updatedAt = new Date().toISOString();
-    });
-  }
-  async complete(jobId, workerId, leaseToken, resultRef) {
-    await this.withState(async (state) => {
-      const job = this.mustGetJob(state, jobId);
-      if (job.status === "completed")
-        return;
-      this.assertLease(job, workerId, leaseToken);
-      job.status = "completed";
-      job.resultRef = resultRef;
-      job.updatedAt = new Date().toISOString();
-      this.clearLease(job);
-    });
-  }
-  async fail(jobId, workerId, leaseToken, reason, retryAt) {
-    await this.withState(async (state) => {
-      const job = this.mustGetJob(state, jobId);
-      this.assertLease(job, workerId, leaseToken);
-      job.reason = reason;
-      job.retryAt = retryAt;
-      job.status = retryAt ? "retry_scheduled" : "failed";
-      job.updatedAt = new Date().toISOString();
-      this.clearLease(job);
-    });
-  }
-  async retry(jobId, reason) {
-    await this.withState(async (state) => {
-      const job = this.mustGetJob(state, jobId);
-      if (job.status !== "failed" && job.status !== "retry_scheduled")
-        return;
-      job.status = "queued";
-      job.reason = reason;
-      job.updatedAt = new Date().toISOString();
-      job.retryAt = void 0;
-      this.clearLease(job);
-    });
-  }
-  async getSnapshot() {
-    const state = await this.readState();
-    return [...state.jobs].sort((a, b) => a.updatedAt < b.updatedAt ? 1 : -1);
-  }
-  async prune(options) {
-    var _a, _b;
-    const maxJobs = (_a = options == null ? void 0 : options.maxJobs) != null ? _a : 500;
-    const maxAgeMs = (_b = options == null ? void 0 : options.maxAgeMs) != null ? _b : 14 * 24 * 60 * 60 * 1e3;
-    const cutoff = Date.now() - maxAgeMs;
-    await this.withState(async (state) => {
-      const retained = state.jobs.filter((job) => {
-        if (job.status === "queued" || job.status === "claimed" || job.status === "running" || job.status === "retry_scheduled") {
-          return true;
-        }
-        return new Date(job.updatedAt).getTime() >= cutoff;
-      }).sort((a, b) => a.updatedAt < b.updatedAt ? 1 : -1).slice(0, maxJobs);
-      state.jobs = retained;
-    });
-  }
-  canBeClaimed(job, nowMs) {
-    if (job.status === "queued")
-      return true;
-    if (job.status === "retry_scheduled") {
-      return !!job.retryAt && new Date(job.retryAt).getTime() <= nowMs;
-    }
-    if ((job.status === "claimed" || job.status === "running") && job.leaseExpiresAt) {
-      return new Date(job.leaseExpiresAt).getTime() < nowMs;
-    }
-    return false;
-  }
-  mustGetJob(state, jobId) {
-    const job = state.jobs.find((j) => j.id === jobId);
-    if (!job)
-      throw new Error(`Queue job not found: ${jobId}`);
-    return job;
-  }
-  assertLease(job, workerId, leaseToken) {
-    if (job.leaseOwner !== workerId || job.leaseToken !== leaseToken) {
-      throw new Error("Lease validation failed");
-    }
-  }
-  clearLease(job) {
-    job.leaseOwner = void 0;
-    job.leaseToken = void 0;
-    job.leaseExpiresAt = void 0;
-  }
-  newLeaseToken() {
-    return `lease_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-  }
-  async withState(mutator) {
-    const run = this.writeChain.then(async () => {
-      const state = await this.readState();
-      await mutator(state);
-      await this.writeState(state);
-    });
-    this.writeChain = run.catch((err) => {
-      console.error("[NeuroVox][Queue] State write failed:", err);
-    });
-    await run;
-  }
-  async readState() {
-    const adapter = this.plugin.app.vault.adapter;
-    await this.ensureDir(adapter);
-    if (!await adapter.exists(_LocalQueueBackend.FILE)) {
-      return { jobs: [] };
-    }
-    try {
-      const raw = await adapter.read(_LocalQueueBackend.FILE);
-      let parsed;
-      try {
-        parsed = JSON.parse(raw);
-      } catch (e) {
-        await this.quarantineCorruptFile(adapter, _LocalQueueBackend.FILE, raw);
-        return { jobs: [] };
-      }
-      return { jobs: Array.isArray(parsed == null ? void 0 : parsed.jobs) ? parsed.jobs : [] };
-    } catch (e) {
-      return { jobs: [] };
-    }
-  }
-  async writeState(state) {
-    const adapter = this.plugin.app.vault.adapter;
-    await this.ensureDir(adapter);
-    await adapter.write(_LocalQueueBackend.FILE, JSON.stringify(state, null, 2));
-  }
-  async ensureDir(adapter) {
-    if (this.dirEnsured) return;
-    if (!await adapter.exists(_LocalQueueBackend.BASE_DIR)) {
-      await adapter.mkdir(_LocalQueueBackend.BASE_DIR);
-    }
-    this.dirEnsured = true;
-  }
-  async quarantineCorruptFile(adapter, path, raw) {
-    try {
-      const quarantinePath = `${path}.corrupt.${Date.now()}.json`;
-      await adapter.write(quarantinePath, raw);
-      await adapter.remove(path);
-    } catch (e) {
-    }
-  }
-};
-var LocalQueueBackend = _LocalQueueBackend;
-LocalQueueBackend.BASE_DIR = ".obsidian/plugins/neurovox/queue";
-LocalQueueBackend.FILE = ".obsidian/plugins/neurovox/queue/local-queue.json";
-
-// src/utils/retry/ErrorClassifier.ts
-function classifyError(error) {
-  const message = toMessage(error);
-  if (includesAny(message, [
-    "unauthorized",
-    "invalid api key",
-    "api key is not configured",
-    "forbidden"
-  ]) || matchesStatusCode(message, [401, 403])) {
-    return { errorClass: "auth", retryable: false };
-  }
-  if (includesAny(message, ["rate limit", "quota", "too many requests"]) || matchesStatusCode(message, [429])) {
-    return { errorClass: "rate_limit", retryable: true };
-  }
-  if (includesAny(message, [
-    "invalid request",
-    "invalid response format",
-    "invalid transcription response",
-    "file too large",
-    "payload",
-    "unprocessable"
-  ]) || matchesStatusCode(message, [400])) {
-    return { errorClass: "payload", retryable: false };
-  }
-  if (includesAny(message, ["timed out", "timeout", "etimedout"])) {
-    return { errorClass: "timeout", retryable: true };
-  }
-  if (includesAny(message, [
-    "network",
-    "failed to fetch",
-    "econn",
-    "enotfound",
-    "socket",
-    "dns",
-    "connection"
-  ])) {
-    return { errorClass: "network", retryable: true };
-  }
-  if (includesAny(message, [
-    "server error",
-    "internal server error",
-    "bad gateway"
-  ]) || matchesStatusCode(message, [500, 502, 503, 504])) {
-    return { errorClass: "server", retryable: true };
-  }
-  return { errorClass: "unknown", retryable: false };
-}
-function toMessage(error) {
-  if (error instanceof Error)
-    return error.message.toLowerCase();
-  if (typeof error === "string")
-    return error.toLowerCase();
-  return "unknown error";
-}
-function includesAny(value, patterns) {
-  return patterns.some((p) => value.includes(p));
-}
-function matchesStatusCode(message, codes) {
-  return codes.some((code) => new RegExp(`(?:^|\\b|status\\s*)${code}(?:\\b|$)`).test(message));
-}
-
-// src/utils/routing/BatchRoutingPolicy.ts
-var BatchRoutingPolicy = class {
-  constructor(settings) {
-    this.settings = settings;
-  }
-  decide(sourcePath, sizeBytes) {
-    const sourceType = this.detectSourceType(sourcePath);
-    const thresholdBytes = this.settings.batchChunkThresholdMB * 1024 * 1024;
-    const isLargeUpload = sourceType === "uploaded" && sizeBytes > thresholdBytes;
-    const backendEnabled = this.settings.enableBackendOrchestration;
-    const prefersBackend = this.settings.preferBackendForLargeUploads;
-    if (sourceType === "uploaded") {
-      return {
-        route: "backend_batch",
-        preferredRoute: "backend_batch",
-        sourceType,
-        isLargeUpload,
-        reason: backendEnabled ? "uploaded_cloud_route_enforced" : "uploaded_cloud_route_enforced_backend_disabled",
-        backendEnabled
-      };
-    }
-    return {
-      route: "direct_batch",
-      preferredRoute: "direct_batch",
-      sourceType,
-      isLargeUpload,
-      reason: isLargeUpload ? "large_upload_backend_not_preferred" : "default_direct_batch",
-      backendEnabled
-    };
-  }
-  detectSourceType(sourcePath) {
-    if (!sourcePath)
-      return "unknown";
-    const normalized = sourcePath.toLowerCase();
-    const recordingRoot = this.settings.recordingFolderPath.trim().toLowerCase();
-    if (recordingRoot.length > 0 && normalized.startsWith(`${recordingRoot}/`)) {
-      return "recorded";
-    }
-    return "uploaded";
-  }
-};
-
-// src/utils/backend/BackendBatchOrchestrationService.ts
-var import_obsidian4 = require("obsidian");
-
-// src/utils/backend/BackendStatusMapper.ts
-var UI_RANK = {
-  creating: 0,
-  uploading: 1,
-  queued: 2,
-  processing: 3,
-  completed: 4,
-  failed: 4
-};
-function mapBackendToUiState(statusRaw, stageRaw) {
-  const status = (statusRaw || "").trim().toLowerCase();
-  const stage = (stageRaw || "").trim().toLowerCase();
-  const probe = `${status} ${stage}`;
-  if (status === "failed" || status === "error" || status === "canceled")
-    return "failed";
-  if (status === "completed" || status === "done" || status === "succeeded")
-    return "completed";
-  if (probe.includes("upload"))
-    return "uploading";
-  if (probe.includes("creat"))
-    return "creating";
-  if (probe.includes("queue"))
-    return "queued";
-  if (probe.includes("process") || probe.includes("provider"))
-    return "processing";
-  if (status === "created")
-    return "creating";
-  if (status === "uploaded")
-    return "uploading";
-  return "processing";
-}
-function clampMonotonicUiState(previous, next) {
-  if (!previous)
-    return next;
-  if (previous === "failed" || previous === "completed")
-    return previous;
-  if (next === "failed" || next === "completed")
-    return next;
-  return UI_RANK[next] >= UI_RANK[previous] ? next : previous;
-}
-function formatUiStateLabel(state) {
-  switch (state) {
-    case "creating":
-      return "Creating job";
-    case "uploading":
-      return "Uploading source";
-    case "queued":
-      return "Queued";
-    case "processing":
-      return "Processing";
-    case "completed":
-      return "Completed";
-    case "failed":
-      return "Failed";
-    default:
-      return "Processing";
-  }
-}
-
-// src/utils/backend/BackendCompletionGate.ts
-function isCompletedStatus(statusRaw) {
-  const status = (statusRaw || "").trim().toLowerCase();
-  return status === "completed" || status === "succeeded" || status === "done";
-}
-function isFailedTerminalStatus(statusRaw) {
-  const status = (statusRaw || "").trim().toLowerCase();
-  return status === "failed" || status === "error" || status === "canceled";
-}
-
-// src/utils/backend/BackendBatchOrchestrationService.ts
-function validateBackendUrl(candidateUrl, backendBaseUrl) {
-  try {
-    const candidateOrigin = new URL(candidateUrl).origin;
-    const baseOrigin = new URL(backendBaseUrl).origin;
-    if (candidateOrigin !== baseOrigin) {
-      throw new Error(`Backend returned URL with unexpected origin: ${candidateOrigin} (expected ${baseOrigin})`);
-    }
-  } catch (e) {
-    if (e.message.includes("unexpected origin")) throw e;
-    throw new Error(`Backend returned invalid URL: ${candidateUrl}`);
-  }
-}
-var _BackendBatchOrchestrationService = class {
-  constructor(plugin) {
-    this.plugin = plugin;
-  }
-  async transcribeLargeUpload(audioBlob, sourcePath, targetPath, logContext) {
-    const baseUrl = this.plugin.settings.backendBaseUrl.trim().replace(/\/+$/, "");
-    if (!baseUrl) {
-      throw new Error("Backend base URL is not configured.");
-    }
-    const createUrl = `${baseUrl}/api/v1/transcription/jobs`;
-    const createBody = {
-      sourceRef: sourcePath || null,
-      targetRef: targetPath,
-      provider: this.plugin.settings.transcriptionProvider,
-      model: this.plugin.settings.transcriptionModel,
-      mimeType: audioBlob.type || "application/octet-stream",
-      size: audioBlob.size,
-      options: {
-        deepgramDetectLanguage: this.plugin.settings.deepgramDetectLanguage,
-        deepgramLanguageHints: this.plugin.settings.deepgramLanguageHints,
-        enableSpeakerDiarization: this.plugin.settings.enableSpeakerDiarization,
-        forceRomanizedOutput: this.plugin.settings.forceRomanizedOutput
-      }
-    };
-    await RuntimeLogger.log(this.plugin, logContext, "backend_job_create", {
-      status: "started",
-      url: createUrl
-    });
-    const created = await this.requestJson(createUrl, "POST", createBody);
-    const jobId = (created.jobId || created.id || "").trim();
-    if (!jobId) {
-      throw new Error("Backend create job response missing job id.");
-    }
-    await RuntimeLogger.log(this.plugin, logContext, "backend_job_create", {
-      status: "success",
-      backendJobId: jobId
-    });
-    const uploadUrl = (created.uploadUrl || `${createUrl}/${encodeURIComponent(jobId)}/source`).trim();
-    const statusUrl = (created.statusUrl || `${createUrl}/${encodeURIComponent(jobId)}`).trim();
-    const startUrl = `${createUrl}/${encodeURIComponent(jobId)}/start`;
-    validateBackendUrl(statusUrl, baseUrl);
-    validateBackendUrl(startUrl, baseUrl);
-    await this.uploadSource(uploadUrl, audioBlob, logContext, jobId);
-    if (created.started !== true) {
-      await RuntimeLogger.log(this.plugin, logContext, "backend_job_start", {
-        status: "started",
-        backendJobId: jobId,
-        url: startUrl
-      });
-      await this.requestJson(startUrl, "POST", {});
-      await RuntimeLogger.log(this.plugin, logContext, "backend_job_start", {
-        status: "success",
-        backendJobId: jobId
-      });
-    }
-    const result = await this.pollForResult(statusUrl, created.resultUrl, jobId, logContext);
-    return result;
-  }
-  async uploadSource(uploadUrl, audioBlob, logContext, backendJobId) {
-    await RuntimeLogger.log(this.plugin, logContext, "backend_source_upload", {
-      status: "started",
-      backendJobId,
-      size: audioBlob.size,
-      mimeType: audioBlob.type || "application/octet-stream"
-    });
-    this.plugin.showProcessingStatus("Uploading source audio to backend");
-    const totalChunks = Math.max(
-      1,
-      Math.ceil(audioBlob.size / _BackendBatchOrchestrationService.CHUNK_SIZE_BYTES)
-    );
-    const mimeType = audioBlob.type || "application/octet-stream";
-    if (totalChunks === 1) {
-      const body = await audioBlob.arrayBuffer();
-      await (0, import_obsidian4.requestUrl)({
-        url: uploadUrl,
-        method: "PUT",
-        headers: this.buildHeaders({
-          "Content-Type": mimeType
-        }),
-        body,
-        throw: true
-      });
-    } else {
-      for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex += 1) {
-        const start = chunkIndex * _BackendBatchOrchestrationService.CHUNK_SIZE_BYTES;
-        const end = Math.min(
-          audioBlob.size,
-          start + _BackendBatchOrchestrationService.CHUNK_SIZE_BYTES
-        );
-        const chunk = audioBlob.slice(start, end, mimeType);
-        const chunkBody = await chunk.arrayBuffer();
-        const isFinalChunk = chunkIndex === totalChunks - 1;
-        this.plugin.showProcessingStatus(
-          `Uploading source audio to backend (${chunkIndex + 1}/${totalChunks})`
-        );
-        await (0, import_obsidian4.requestUrl)({
-          url: uploadUrl,
-          method: "PUT",
-          headers: this.buildHeaders({
-            "Content-Type": mimeType,
-            "X-NeuroVox-Chunk-Index": String(chunkIndex),
-            "X-NeuroVox-Chunk-Total": String(totalChunks),
-            "X-NeuroVox-Chunk-Final": isFinalChunk ? "true" : "false"
-          }),
-          body: chunkBody,
-          throw: true
-        });
-      }
-    }
-    await RuntimeLogger.log(this.plugin, logContext, "backend_source_upload", {
-      status: "success",
-      backendJobId,
-      chunkCount: totalChunks
-    });
-  }
-  async pollForResult(statusUrl, defaultResultUrl, backendJobId, logContext) {
-    const timeoutMs = this.plugin.settings.backendJobTimeoutSec * 1e3;
-    const pollMs = this.plugin.settings.backendPollIntervalMs;
-    const startedAt = Date.now();
-    let lastUiState = null;
-    let consecutiveErrors = 0;
-    let currentPollMs = pollMs;
-    while (Date.now() - startedAt < timeoutMs) {
-      let status;
-      try {
-        status = await this.requestJson(statusUrl, "GET");
-        consecutiveErrors = 0;
-      } catch (pollError) {
-        consecutiveErrors += 1;
-        console.warn(`[NeuroVox] Poll request failed (${consecutiveErrors}/5):`, pollError);
-        if (consecutiveErrors >= 5) {
-          throw new Error(`Backend poll failed 5 consecutive times. Last error: ${pollError instanceof Error ? pollError.message : String(pollError)}`);
-        }
-        await this.sleep(currentPollMs);
-        currentPollMs = Math.min(currentPollMs * 1.5, pollMs * 4);
-        continue;
-      }
-      const normalized = (status.status || "").toLowerCase();
-      const stage = status.stage || normalized || "processing";
-      const rawUiState = mapBackendToUiState(status.status, status.stage);
-      const uiState = clampMonotonicUiState(lastUiState, rawUiState);
-      if (uiState !== lastUiState) {
-        currentPollMs = pollMs;
-      }
-      lastUiState = uiState;
-      this.plugin.showProcessingStatus(`Backend: ${formatUiStateLabel(uiState)}`);
-      await RuntimeLogger.log(this.plugin, logContext, "backend_job_poll", {
-        status: "started",
-        backendJobId,
-        stage,
-        uiState,
-        progress: typeof status.progress === "number" ? status.progress : void 0
-      });
-      if (isCompletedStatus(normalized)) {
-        const inlineTranscript = (status.transcription || "").trim();
-        if (inlineTranscript.length > 0) {
-          await RuntimeLogger.log(this.plugin, logContext, "backend_job_complete", {
-            status: "success",
-            backendJobId,
-            transcriptionChars: inlineTranscript.length
-          });
-          return {
-            transcription: inlineTranscript,
-            postProcessing: status.postProcessing
-          };
-        }
-        const resultUrl = (status.resultUrl || defaultResultUrl || "").trim();
-        if (!resultUrl) {
-          throw new Error("Backend job completed but no result payload was provided.");
-        }
-        const result = await this.requestJson(resultUrl, "GET");
-        const transcript = (result.transcription || "").trim();
-        if (!transcript) {
-          throw new Error("Backend result payload missing transcription text.");
-        }
-        await RuntimeLogger.log(this.plugin, logContext, "backend_job_complete", {
-          status: "success",
-          backendJobId,
-          transcriptionChars: transcript.length
-        });
-        return {
-          transcription: transcript,
-          postProcessing: result.postProcessing
-        };
-      }
-      if (isFailedTerminalStatus(normalized)) {
-        const message = status.message || `Backend job ended with status "${normalized}"`;
-        await RuntimeLogger.log(this.plugin, logContext, "backend_job_complete", {
-          status: "failed",
-          backendJobId,
-          reason: message
-        });
-        throw new Error(message);
-      }
-      await this.sleep(currentPollMs);
-      currentPollMs = Math.min(currentPollMs * 1.5, pollMs * 4);
-    }
-    throw new Error(
-      `Backend job timed out after ${this.plugin.settings.backendJobTimeoutSec}s`
-    );
-  }
-  async requestJson(url, method, body) {
-    const response = await (0, import_obsidian4.requestUrl)({
-      url,
-      method,
-      headers: this.buildHeaders({
-        "Content-Type": "application/json"
-      }),
-      body: body !== void 0 ? JSON.stringify(body) : void 0,
-      throw: true
-    });
-    if (!response.json) {
-      throw new Error(`Backend returned invalid JSON response for ${method} ${url}`);
-    }
-    return response.json;
-  }
-  buildHeaders(extra) {
-    const headers = { ...extra };
-    const token = this.plugin.settings.backendApiKey.trim();
-    if (token.length > 0) {
-      headers.Authorization = `Bearer ${token}`;
-    }
-    return headers;
-  }
-  sleep(ms) {
-    return new Promise((resolve) => setTimeout(resolve, ms));
-  }
-};
-var BackendBatchOrchestrationService = _BackendBatchOrchestrationService;
-BackendBatchOrchestrationService.CHUNK_SIZE_BYTES = 8 * 1024 * 1024;
-
-// src/utils/RecordingProcessor.ts
-var _RecordingProcessor = class {
-  constructor(plugin) {
-    this.plugin = plugin;
-    this.config = {
-      maxRetries: 3,
-      retryDelay: 1e3
-    };
-    this.processingState = new ProcessingState();
-    this.audioProcessor = new AudioProcessor(plugin);
-    this.transcriptionService = new TranscriptionService(plugin);
-    this.documentInserter = new DocumentInserter(plugin);
-    this.jobStore = new JobStore(plugin);
-    this.queueBackend = new LocalQueueBackend(plugin);
-    this.batchRoutingPolicy = new BatchRoutingPolicy(plugin.settings);
-    this.backendBatchOrchestrationService = new BackendBatchOrchestrationService(plugin);
-  }
-  static getInstance(plugin) {
-    var _a;
-    return (_a = this.instance) != null ? _a : this.instance = new _RecordingProcessor(plugin);
-  }
-  /**
-   * Processes a recording: transcribes audio and inserts the content into the document
-   */
-  async processRecording(audioBlob, activeFile, cursorPosition, audioFilePath) {
-    const logContext = RuntimeLogger.createContext("batch");
-    const now = new Date().toISOString();
-    const resumeAnchor = await this.createResumeAnchor(activeFile, cursorPosition);
-    const baseJob = {
-      jobId: logContext.jobId,
-      kind: "batch",
-      status: "running",
-      sourceFile: audioFilePath,
-      targetFile: activeFile.path,
-      provider: this.plugin.settings.transcriptionProvider,
-      model: this.plugin.settings.transcriptionModel,
-      createdAt: now,
-      updatedAt: now,
-      insertionLine: cursorPosition.line,
-      insertionCh: cursorPosition.ch,
-      resumeAnchor
-    };
-    const workerId = "local_recording_processor";
-    const leaseMs = 3e4;
-    let queueJobId = null;
-    let leaseToken = null;
-    if (this.processingState.getIsProcessing()) {
-      throw new Error("Recording is already in progress.");
-    }
-    try {
-      this.processingState.reset();
-      this.processingState.setIsProcessing(true);
-      this.plugin.showProcessingStatus("Transcribing audio");
-      await this.jobStore.upsertJob(baseJob);
-      const payload = {
-        recoveryJobId: logContext.jobId,
-        sourceRef: audioFilePath,
-        targetRef: activeFile.path,
-        provider: this.plugin.settings.transcriptionProvider,
-        model: this.plugin.settings.transcriptionModel,
-        retryPolicy: {
-          maxAttempts: this.config.maxRetries + 1,
-          baseDelayMs: this.config.retryDelay
-        }
-      };
-      const enqueued = await this.queueBackend.enqueue(payload);
-      const claim = await this.queueBackend.claim(workerId, leaseMs, enqueued.id);
-      if (!claim) {
-        throw new Error("Could not claim queue job");
-      }
-      queueJobId = claim.job.id;
-      leaseToken = claim.leaseToken;
-      await this.jobStore.upsertJob({ ...baseJob, queueJobId });
-      await this.queueBackend.heartbeat(queueJobId, workerId, leaseToken, leaseMs);
-      await RuntimeLogger.log(this.plugin, logContext, "record_start", { status: "started" });
-      this.processingState.startStep("Audio Processing");
-      const audioResult = await this.audioProcessor.processAudio(audioBlob, audioFilePath);
-      await this.jobStore.upsertCheckpoint({
-        jobId: logContext.jobId,
-        index: 0,
-        status: "committed",
-        stage: "audio_ready",
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      });
-      this.processingState.completeStep();
-      if (audioResult.processedChunks && audioResult.totalChunks) {
-        this.processingState.updateProgress(
-          audioResult.processedChunks,
-          audioResult.totalChunks
-        );
-      }
-      this.processingState.startStep("Transcription");
-      await RuntimeLogger.log(this.plugin, logContext, "provider_request", {
-        status: "started",
-        mimeType: audioResult.audioBlob.type || "application/octet-stream",
-        size: audioResult.audioBlob.size
-      });
-      const routeDecision = this.batchRoutingPolicy.decide(
-        audioFilePath,
-        audioResult.audioBlob.size
-      );
-      await RuntimeLogger.log(this.plugin, logContext, "batch_route_decision", {
-        status: "selected",
-        route: routeDecision.route,
-        preferredRoute: routeDecision.preferredRoute,
-        reason: routeDecision.reason,
-        sourceType: routeDecision.sourceType,
-        isLargeUpload: routeDecision.isLargeUpload
-      });
-      let result;
-      if (routeDecision.route === "backend_batch") {
-        try {
-          this.plugin.showProcessingStatus("Routing large upload to backend workers");
-          result = await this.backendBatchOrchestrationService.transcribeLargeUpload(
-            audioResult.audioBlob,
-            audioFilePath,
-            activeFile.path,
-            logContext
-          );
-        } catch (backendError) {
-          const uploadedCloudOnly = routeDecision.sourceType === "uploaded";
-          await RuntimeLogger.log(this.plugin, logContext, "backend_route_failure", {
-            status: "failed",
-            reason: backendError instanceof Error ? backendError.message : String(backendError),
-            failOpenEnabled: this.plugin.settings.backendFailOpenToDirect,
-            uploadedCloudOnly
-          });
-          if (uploadedCloudOnly || !this.plugin.settings.backendFailOpenToDirect) {
-            throw backendError;
-          }
-          this.plugin.showProcessingStatus(
-            "Backend route failed. Falling back to direct provider transcription."
-          );
-          const fallbackBuffer = await audioResult.audioBlob.arrayBuffer();
-          result = await this.executeWithRetry(
-            () => this.transcriptionService.transcribeContent(fallbackBuffer, {
-              mimeType: audioResult.audioBlob.type
-            }),
-            0,
-            {
-              onRetry: async (attempt, error) => {
-                this.plugin.showProcessingStatus(
-                  `Retrying transcription ${attempt}/${this.config.maxRetries + 1}`
-                );
-                const classified = classifyError(error);
-                await RuntimeLogger.log(this.plugin, logContext, "provider_retry", {
-                  status: "retrying",
-                  attempt,
-                  maxAttempts: this.config.maxRetries + 1,
-                  errorClass: classified.errorClass,
-                  retryable: classified.retryable,
-                  reason: error instanceof Error ? error.message : String(error)
-                });
-              },
-              onFailed: async (attempts, error, classification) => {
-                await RuntimeLogger.log(this.plugin, logContext, "provider_failure", {
-                  status: "failed",
-                  attempts,
-                  errorClass: classification.errorClass,
-                  retryable: classification.retryable,
-                  reason: error instanceof Error ? error.message : String(error)
-                });
-              }
-            }
-          );
-        }
-      } else {
-        if (routeDecision.sourceType === "uploaded") {
-          throw new Error(
-            "Uploaded audio must use backend cloud route. Direct provider route is disabled for uploads."
-          );
-        }
-        if (routeDecision.isLargeUpload && routeDecision.preferredRoute !== routeDecision.route) {
-          this.plugin.showProcessingStatus(
-            "Large upload detected. Backend route unavailable, using direct provider mode."
-          );
-        }
-        const audioBuffer = await audioResult.audioBlob.arrayBuffer();
-        result = await this.executeWithRetry(
-          () => this.transcriptionService.transcribeContent(audioBuffer, {
-            mimeType: audioResult.audioBlob.type
-          }),
-          0,
-          {
-            onRetry: async (attempt, error) => {
-              this.plugin.showProcessingStatus(
-                `Retrying transcription ${attempt}/${this.config.maxRetries + 1}`
-              );
-              const classified = classifyError(error);
-              await RuntimeLogger.log(this.plugin, logContext, "provider_retry", {
-                status: "retrying",
-                attempt,
-                maxAttempts: this.config.maxRetries + 1,
-                errorClass: classified.errorClass,
-                retryable: classified.retryable,
-                reason: error instanceof Error ? error.message : String(error)
-              });
-            },
-            onFailed: async (attempts, error, classification) => {
-              await RuntimeLogger.log(this.plugin, logContext, "provider_failure", {
-                status: "failed",
-                attempts,
-                errorClass: classification.errorClass,
-                retryable: classification.retryable,
-                reason: error instanceof Error ? error.message : String(error)
-              });
-            }
-          }
-        );
-      }
-      await RuntimeLogger.log(this.plugin, logContext, "provider_response", {
-        status: "success",
-        transcriptionChars: result.transcription.length
-      });
-      if (queueJobId && leaseToken) {
-        await this.queueBackend.heartbeat(queueJobId, workerId, leaseToken, leaseMs);
-      }
-      await this.jobStore.upsertCheckpoint({
-        jobId: logContext.jobId,
-        index: 1,
-        status: "committed",
-        stage: "transcription_ready",
-        transcript: result.transcription,
-        postProcessing: result.postProcessing,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      });
-      this.processingState.completeStep();
-      this.processingState.startStep("Content Insertion");
-      this.plugin.showProcessingStatus("Writing transcript note");
-      await RuntimeLogger.log(this.plugin, logContext, "note_render_start", { status: "started" });
-      await this.documentInserter.insertContent(
-        {
-          transcription: result.transcription,
-          postProcessing: result.postProcessing,
-          audioFilePath: audioResult.finalPath,
-          sourceSizeMb: (audioResult.audioBlob.size / (1024 * 1024)).toFixed(2),
-          entryTitle: this.buildDurationEntryTitle(
-            await this.resolveDurationSeconds(audioResult.audioBlob, result.transcription)
-          ) || void 0
-        },
-        activeFile,
-        cursorPosition
-      );
-      await RuntimeLogger.log(this.plugin, logContext, "note_render_commit", { status: "success" });
-      await this.jobStore.upsertCheckpoint({
-        jobId: logContext.jobId,
-        index: 2,
-        status: "committed",
-        stage: "note_written",
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      });
-      this.processingState.completeStep();
-      await RuntimeLogger.log(this.plugin, logContext, "job_complete", { status: "completed" });
-      await this.jobStore.updateJobStatus(logContext.jobId, "completed");
-      if (queueJobId && leaseToken) {
-        await this.queueBackend.complete(queueJobId, workerId, leaseToken, activeFile.path);
-      }
-      this.plugin.setProcessingStatus("Idle");
-    } catch (error) {
-      const primaryError = error;
-      this.handleError("Processing failed", error);
-      this.processingState.setError(error);
-      this.plugin.setProcessingStatus("Failed");
-      await RuntimeLogger.log(this.plugin, logContext, "job_failed", {
-        status: "failed",
-        reason: error instanceof Error ? error.message : String(error)
-      });
-      await this.jobStore.updateJobStatus(
-        logContext.jobId,
-        "failed",
-        error instanceof Error ? error.message : String(error)
-      );
-      if (queueJobId && leaseToken) {
-        try {
-          await this.queueBackend.fail(
-            queueJobId,
-            workerId,
-            leaseToken,
-            error instanceof Error ? error.message : String(error)
-          );
-        } catch (queueFailError) {
-          await RuntimeLogger.log(this.plugin, logContext, "queue_fail_record_error", {
-            status: "failed",
-            reason: queueFailError instanceof Error ? queueFailError.message : String(queueFailError)
-          });
-        }
-      }
-      throw primaryError;
-    } finally {
-      this.processingState.setIsProcessing(false);
-      await RuntimeLogger.log(this.plugin, logContext, "record_stop", { status: "stopped" });
-    }
-  }
-  async getIncompleteJobs() {
-    return this.jobStore.getIncompleteJobs();
-  }
-  async runStartupMaintenance() {
-    await this.jobStore.demoteStaleFailedToCanceled(
-      _RecordingProcessor.STALE_FAILED_JOB_MAX_AGE_MS
-    );
-    await this.jobStore.prune();
-    await this.queueBackend.prune();
-    await this.reconcileQueueAndRecoveryStates();
-  }
-  async cancelJob(jobId) {
-    await this.jobStore.updateJobStatus(jobId, "canceled");
-  }
-  async resumeJob(jobId) {
-    var _a, _b;
-    const job = await this.jobStore.getJob(jobId);
-    if (!job || !job.targetFile)
-      return false;
-    const ready = await this.jobStore.getLatestCommittedCheckpoint(jobId, "transcription_ready");
-    const written = await this.jobStore.getLatestCommittedCheckpoint(jobId, "note_written");
-    if (!ready || written || !ready.transcript)
-      return false;
-    const target = this.plugin.app.vault.getAbstractFileByPath(job.targetFile);
-    if (!(target instanceof import_obsidian5.TFile))
-      return false;
-    let line = typeof job.insertionLine === "number" ? job.insertionLine : 0;
-    let ch = typeof job.insertionCh === "number" ? job.insertionCh : 0;
-    const anchorValid = await this.isResumeAnchorValid(target, job);
-    if (!anchorValid) {
-      const targetContent = await this.plugin.app.vault.read(target);
-      const lines = targetContent.split("\n");
-      line = Math.max(0, lines.length - 1);
-      ch = (_b = (_a = lines[line]) == null ? void 0 : _a.length) != null ? _b : 0;
-      new import_obsidian5.Notice("NeuroVox recovered transcript inserted at end of note because the original cursor anchor changed.");
-    }
-    await this.documentInserter.insertContent(
-      {
-        transcription: ready.transcript,
-        postProcessing: ready.postProcessing,
-        audioFilePath: job.sourceFile
-      },
-      target,
-      { line, ch }
-    );
-    await this.jobStore.upsertCheckpoint({
-      jobId,
-      index: 2,
-      status: "committed",
-      stage: "note_written",
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    });
-    await this.jobStore.updateJobStatus(jobId, "completed");
-    return true;
-  }
-  /**
-   * Processes a streaming transcription result: inserts pre-transcribed content into the document
-   */
-  async processStreamingResult(transcriptionResult, activeFile, cursorPosition, options) {
-    const logContext = RuntimeLogger.createContext("stream");
-    const existingStreamJob = await this.jobStore.getLatestIncompleteJob("stream", activeFile.path);
-    const recoveryJobId = (existingStreamJob == null ? void 0 : existingStreamJob.jobId) || logContext.jobId;
-    const now = new Date().toISOString();
-    const resumeAnchor = await this.createResumeAnchor(activeFile, cursorPosition);
-    const baseJob = {
-      jobId: recoveryJobId,
-      kind: "stream",
-      status: "running",
-      targetFile: activeFile.path,
-      provider: this.plugin.settings.transcriptionProvider,
-      model: this.plugin.settings.transcriptionModel,
-      createdAt: now,
-      updatedAt: now,
-      insertionLine: cursorPosition.line,
-      insertionCh: cursorPosition.ch,
-      resumeAnchor
-    };
-    if (this.processingState.getIsProcessing()) {
-      throw new Error("Recording is already in progress.");
-    }
-    try {
-      this.processingState.reset();
-      this.processingState.setIsProcessing(true);
-      this.plugin.showProcessingStatus("Processing streaming transcript");
-      await this.jobStore.upsertJob(baseJob);
-      await RuntimeLogger.log(this.plugin, logContext, "record_start", { status: "started" });
-      this.processingState.startStep("Content Processing");
-      let postProcessing;
-      if (this.plugin.settings.generatePostProcessing) {
-        this.processingState.startStep("Post-processing");
-        postProcessing = await this.executeWithRetry(
-          () => this.generatePostProcessing(transcriptionResult)
-        );
-        this.processingState.completeStep();
-      }
-      let savedAudioPath = options == null ? void 0 : options.audioFilePath;
-      if (options == null ? void 0 : options.audioBlob) {
-        try {
-          const processedAudio = await this.audioProcessor.processAudio(
-            options.audioBlob,
-            options.audioFilePath
-          );
-          savedAudioPath = processedAudio.finalPath;
-        } catch (saveError) {
-          const reason = saveError instanceof Error ? saveError.message : String(saveError);
-          new import_obsidian5.Notice(`NeuroVox: transcript saved, but audio file save failed (${reason})`);
-          await RuntimeLogger.log(this.plugin, logContext, "provider_failure", {
-            status: "failed",
-            reason: `live_audio_save_failed:${reason}`
-          });
-        }
-      }
-      await this.jobStore.upsertCheckpoint({
-        jobId: recoveryJobId,
-        index: 1,
-        status: "committed",
-        stage: "transcription_ready",
-        transcript: transcriptionResult,
-        postProcessing,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      });
-      this.processingState.startStep("Content Insertion");
-      await this.documentInserter.removeAllLiveTranscriptionBlocks(activeFile);
-      await RuntimeLogger.log(this.plugin, logContext, "note_render_start", { status: "started" });
-      await this.documentInserter.insertContent(
-        {
-          transcription: transcriptionResult,
-          postProcessing,
-          audioFilePath: savedAudioPath,
-          sourceSizeMb: (options == null ? void 0 : options.audioBlob) ? (options.audioBlob.size / (1024 * 1024)).toFixed(2) : void 0,
-          entryTitle: this.buildDurationEntryTitle(
-            await this.resolveDurationSeconds(
-              options == null ? void 0 : options.audioBlob,
-              transcriptionResult,
-              options == null ? void 0 : options.durationSeconds
-            )
-          ) || void 0
-        },
-        activeFile,
-        cursorPosition
-      );
-      if (savedAudioPath) {
-        new import_obsidian5.Notice(`NeuroVox: recording saved to ${savedAudioPath}`);
-      }
-      await RuntimeLogger.log(this.plugin, logContext, "note_render_commit", { status: "success" });
-      await this.jobStore.upsertCheckpoint({
-        jobId: recoveryJobId,
-        index: 2,
-        status: "committed",
-        stage: "note_written",
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      });
-      this.processingState.completeStep();
-      await RuntimeLogger.log(this.plugin, logContext, "job_complete", { status: "completed" });
-      await this.jobStore.updateJobStatus(recoveryJobId, "completed");
-      this.plugin.setProcessingStatus("Idle");
-    } catch (error) {
-      this.handleError("Processing failed", error);
-      this.processingState.setError(error);
-      this.plugin.setProcessingStatus("Failed");
-      await RuntimeLogger.log(this.plugin, logContext, "job_failed", {
-        status: "failed",
-        reason: error instanceof Error ? error.message : String(error)
-      });
-      await this.jobStore.updateJobStatus(
-        recoveryJobId,
-        "failed",
-        error instanceof Error ? error.message : String(error)
-      );
-      throw error;
-    } finally {
-      this.processingState.setIsProcessing(false);
-      await RuntimeLogger.log(this.plugin, logContext, "record_stop", { status: "stopped" });
-    }
-  }
-  /**
-   * Generates post-processing content using the configured AI adapter
-   */
-  async generatePostProcessing(transcription) {
-    const adapter = await this.getAdapter(
-      this.plugin.settings.postProcessingProvider,
-      "language"
-    );
-    const prompt = `${this.plugin.settings.postProcessingPrompt}
-
-${transcription}`;
-    return adapter.generateResponse(
-      prompt,
-      this.plugin.settings.postProcessingModel,
-      {
-        maxTokens: this.plugin.settings.postProcessingMaxTokens,
-        temperature: this.plugin.settings.postProcessingTemperature
-      }
-    );
-  }
-  /**
-   * Gets and validates the appropriate AI adapter
-   */
-  async getAdapter(provider, category) {
-    const adapter = this.plugin.aiAdapters.get(provider);
-    if (!adapter) {
-      throw new Error(`${provider} adapter not found`);
-    }
-    if (!adapter.isReady(category)) {
-      const apiKey = adapter.getApiKey();
-      if (!apiKey) {
-        throw new Error(`${provider} API key is not configured`);
-      }
-      const validated = await this.validateAdapterWithTimeout(adapter);
-      if (validated && adapter.isReady(category)) {
-        return adapter;
-      }
-      throw new Error(
-        `${provider} adapter is not ready for ${category}. Please check your settings and model availability.`
-      );
-    }
-    return adapter;
-  }
-  async validateAdapterWithTimeout(adapter) {
-    const timeoutMs = _RecordingProcessor.ADAPTER_VALIDATION_TIMEOUT_MS;
-    return await Promise.race([
-      adapter.validateApiKey().catch(() => false),
-      new Promise((resolve) => {
-        window.setTimeout(() => resolve(false), timeoutMs);
-      })
-    ]);
-  }
-  /**
-   * Executes an operation with retry logic
-   */
-  async executeWithRetry(operation, retryCount = 0, hooks) {
-    try {
-      return await operation();
-    } catch (error) {
-      const classification = classifyError(error);
-      const unknownRetryable = classification.errorClass === "unknown" && retryCount < 1;
-      const retryAllowed = (classification.retryable || unknownRetryable) && retryCount < this.config.maxRetries;
-      if (retryAllowed) {
-        const delay = this.getRetryDelayMs(classification.errorClass, retryCount + 1);
-        if (hooks == null ? void 0 : hooks.onRetry) {
-          await hooks.onRetry(retryCount + 1, error, classification, delay);
-        }
-        await new Promise((resolve) => setTimeout(resolve, delay));
-        return this.executeWithRetry(operation, retryCount + 1, hooks);
-      }
-      if (hooks == null ? void 0 : hooks.onFailed) {
-        await hooks.onFailed(retryCount + 1, error, classification);
-      }
-      throw error;
-    }
-  }
-  getRetryDelayMs(errorClass, attempt) {
-    const base = this.config.retryDelay;
-    const multiplier = errorClass === "rate_limit" ? 2.5 : errorClass === "timeout" ? 2 : errorClass === "server" ? 1.8 : errorClass === "network" ? 1.6 : 1.5;
-    const delay = Math.round(base * Math.pow(multiplier, Math.max(0, attempt - 1)));
-    return Math.min(delay, 3e4);
-  }
-  /**
-   * Handles error display
-   */
-  handleError(context, error) {
-    const message = error instanceof Error ? error.message : "Unknown error occurred";
-    new import_obsidian5.Notice(`${context}: ${message}`);
-  }
-  async resolveDurationSeconds(audioBlob, transcription, preferredSeconds) {
-    if (Number.isFinite(preferredSeconds) && Number(preferredSeconds) > 0) {
-      return Math.max(1, Math.round(Number(preferredSeconds)));
-    }
-    const decoded = await this.estimateAudioDurationFromBlob(audioBlob);
-    if (decoded !== null)
-      return decoded;
-    const tokenMax = this.estimateDurationFromTimestampTokens(transcription);
-    if (tokenMax !== null)
-      return tokenMax;
-    return null;
-  }
-  async estimateAudioDurationFromBlob(audioBlob) {
-    if (!audioBlob || audioBlob.size <= 0)
-      return null;
-    const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
-    if (!AudioContextCtor)
-      return null;
-    let audioContext = null;
-    try {
-      const ctx = new AudioContextCtor();
-      audioContext = ctx;
-      const source = await audioBlob.arrayBuffer();
-      const decoded = await ctx.decodeAudioData(source.slice(0));
-      const seconds = Number((decoded == null ? void 0 : decoded.duration) || 0);
-      if (!Number.isFinite(seconds) || seconds <= 0)
-        return null;
-      return Math.max(1, Math.round(seconds));
-    } catch (e) {
-      return null;
-    } finally {
-      if (audioContext) {
-        try {
-          await audioContext.close();
-        } catch (e) {
-        }
-      }
-    }
-  }
-  estimateDurationFromTimestampTokens(transcription) {
-    if (!transcription || typeof transcription !== "string")
-      return null;
-    const tokenRegex = /\[(\d{2}):(\d{2}):(\d{2})\]/g;
-    let max = -1;
-    let match = tokenRegex.exec(transcription);
-    while (match) {
-      const hh = Number(match[1]);
-      const mm = Number(match[2]);
-      const ss = Number(match[3]);
-      if (Number.isFinite(hh) && Number.isFinite(mm) && Number.isFinite(ss)) {
-        max = Math.max(max, hh * 3600 + mm * 60 + ss);
-      }
-      match = tokenRegex.exec(transcription);
-    }
-    return max >= 0 ? max : null;
-  }
-  buildDurationEntryTitle(durationSeconds) {
-    if (!Number.isFinite(durationSeconds) || Number(durationSeconds) <= 0)
-      return null;
-    const total = Math.max(1, Math.round(Number(durationSeconds)));
-    const hh = Math.floor(total / 3600);
-    const mm = Math.floor(total % 3600 / 60);
-    const ss = total % 60;
-    const timeLabel = hh > 0 ? `${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}:${String(ss).padStart(2, "0")}` : `${String(mm).padStart(2, "0")}:${String(ss).padStart(2, "0")}`;
-    return `Transcription - ${timeLabel}`;
-  }
-  async reconcileQueueAndRecoveryStates() {
-    const [jobs, queueSnapshot] = await Promise.all([
-      this.jobStore.getIncompleteJobs(),
-      this.queueBackend.getSnapshot()
-    ]);
-    const queueById = new Map(queueSnapshot.map((q) => [q.id, q]));
-    const queueByRecoveryId = new Map(
-      queueSnapshot.filter((q) => !!q.payload.recoveryJobId).map((q) => [q.payload.recoveryJobId, q])
-    );
-    for (const job of jobs) {
-      const queueJob = (job.queueJobId ? queueById.get(job.queueJobId) : void 0) || queueByRecoveryId.get(job.jobId);
-      if (!queueJob && job.kind === "batch" && job.status === "running") {
-        await this.jobStore.updateJobStatus(
-          job.jobId,
-          "failed",
-          "startup_reconcile_missing_queue_job"
-        );
-        continue;
-      }
-      if (!queueJob)
-        continue;
-      if ((queueJob.status === "failed" || queueJob.status === "canceled") && job.status === "running") {
-        await this.jobStore.updateJobStatus(
-          job.jobId,
-          "failed",
-          queueJob.reason || `queue_${queueJob.status}`
-        );
-      }
-    }
-  }
-  async createResumeAnchor(file, position) {
-    try {
-      const content = await this.plugin.app.vault.read(file);
-      return {
-        line: position.line,
-        ch: position.ch,
-        contextHash: this.computeAnchorHash(content, position.line)
-      };
-    } catch (e) {
-      return void 0;
-    }
-  }
-  async isResumeAnchorValid(file, job) {
-    if (!job.resumeAnchor)
-      return true;
-    try {
-      const content = await this.plugin.app.vault.read(file);
-      const currentHash = this.computeAnchorHash(content, job.resumeAnchor.line);
-      return currentHash === job.resumeAnchor.contextHash;
-    } catch (e) {
-      return false;
-    }
-  }
-  computeAnchorHash(content, line) {
-    const lines = content.split("\n");
-    const start = Math.max(0, line - 2);
-    const end = Math.min(lines.length - 1, line + 2);
-    const context = lines.slice(start, end + 1).join("\n");
-    let hash = 2166136261;
-    for (let i = 0; i < context.length; i++) {
-      hash ^= context.charCodeAt(i);
-      hash += (hash << 1) + (hash << 4) + (hash << 7) + (hash << 8) + (hash << 24);
-    }
-    return (hash >>> 0).toString(16);
-  }
-};
-var RecordingProcessor = _RecordingProcessor;
-RecordingProcessor.instance = null;
-RecordingProcessor.ADAPTER_VALIDATION_TIMEOUT_MS = 4e3;
-RecordingProcessor.STALE_FAILED_JOB_MAX_AGE_MS = 10 * 60 * 1e3;
-
-// src/utils/VideoProcessor.ts
-var _VideoProcessor = class {
-  constructor(plugin) {
-    this.plugin = plugin;
-    this.isProcessing = false;
-  }
-  static async getInstance(plugin) {
-    if (!this.instance) {
-      this.instance = new _VideoProcessor(plugin);
-      await this.instance.initializeFFmpeg();
-    }
-    return this.instance;
-  }
-  async initializeFFmpeg() {
-    this.ffmpeg = new FFmpeg();
-    const baseURL = "https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd";
-    await this.ffmpeg.load({
-      coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, "text/javascript"),
-      wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, "application/wasm")
-    });
-  }
-  async processVideo(file) {
-    if (this.isProcessing) {
-      throw new Error("Video processing is already in progress.");
-    }
-    try {
-      this.isProcessing = true;
-      new import_obsidian6.Notice("\u{1F3A5} Starting video processing...");
-      const transcriptFile = await this.createTranscriptFile(file);
-      const audioBuffer = await this.extractAudioFromVideo(file);
-      const recordingProcessor = RecordingProcessor.getInstance(this.plugin);
-      const audioBlob = new Blob([audioBuffer], { type: "audio/wav" });
-      await recordingProcessor.processRecording(
-        audioBlob,
-        transcriptFile,
-        { line: 0, ch: 0 },
-        file.path
-      );
-      new import_obsidian6.Notice("\u2728 Video transcription completed");
-      await this.plugin.app.workspace.getLeaf().openFile(transcriptFile);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Unknown error occurred";
-      new import_obsidian6.Notice("\u274C Video processing failed: " + message);
-      throw error;
-    } finally {
-      this.isProcessing = false;
-    }
-  }
-  async createTranscriptFile(videoFile) {
-    const baseName = videoFile.basename.replace(/[\\/:*?"<>|]/g, "");
-    const fileName = `${baseName} - Video Transcript.md`;
-    const folderPath = this.plugin.settings.transcriptFolderPath;
-    if (folderPath) {
-      const parts = folderPath.split("/").filter(Boolean);
-      let currentPath = "";
-      for (const part of parts) {
-        currentPath = currentPath ? `${currentPath}/${part}` : part;
-        const folder = this.plugin.app.vault.getAbstractFileByPath(currentPath);
-        if (!folder) {
-          await this.plugin.app.vault.createFolder(currentPath);
-        }
-      }
-    }
-    const filePath = folderPath ? `${folderPath}/${fileName}` : fileName;
-    return this.plugin.app.vault.create(filePath, "");
-  }
-  async extractAudioFromVideo(file) {
-    new import_obsidian6.Notice("\u{1F3B5} Extracting audio from video...");
-    try {
-      const videoData = await this.plugin.app.vault.readBinary(file);
-      const videoBlob = new Blob([videoData], { type: this.getVideoMimeType(file.extension) });
-      const videoURL = URL.createObjectURL(videoBlob);
-      await this.ffmpeg.writeFile("input." + file.extension, await fetchFile(videoURL));
-      await this.ffmpeg.exec([
-        "-i",
-        "input." + file.extension,
-        "-vn",
-        // No video
-        "-acodec",
-        "libmp3lame",
-        // MP3 codec
-        "-ab",
-        "320k",
-        // Bitrate
-        "-ar",
-        "44100",
-        // Sample rate
-        "-ac",
-        "2",
-        // Stereo
-        "output.mp3"
-        // Output file
-      ]);
-      const data = await this.ffmpeg.readFile("output.mp3");
-      URL.revokeObjectURL(videoURL);
-      await this.ffmpeg.deleteFile("input." + file.extension);
-      await this.ffmpeg.deleteFile("output.mp3");
-      return data.buffer;
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Unknown error occurred";
-      throw new Error("Failed to extract audio: " + message);
-    }
-  }
-  getVideoMimeType(extension) {
-    const mimeTypes = {
-      "mp4": "video/mp4",
-      "webm": "video/webm",
-      "mov": "video/quicktime"
-    };
-    return mimeTypes[extension.toLowerCase()] || "video/mp4";
-  }
-};
-var VideoProcessor = _VideoProcessor;
-VideoProcessor.instance = null;
-
-// src/settings/SettingTab.ts
+// src-rebuild/ui/FloatingButton.ts
 var import_obsidian11 = require("obsidian");
 
-// src/settings/accordions/BaseAccordion.ts
-var import_obsidian7 = require("obsidian");
-var BaseAccordion = class {
-  constructor(containerEl, title, description = "") {
-    this.isOpen = false;
-    this.containerEl = containerEl;
-    this.accordionEl = this.containerEl.createDiv({ cls: "neurovox-accordion" });
-    this.headerEl = this.accordionEl.createDiv({ cls: "neurovox-accordion-header" });
-    const titleWrapper = this.headerEl.createDiv({ cls: "neurovox-accordion-title-wrapper" });
-    titleWrapper.createSpan({ text: title, cls: "neurovox-accordion-title" });
-    this.toggleIcon = this.headerEl.createSpan({ cls: "neurovox-accordion-toggle" });
-    this.updateToggleIcon();
-    if (description) {
-      const descriptionEl = this.accordionEl.createDiv({ cls: "neurovox-accordion-description" });
-      descriptionEl.createSpan({ text: description });
-    }
-    this.contentEl = this.accordionEl.createDiv({ cls: "neurovox-accordion-content" });
-    this.contentEl.style.display = "none";
-    this.headerEl.addEventListener("click", () => this.toggleAccordion());
-  }
-  toggleAccordion() {
-    this.isOpen = !this.isOpen;
-    this.contentEl.style.display = this.isOpen ? "block" : "none";
-    this.updateToggleIcon();
-    this.accordionEl.classList.toggle("neurovox-accordion-open", this.isOpen);
-  }
-  updateToggleIcon() {
-    this.toggleIcon.empty();
-    (0, import_obsidian7.setIcon)(this.toggleIcon, "chevron-right");
-    this.toggleIcon.classList.toggle("neurovox-accordion-icon-open", this.isOpen);
-  }
-  createSettingItem(name, desc) {
-    const setting = new import_obsidian7.Setting(this.contentEl);
-    setting.setName(name).setDesc(desc);
-    return setting;
-  }
-};
-
-// src/settings/accordions/ModelHookupAccordion.ts
-var import_obsidian8 = require("obsidian");
-var ModelHookupAccordion = class extends BaseAccordion {
-  constructor(containerEl, settings, getAdapter, plugin) {
-    super(
-      containerEl,
-      "\u{1F511} API Keys",
-      "Configure API keys for AI providers."
-    );
-    this.settings = settings;
-    this.getAdapter = getAdapter;
-    this.plugin = plugin;
-  }
-  setAccordions(recording, postProcessing) {
-    this.recordingAccordion = recording;
-    this.postProcessingAccordion = postProcessing;
-  }
-  async refreshAccordions() {
-    await Promise.all([
-      this.recordingAccordion.refresh(),
-      this.postProcessingAccordion.refresh()
-    ]);
-  }
-  render() {
-    const openaiSetting = new import_obsidian8.Setting(this.contentEl).setName("OpenAI API Key").setDesc("Enter your OpenAI API key").addText((text) => {
-      text.setPlaceholder("sk-...").setValue(this.settings.openaiApiKey);
-      text.inputEl.type = "password";
-      text.onChange(async (value) => {
-        const trimmedValue = value.trim();
-        this.settings.openaiApiKey = trimmedValue;
-        await this.plugin.saveSettings();
-        const adapter = this.getAdapter("openai" /* OpenAI */);
-        if (!adapter) {
-          return;
-        }
-        adapter.setApiKey(trimmedValue);
-        const isValid = await adapter.validateApiKey();
-        if (isValid) {
-          openaiSetting.setDesc("\u2705 API key validated successfully");
-          try {
-            await this.refreshAccordions();
-          } catch (error) {
-            openaiSetting.setDesc("\u2705 API key valid, but failed to update model lists");
-          }
-        } else {
-          openaiSetting.setDesc("\u274C Invalid API key. Please check your credentials.");
-        }
-      });
-    });
-    const groqSetting = new import_obsidian8.Setting(this.contentEl).setName("Groq API Key").setDesc("Enter your Groq API key").addText((text) => {
-      text.setPlaceholder("gsk_...").setValue(this.settings.groqApiKey);
-      text.inputEl.type = "password";
-      text.onChange(async (value) => {
-        const trimmedValue = value.trim();
-        this.settings.groqApiKey = trimmedValue;
-        await this.plugin.saveSettings();
-        const adapter = this.getAdapter("groq" /* Groq */);
-        if (!adapter) {
-          return;
-        }
-        adapter.setApiKey(trimmedValue);
-        const isValid = await adapter.validateApiKey();
-        if (isValid) {
-          groqSetting.setDesc("\u2705 API key validated successfully");
-          try {
-            await this.refreshAccordions();
-          } catch (error) {
-            groqSetting.setDesc("\u2705 API key valid, but failed to update model lists");
-          }
-        } else {
-          groqSetting.setDesc("\u274C Invalid API key. Please check your credentials.");
-        }
-      });
-    });
-    const deepgramSetting = new import_obsidian8.Setting(this.contentEl).setName("Deepgram API Key").setDesc("Enter your Deepgram API key").addText((text) => {
-      text.setPlaceholder("Enter your Deepgram API key...").setValue(this.settings.deepgramApiKey);
-      text.inputEl.type = "password";
-      text.onChange(async (value) => {
-        const trimmedValue = value.trim();
-        this.settings.deepgramApiKey = trimmedValue;
-        await this.plugin.saveSettings();
-        const adapter = this.getAdapter("deepgram" /* Deepgram */);
-        if (!adapter) {
-          return;
-        }
-        adapter.setApiKey(trimmedValue);
-        const isValid = await adapter.validateApiKey();
-        if (isValid) {
-          deepgramSetting.setDesc("\u2705 API key validated successfully");
-          try {
-            await this.refreshAccordions();
-          } catch (error) {
-            deepgramSetting.setDesc("\u2705 API key valid, but failed to update model lists");
-          }
-        } else {
-          deepgramSetting.setDesc("\u274C Invalid API key. Please check your credentials.");
-        }
-      });
-    });
-  }
-};
-
-// src/settings/accordions/RecordingAccordion.ts
-var import_obsidian9 = require("obsidian");
-var RecordingAccordion = class extends BaseAccordion {
-  constructor(containerEl, settings, getAdapter, plugin) {
-    super(containerEl, "\u{1F399} Recording", "Configure recording preferences and select a transcription model.");
-    this.settings = settings;
-    this.getAdapter = getAdapter;
-    this.plugin = plugin;
-    this.modelDropdown = null;
-    this.modelSetting = null;
-  }
-  render() {
-    this.createRecordingPathSetting();
-    this.createIphoneInboxPathSetting();
-    this.createTranscriptPathSetting();
-    this.createAudioQualitySetting();
-    this.createStreamingModeSetting();
-    this.createFloatingButtonSetting();
-    this.createMicButtonColorSetting();
-    this.createTranscriptionFormatSetting();
-    this.createTranscriptionModelSetting();
-    this.createSpeakerDiarizationSetting();
-    this.createDeepgramLanguageSettings();
-    this.createBatchChunkingSettings();
-  }
-  createTranscriptPathSetting() {
-    new import_obsidian9.Setting(this.contentEl).setName("Transcript path").setDesc("Specify the folder path to save transcripts relative to the vault root").addText((text) => {
-      text.setPlaceholder("Transcripts").setValue(this.settings.transcriptFolderPath).onChange(async (value) => {
-        this.settings.transcriptFolderPath = value.trim() || "Transcripts";
-        await this.plugin.saveSettings();
-      });
-    });
-  }
-  createRecordingPathSetting() {
-    new import_obsidian9.Setting(this.contentEl).setName("Recording path").setDesc("Specify the folder path to save recordings relative to the vault root").addText((text) => {
-      text.setPlaceholder("Recordings").setValue(this.settings.recordingFolderPath).onChange(async (value) => {
-        this.settings.recordingFolderPath = value.trim() || "Recordings";
-        await this.plugin.saveSettings();
-      });
-    });
-  }
-  createAudioQualitySetting() {
-    new import_obsidian9.Setting(this.contentEl).setName("Audio quality").setDesc("Set the recording quality (affects file size and clarity)").addDropdown((dropdown) => {
-      dropdown.addOption("low" /* Low */, "Voice optimized (smaller files)").addOption("medium" /* Medium */, "CD quality (balanced)").addOption("high" /* High */, "Enhanced quality (larger files)").setValue(this.settings.audioQuality).onChange(async (value) => {
-        this.settings.audioQuality = value;
-        await this.plugin.saveSettings();
-      });
-    });
-  }
-  createFloatingButtonSetting() {
-    const floatingBtnSetting = new import_obsidian9.Setting(this.contentEl).setName("Show floating button").setDesc("Show a floating microphone button for quick recording").addToggle((toggle) => {
-      toggle.setValue(this.settings.showFloatingButton).onChange(async (value) => {
-        this.settings.showFloatingButton = value;
-        await this.plugin.saveSettings();
-        this.plugin.events.trigger("floating-button-setting-changed", value);
-        this.refresh();
-      });
-    });
-  }
-  async refresh() {
-    try {
-      if (!this.modelDropdown) {
-        return;
-      }
-      await this.setupModelDropdown(this.modelDropdown);
-    } catch (error) {
-      throw error;
-    }
-  }
-  createMicButtonColorSetting() {
-    new import_obsidian9.Setting(this.contentEl).setName("Mic button color").setDesc("Choose the color for the microphone buttons").addColorPicker((color) => {
-      color.setValue(this.settings.micButtonColor).onChange(async (value) => {
-        this.settings.micButtonColor = value;
-        this.plugin.updateAllButtonColors();
-        await this.plugin.saveSettings();
-      });
-    });
-  }
-  createTranscriptionFormatSetting() {
-    new import_obsidian9.Setting(this.contentEl).setName("Transcription format").setDesc("Customize the transcription callout format. Use {audioPath} for audio file path and {transcription} for the transcribed text").addTextArea((text) => {
-      text.setPlaceholder(">[!info]- Transcription\n>![[{audioPath}]]\n>{transcription}").setValue(this.settings.transcriptionCalloutFormat).onChange(async (value) => {
-        this.settings.transcriptionCalloutFormat = value;
-        await this.plugin.saveSettings();
-      });
-      text.inputEl.rows = 4;
-      text.inputEl.style.width = "100%";
-    });
-  }
-  createTranscriptionModelSetting() {
-    if (this.modelSetting) {
-      this.modelSetting.settingEl.remove();
-    }
-    this.modelSetting = new import_obsidian9.Setting(this.contentEl).setName("Transcription model").setDesc("Select the AI model for transcription").addDropdown((dropdown) => {
-      this.modelDropdown = dropdown;
-      this.setupModelDropdown(dropdown);
-      dropdown.onChange(async (value) => {
-        this.settings.transcriptionModel = value;
-        const provider = this.getProviderFromModel(value);
-        if (provider) {
-          this.settings.transcriptionProvider = provider;
-          await this.plugin.saveSettings();
-        }
-      });
-    });
-  }
-  async setupModelDropdown(dropdown) {
-    dropdown.selectEl.empty();
-    let hasValidProvider = false;
-    for (const provider of ["openai" /* OpenAI */, "groq" /* Groq */, "deepgram" /* Deepgram */]) {
-      const apiKey = this.settings[`${provider}ApiKey`];
-      if (apiKey) {
-        const adapter = this.getAdapter(provider);
-        if (adapter) {
-          const models = adapter.getAvailableModels("transcription");
-          if (models.length > 0) {
-            hasValidProvider = true;
-            const group = document.createElement("optgroup");
-            group.label = `${provider.toUpperCase()} Models`;
-            models.forEach((model) => {
-              const option = document.createElement("option");
-              option.value = model.id;
-              option.text = `${model.name}`;
-              group.appendChild(option);
-            });
-            dropdown.selectEl.appendChild(group);
-          }
-        }
-      }
-    }
-    if (!hasValidProvider) {
-      dropdown.addOption("none", "No API keys configured");
-      dropdown.setDisabled(true);
-      this.settings.transcriptionModel = "";
-    } else {
-      dropdown.setDisabled(false);
-      if (!this.settings.transcriptionModel || !this.getProviderFromModel(this.settings.transcriptionModel)) {
-        const firstOption = dropdown.selectEl.querySelector('option:not([value="none"])');
-        if (firstOption) {
-          const modelId = firstOption.value;
-          const provider = this.getProviderFromModel(modelId);
-          if (provider) {
-            this.settings.transcriptionProvider = provider;
-            this.settings.transcriptionModel = modelId;
-            dropdown.setValue(modelId);
-            await this.plugin.saveSettings();
-          }
-        }
-      } else {
-        dropdown.setValue(this.settings.transcriptionModel);
-      }
-    }
-    await this.plugin.saveSettings();
-  }
-  createSpeakerDiarizationSetting() {
-    new import_obsidian9.Setting(this.contentEl).setName("Enable speaker diarization").setDesc("For Deepgram transcription, label lines by speaker (Speaker 1, Speaker 2, etc.)").addToggle((toggle) => {
-      toggle.setValue(this.settings.enableSpeakerDiarization).onChange(async (value) => {
-        this.settings.enableSpeakerDiarization = value;
-        await this.plugin.saveSettings();
-      });
-    });
-  }
-  createIphoneInboxPathSetting() {
-    new import_obsidian9.Setting(this.contentEl).setName("iPhone inbox path").setDesc("Folder used for iPhone Voice Memos shared via Files. Latest file can be transcribed with a command.").addText((text) => {
-      text.setPlaceholder("Recordings/Inbox").setValue(this.settings.iphoneInboxFolderPath).onChange(async (value) => {
-        this.settings.iphoneInboxFolderPath = value.trim() || "Recordings/Inbox";
-        await this.plugin.saveSettings();
-      });
-    });
-  }
-  createStreamingModeSetting() {
-    new import_obsidian9.Setting(this.contentEl).setName("Enable streaming mode").setDesc("Process recording in chunks during capture for better long-session reliability").addToggle((toggle) => {
-      toggle.setValue(this.settings.streamingMode).onChange(async (value) => {
-        this.settings.streamingMode = value;
-        await this.plugin.saveSettings();
-      });
-    });
-    new import_obsidian9.Setting(this.contentEl).setName("Use expandable floating recorder").setDesc("Expand the floating mic into a non-blocking recorder panel instead of opening a modal").addToggle((toggle) => {
-      toggle.setValue(this.settings.useExpandableFloatingRecorder).onChange(async (value) => {
-        this.settings.useExpandableFloatingRecorder = value;
-        await this.plugin.saveSettings();
-      });
-    });
-  }
-  createDeepgramLanguageSettings() {
-    new import_obsidian9.Setting(this.contentEl).setName("Deepgram language auto-detect").setDesc("Enable auto detection for mixed Hindi-English audio").addToggle((toggle) => {
-      toggle.setValue(this.settings.deepgramDetectLanguage).onChange(async (value) => {
-        this.settings.deepgramDetectLanguage = value;
-        await this.plugin.saveSettings();
-      });
-    });
-    new import_obsidian9.Setting(this.contentEl).setName("Deepgram language hints").setDesc("Comma-separated language hints, e.g. en,hi").addText((text) => {
-      text.setPlaceholder("en,hi").setValue(this.settings.deepgramLanguageHints).onChange(async (value) => {
-        this.settings.deepgramLanguageHints = value.trim() || "en,hi";
-        await this.plugin.saveSettings();
-      });
-    });
-    new import_obsidian9.Setting(this.contentEl).setName("Force Roman script output").setDesc("Convert Hindi Devanagari transcript text to roman letters").addToggle((toggle) => {
-      toggle.setValue(this.settings.forceRomanizedOutput).onChange(async (value) => {
-        this.settings.forceRomanizedOutput = value;
-        await this.plugin.saveSettings();
-      });
-    });
-    new import_obsidian9.Setting(this.contentEl).setName("Live diarization profile").setDesc("Tune Deepgram speaker-change stability vs latency in live mode").addDropdown((dropdown) => {
-      dropdown.addOption("accuracy_first", "Accuracy first (recommended)").addOption("balanced", "Balanced").addOption("low_latency", "Low latency").setValue(this.settings.deepgramLiveDiarizationProfile).onChange(async (value) => {
-        if (value !== "accuracy_first" && value !== "balanced" && value !== "low_latency") {
-          return;
-        }
-        this.settings.deepgramLiveDiarizationProfile = value;
-        await this.plugin.saveSettings();
-      });
-    });
-    new import_obsidian9.Setting(this.contentEl).setName("Show live chunks in note").setDesc("Display chunk-by-chunk live transcript in a temporary in-progress block").addToggle((toggle) => {
-      toggle.setValue(this.settings.showLiveChunkPreviewInNote).onChange(async (value) => {
-        this.settings.showLiveChunkPreviewInNote = value;
-        await this.plugin.saveSettings();
-      });
-    });
-    new import_obsidian9.Setting(this.contentEl).setName("Save live recording audio").setDesc("When enabled, live transcription also saves the full recording audio file locally").addToggle((toggle) => {
-      toggle.setValue(this.settings.saveLiveRecordingAudio).onChange(async (value) => {
-        this.settings.saveLiveRecordingAudio = value;
-        await this.plugin.saveSettings();
-      });
-    });
-    new import_obsidian9.Setting(this.contentEl).setName("Allow partial live finalize").setDesc("If some chunks fail, keep partial live transcript with a warning instead of hard fail").addToggle((toggle) => {
-      toggle.setValue(this.settings.allowPartialOnStreamFinalizeFailure).onChange(async (value) => {
-        this.settings.allowPartialOnStreamFinalizeFailure = value;
-        await this.plugin.saveSettings();
-      });
-    });
-    new import_obsidian9.Setting(this.contentEl).setName("Enable stream transport fallback").setDesc("If repeated chunk 400 errors occur, auto-fallback to safer WAV chunk transport").addToggle((toggle) => {
-      toggle.setValue(this.settings.streamTransportFallbackEnabled).onChange(async (value) => {
-        this.settings.streamTransportFallbackEnabled = value;
-        await this.plugin.saveSettings();
-      });
-    });
-  }
-  createBatchChunkingSettings() {
-    new import_obsidian9.Setting(this.contentEl).setName("Chunk large uploaded files").setDesc("Automatically split large uploaded audio files into queue-backed chunks").addToggle((toggle) => {
-      toggle.setValue(this.settings.enableBatchChunkingForUploads).onChange(async (value) => {
-        this.settings.enableBatchChunkingForUploads = value;
-        await this.plugin.saveSettings();
-      });
-    });
-    new import_obsidian9.Setting(this.contentEl).setName("Chunking threshold (MB)").setDesc("Uploaded files above this size use chunked batch transcription").addText((text) => {
-      text.setPlaceholder("25").setValue(String(this.settings.batchChunkThresholdMB)).onChange(async (value) => {
-        const parsed = Number(value);
-        this.settings.batchChunkThresholdMB = Number.isFinite(parsed) ? Math.min(512, Math.max(5, Math.round(parsed))) : 25;
-        await this.plugin.saveSettings();
-      });
-    });
-    new import_obsidian9.Setting(this.contentEl).setName("Chunk duration (seconds)").setDesc("Target duration for each uploaded-file chunk").addText((text) => {
-      text.setPlaceholder("360").setValue(String(this.settings.batchChunkDurationSec)).onChange(async (value) => {
-        const parsed = Number(value);
-        this.settings.batchChunkDurationSec = Number.isFinite(parsed) ? Math.min(1800, Math.max(30, Math.round(parsed))) : 360;
-        await this.plugin.saveSettings();
-      });
-    });
-    new import_obsidian9.Setting(this.contentEl).setName("Chunk overlap (seconds)").setDesc("Small overlap improves continuity at chunk boundaries").addText((text) => {
-      text.setPlaceholder("2").setValue(String(this.settings.batchChunkOverlapSec)).onChange(async (value) => {
-        const parsed = Number(value);
-        this.settings.batchChunkOverlapSec = Number.isFinite(parsed) ? Math.min(30, Math.max(0, Math.round(parsed))) : 2;
-        await this.plugin.saveSettings();
-      });
-    });
-    new import_obsidian9.Setting(this.contentEl).setName("Allow single-request override").setDesc("Show advanced troubleshooting option to force non-chunked upload mode").addToggle((toggle) => {
-      toggle.setValue(this.settings.allowSingleRequestOverride).onChange(async (value) => {
-        this.settings.allowSingleRequestOverride = value;
-        await this.plugin.saveSettings();
-      });
-    });
-    new import_obsidian9.Setting(this.contentEl).setName("Backend base URL").setDesc("Backend API root used for long-upload orchestration, e.g. https://api.example.com").addText((text) => {
-      text.setPlaceholder("https://api.example.com").setValue(this.settings.backendBaseUrl).onChange(async (value) => {
-        this.settings.backendBaseUrl = value.trim();
-        await this.plugin.saveSettings();
-      });
-    });
-    new import_obsidian9.Setting(this.contentEl).setName("Backend API key (optional)").setDesc("Bearer token for backend orchestration endpoints").addText((text) => {
-      text.setPlaceholder("Optional bearer token").setValue(this.settings.backendApiKey).onChange(async (value) => {
-        this.settings.backendApiKey = value.trim();
-        await this.plugin.saveSettings();
-      });
-      text.inputEl.type = "password";
-    });
-    new import_obsidian9.Setting(this.contentEl).setName("Backend poll interval (ms)").setDesc("How often NeuroVox polls backend job status").addText((text) => {
-      text.setPlaceholder("3000").setValue(String(this.settings.backendPollIntervalMs)).onChange(async (value) => {
-        const parsed = Number(value);
-        this.settings.backendPollIntervalMs = Number.isFinite(parsed) ? Math.min(3e4, Math.max(1e3, Math.round(parsed))) : 3e3;
-        await this.plugin.saveSettings();
-      });
-    });
-    new import_obsidian9.Setting(this.contentEl).setName("Backend job timeout (seconds)").setDesc("Maximum wait time for backend processing before timeout").addText((text) => {
-      text.setPlaceholder("1800").setValue(String(this.settings.backendJobTimeoutSec)).onChange(async (value) => {
-        const parsed = Number(value);
-        this.settings.backendJobTimeoutSec = Number.isFinite(parsed) ? Math.min(14400, Math.max(60, Math.round(parsed))) : 1800;
-        await this.plugin.saveSettings();
-      });
-    });
-  }
-  getProviderFromModel(modelId) {
-    for (const [provider, models] of Object.entries(AIModels)) {
-      if (models.some((model) => model.id === modelId)) {
-        return provider;
-      }
-    }
-    return null;
-  }
-};
-
-// src/settings/accordions/PostProcessingAccordion.ts
-var import_obsidian10 = require("obsidian");
-var PostProcessingAccordion = class extends BaseAccordion {
-  constructor(containerEl, settings, getAdapter, plugin) {
-    super(
-      containerEl,
-      "\u{1F4DD} Post-Processing",
-      "Configure AI post-processing preferences and customize the prompt template."
-    );
-    this.settings = settings;
-    this.getAdapter = getAdapter;
-    this.plugin = plugin;
-    this.modelDropdown = null;
-    this.modelSetting = null;
-    this.promptArea = null;
-    this.maxTokensSlider = null;
-    this.temperatureSlider = null;
-  }
-  async refresh() {
-    try {
-      if (!this.modelDropdown) {
-        return;
-      }
-      await this.setupModelDropdown(this.modelDropdown);
-      if (this.settings.postProcessingModel) {
-        await this.updateMaxTokensLimit(this.settings.postProcessingModel);
-      }
-    } catch (error) {
-      throw error;
-    }
-  }
-  render() {
-    this.addEnableToggle();
-    this.addModelSelection();
-    this.addPromptTemplate();
-    this.addSummaryFormat();
-    this.addMaxTokens();
-    this.addTemperatureControl();
-  }
-  addEnableToggle() {
-    new import_obsidian10.Setting(this.contentEl).setName("Enable AI Post-Processing").setDesc("Automatically generate AI post-processing after transcription").addToggle((toggle) => {
-      toggle.setValue(this.settings.generatePostProcessing).onChange(async (value) => {
-        this.settings.generatePostProcessing = value;
-        await this.plugin.saveSettings();
-      });
-    });
-  }
-  addModelSelection() {
-    if (this.modelSetting) {
-      this.modelSetting.settingEl.remove();
-    }
-    this.modelSetting = new import_obsidian10.Setting(this.contentEl).setName("Post-processing model").setDesc("Select the AI model for post-processing").addDropdown((dropdown) => {
-      this.modelDropdown = dropdown;
-      this.setupModelDropdown(dropdown);
-      dropdown.onChange(async (value) => {
-        this.settings.postProcessingModel = value;
-        const provider = this.getProviderFromModel(value);
-        if (provider) {
-          this.settings.postProcessingProvider = provider;
-          await this.plugin.saveSettings();
-        }
-        await this.updateMaxTokensLimit(value);
-      });
-    });
-  }
-  async setupModelDropdown(dropdown) {
-    dropdown.selectEl.empty();
-    let hasValidProvider = false;
-    for (const provider of ["openai" /* OpenAI */, "groq" /* Groq */]) {
-      const apiKey = this.settings[`${provider}ApiKey`];
-      if (apiKey) {
-        const models = AIModels[provider].filter((model) => model.category === "language");
-        if (models.length > 0) {
-          hasValidProvider = true;
-          const group = document.createElement("optgroup");
-          group.label = `${provider.toUpperCase()} Models`;
-          models.forEach((model) => {
-            const option = document.createElement("option");
-            option.value = model.id;
-            option.text = model.name;
-            group.appendChild(option);
-          });
-          dropdown.selectEl.appendChild(group);
-        }
-      }
-    }
-    if (!hasValidProvider) {
-      dropdown.addOption("none", "No API keys configured");
-      dropdown.setDisabled(true);
-      this.settings.postProcessingModel = "";
-    } else {
-      dropdown.setDisabled(false);
-      if (!this.settings.postProcessingModel) {
-        const firstOption = dropdown.selectEl.querySelector('option:not([value="none"])');
-        if (firstOption) {
-          const modelId = firstOption.value;
-          const provider = this.getProviderFromModel(modelId);
-          if (provider) {
-            this.settings.postProcessingProvider = provider;
-            this.settings.postProcessingModel = modelId;
-            dropdown.setValue(modelId);
-          }
-        }
-      } else {
-        dropdown.setValue(this.settings.postProcessingModel);
-      }
-    }
-    await this.plugin.saveSettings();
-  }
-  addPromptTemplate() {
-    new import_obsidian10.Setting(this.contentEl).setName("Post-processing template").setDesc("Customize the prompt used for generating summaries. Use {transcript} as a placeholder for the transcribed text.").addTextArea((text) => {
-      this.promptArea = text;
-      text.setPlaceholder("Please process the following transcript: {transcript}").setValue(this.settings.postProcessingPrompt).onChange(async (value) => {
-        this.settings.postProcessingPrompt = value;
-        await this.plugin.saveSettings();
-      });
-      text.inputEl.rows = 4;
-      text.inputEl.style.width = "100%";
-    });
-  }
-  addSummaryFormat() {
-    new import_obsidian10.Setting(this.contentEl).setName("Post-processing format").setDesc("Customize the post-processing callout format. Use {postProcessing} for the generated content").addTextArea((text) => {
-      text.setPlaceholder(">[!note]- Post-Processing\n>{postProcessing}").setValue(this.settings.postProcessingCalloutFormat).onChange(async (value) => {
-        this.settings.postProcessingCalloutFormat = value;
-        await this.plugin.saveSettings();
-      });
-      text.inputEl.rows = 4;
-      text.inputEl.style.width = "100%";
-    });
-  }
-  addMaxTokens() {
-    new import_obsidian10.Setting(this.contentEl).setName("Maximum post-processing length").setDesc("Set the maximum number of tokens for the post-processing output").addSlider((slider) => {
-      this.maxTokensSlider = slider;
-      slider.setLimits(100, 4096, 100).setValue(this.settings.postProcessingMaxTokens).setDynamicTooltip().onChange(async (value) => {
-        this.settings.postProcessingMaxTokens = value;
-        await this.plugin.saveSettings();
-      });
-    });
-  }
-  addTemperatureControl() {
-    new import_obsidian10.Setting(this.contentEl).setName("Post-processing creativity").setDesc("Adjust the creativity level of the post-processing (0 = more focused, 1 = more creative)").addSlider((slider) => {
-      this.temperatureSlider = slider;
-      slider.setLimits(0, 1, 0.1).setValue(this.settings.postProcessingTemperature).setDynamicTooltip().onChange(async (value) => {
-        this.settings.postProcessingTemperature = value;
-        await this.plugin.saveSettings();
-      });
-    });
-  }
-  getProviderFromModel(modelId) {
-    for (const [provider, models] of Object.entries(AIModels)) {
-      if (models.some((model) => model.id === modelId)) {
-        return provider;
-      }
-    }
-    return null;
-  }
-  async updateMaxTokensLimit(modelId) {
-    const model = getModelInfo(modelId);
-    const maxTokens = (model == null ? void 0 : model.maxTokens) || 1e3;
-    if (this.maxTokensSlider) {
-      this.maxTokensSlider.sliderEl.max = maxTokens.toString();
-      const currentValue = parseInt(this.maxTokensSlider.sliderEl.value);
-      if (currentValue > maxTokens) {
-        this.maxTokensSlider.setValue(maxTokens);
-        this.settings.postProcessingMaxTokens = maxTokens;
-        await this.plugin.saveSettings();
-      }
-    }
-  }
-};
-
-// src/settings/SettingTab.ts
-var NeuroVoxSettingTab = class extends import_obsidian11.PluginSettingTab {
-  constructor(app, plugin) {
-    super(app, plugin);
-    this.recordingAccordion = null;
-    this.postProcessingAccordion = null;
-    this.plugin = plugin;
-  }
-  display() {
-    const { containerEl } = this;
-    containerEl.empty();
-    const modelHookupContainer = containerEl.createDiv();
-    const recordingContainer = containerEl.createDiv();
-    const postProcessingContainer = containerEl.createDiv();
-    this.recordingAccordion = new RecordingAccordion(
-      recordingContainer,
-      this.plugin.settings,
-      (provider) => this.plugin.aiAdapters.get(provider),
-      this.plugin
-    );
-    this.postProcessingAccordion = new PostProcessingAccordion(
-      postProcessingContainer,
-      this.plugin.settings,
-      (provider) => this.plugin.aiAdapters.get(provider),
-      this.plugin
-    );
-    const modelHookupAccordion = new ModelHookupAccordion(
-      modelHookupContainer,
-      this.plugin.settings,
-      (provider) => this.plugin.aiAdapters.get(provider),
-      this.plugin
-    );
-    modelHookupAccordion.setAccordions(this.recordingAccordion, this.postProcessingAccordion);
-    modelHookupAccordion.render();
-    this.recordingAccordion.render();
-    this.postProcessingAccordion.render();
-  }
-  getRecordingAccordion() {
-    return this.recordingAccordion;
-  }
-  getPostProcessingAccordion() {
-    return this.postProcessingAccordion;
-  }
-};
-
-// src/ui/FloatingButton.ts
-var import_obsidian16 = require("obsidian");
-
-// src/utils/ButtonPositionManager.ts
-var ButtonPositionManager = class {
-  constructor(containerEl, buttonEl, activeContainer, buttonSize, margin, onPositionChange, onDragEnd, onClick) {
-    this.containerEl = containerEl;
-    this.buttonEl = buttonEl;
-    this.activeContainer = activeContainer;
-    this.buttonSize = buttonSize;
-    this.margin = margin;
-    this.onPositionChange = onPositionChange;
-    this.onDragEnd = onDragEnd;
-    this.onClick = onClick;
-    this.isDragging = false;
-    this.hasMoved = false;
-    this.dragStartX = 0;
-    this.dragStartY = 0;
-    this.currentX = 0;
-    this.currentY = 0;
-    this.lastContainerWidth = null;
-    this.relativeX = 0;
-    this.relativeY = 0;
-    this.DRAG_THRESHOLD = 5;
-    this.handleDragStart = (e) => {
-      if (e.button !== 0)
-        return;
-      e.preventDefault();
-      e.stopPropagation();
-      this.isDragging = true;
-      this.hasMoved = false;
-      this.dragStartX = e.clientX - this.currentX;
-      this.dragStartY = e.clientY - this.currentY;
-      this.buttonEl.classList.add("is-dragging");
-    };
-    /**
-     * Handles the end of a drag operation
-     */
-    this.handleDragEnd = (e) => {
-      if (!this.isDragging)
-        return;
-      if (e) {
-        e.preventDefault();
-        e.stopPropagation();
-      }
-      this.isDragging = false;
-      this.buttonEl.classList.remove("is-dragging");
-      if (this.hasMoved) {
-        this.onDragEnd({
-          x: this.currentX,
-          y: this.currentY
-        });
-      }
-      setTimeout(() => {
-        this.hasMoved = false;
-      }, 100);
-    };
-    /**
-     * Handles drag movement and determines if threshold is met
-     */
-    this.handleDragMove = (e) => {
-      if (!this.isDragging)
-        return;
-      e.preventDefault();
-      e.stopPropagation();
-      const newX = e.clientX - this.dragStartX;
-      const newY = e.clientY - this.dragStartY;
-      if (!this.hasMoved && (Math.abs(newX - this.currentX) > this.DRAG_THRESHOLD || Math.abs(newY - this.currentY) > this.DRAG_THRESHOLD)) {
-        this.hasMoved = true;
-      }
-      this.setPosition(newX, newY);
-      this.constrainPosition();
-    };
-    /**
-     * Handles touch events for mobile support
-     */
-    this.handleTouchStart = (e) => {
-      if (e.touches.length !== 1)
-        return;
-      e.preventDefault();
-      const touch = e.touches[0];
-      this.isDragging = true;
-      this.hasMoved = false;
-      this.dragStartX = touch.clientX - this.currentX;
-      this.dragStartY = touch.clientY - this.currentY;
-      this.buttonEl.classList.add("is-dragging");
-    };
-    this.handleTouchMove = (e) => {
-      if (!this.isDragging || e.touches.length !== 1)
-        return;
-      e.preventDefault();
-      const touch = e.touches[0];
-      const newX = touch.clientX - this.dragStartX;
-      const newY = touch.clientY - this.dragStartY;
-      if (!this.hasMoved && (Math.abs(newX - this.currentX) > this.DRAG_THRESHOLD || Math.abs(newY - this.currentY) > this.DRAG_THRESHOLD)) {
-        this.hasMoved = true;
-      }
-      this.setPosition(newX, newY);
-      this.constrainPosition();
-    };
-    this.handleTouchEnd = () => {
-      if (!this.isDragging)
-        return;
-      const wasDragging = this.hasMoved;
-      this.isDragging = false;
-      this.buttonEl.classList.remove("is-dragging");
-      if (!wasDragging) {
-        this.onClick();
-      } else {
-        this.onDragEnd({
-          x: this.currentX,
-          y: this.currentY
-        });
-      }
-      this.hasMoved = false;
-    };
-    this._boundHandlers = {
-      move: this.handleDragMove.bind(this),
-      end: this.handleDragEnd.bind(this),
-      touchMove: this.handleTouchMove.bind(this),
-      touchEnd: this.handleTouchEnd.bind(this)
-    };
-    this.setupEventListeners();
-  }
-  setPosition(x, y, updateRelative = true) {
-    this.currentX = x;
-    this.currentY = y;
-    if (updateRelative && this.activeContainer) {
-      const containerRect = this.activeContainer.getBoundingClientRect();
-      this.relativeX = x / containerRect.width;
-      this.relativeY = y / containerRect.height;
-    }
-    this.onPositionChange(x, y);
-  }
-  constrainPosition() {
-    if (!this.activeContainer)
-      return;
-    const containerRect = this.activeContainer.getBoundingClientRect();
-    this.lastContainerWidth = containerRect.width;
-    if (containerRect.width < this.buttonSize + this.margin * 2 || containerRect.height < this.buttonSize + this.margin * 2) {
-      return;
-    }
-    const maxX = containerRect.width - this.buttonSize - this.margin;
-    const maxY = containerRect.height - this.buttonSize - this.margin;
-    const targetX = this.relativeX * containerRect.width;
-    const targetY = this.relativeY * containerRect.height;
-    const x = Math.max(this.margin, Math.min(targetX, maxX));
-    const y = Math.max(this.margin, Math.min(targetY, maxY));
-    this.setPosition(x, y, false);
-  }
-  updateContainer(newContainer) {
-    if (!newContainer) {
-      this.activeContainer = null;
-      return;
-    }
-    const oldContainer = this.activeContainer;
-    this.activeContainer = newContainer;
-    if (oldContainer) {
-      const newRect = newContainer.getBoundingClientRect();
-      const newX = this.relativeX * newRect.width;
-      const newY = this.relativeY * newRect.height;
-      this.setPosition(newX, newY, false);
-    }
-    this.constrainPosition();
-  }
-  setupEventListeners() {
-    this.buttonEl.addEventListener("mousedown", this.handleDragStart.bind(this));
-    document.addEventListener("mousemove", this._boundHandlers.move);
-    document.addEventListener("mouseup", this._boundHandlers.end);
-    this.buttonEl.addEventListener("touchstart", this.handleTouchStart.bind(this), { passive: false });
-    document.addEventListener("touchmove", this._boundHandlers.touchMove);
-    document.addEventListener("touchend", this._boundHandlers.touchEnd);
-  }
-  getCurrentPosition() {
-    return {
-      x: this.currentX,
-      y: this.currentY
-    };
-  }
-  /**
-   * Handles cleanup of position manager resources
-   */
-  cleanup() {
-    this.buttonEl.removeEventListener("mousedown", this.handleDragStart);
-    this.buttonEl.removeEventListener("touchstart", this.handleTouchStart);
-    document.removeEventListener("mousemove", this._boundHandlers.move);
-    document.removeEventListener("mouseup", this._boundHandlers.end);
-    document.removeEventListener("touchmove", this._boundHandlers.touchMove);
-    document.removeEventListener("touchend", this._boundHandlers.touchEnd);
-  }
-};
-
-// src/utils/RecordingManager.ts
+// src-rebuild/utils/RecordingManager.ts
 var import_recordrtc = __toESM(require_RecordRTC());
 
-// src/utils/DeviceDetection.ts
+// src-rebuild/utils/DeviceDetection.ts
 var DeviceDetection = class {
   constructor() {
     this.availableMemory = null;
@@ -8745,47 +5611,79 @@ var DeviceDetection = class {
   }
 };
 
-// src/utils/RecordingManager.ts
+// src-rebuild/utils/RecordingManager.ts
 var AudioRecordingManager = class {
   constructor(plugin) {
     this.plugin = plugin;
     this.recorder = null;
     this.stream = null;
     this.pendingDataCallbacks = /* @__PURE__ */ new Set();
-    // Audio quality settings (sample rates in Hz)
     this.SAMPLE_RATES = {
-      ["low" /* Low */]: 22050,
+      [
+        "low"
+        /* Low */
+      ]: 22050,
       // Voice optimized
-      ["medium" /* Medium */]: 32e3,
+      [
+        "medium"
+        /* Medium */
+      ]: 32e3,
       // High quality voice
-      ["high" /* High */]: 44100
+      [
+        "high"
+        /* High */
+      ]: 44100
       // CD quality
     };
-    // Mobile-optimized sample rates
     this.MOBILE_SAMPLE_RATES = {
-      ["low" /* Low */]: 16e3,
+      [
+        "low"
+        /* Low */
+      ]: 16e3,
       // Mobile voice optimized
-      ["medium" /* Medium */]: 22050,
+      [
+        "medium"
+        /* Medium */
+      ]: 22050,
       // Mobile high quality voice
-      ["high" /* High */]: 32e3
+      [
+        "high"
+        /* High */
+      ]: 32e3
       // Mobile max quality
     };
-    // Bitrate settings (bits per second)
     this.BIT_RATES = {
-      ["low" /* Low */]: 64e3,
+      [
+        "low"
+        /* Low */
+      ]: 64e3,
       // Good for voice
-      ["medium" /* Medium */]: 128e3,
+      [
+        "medium"
+        /* Medium */
+      ]: 128e3,
       // Excellent voice quality
-      ["high" /* High */]: 192e3
+      [
+        "high"
+        /* High */
+      ]: 192e3
       // Studio quality
     };
-    // Mobile-optimized bitrates
     this.MOBILE_BIT_RATES = {
-      ["low" /* Low */]: 16e3,
+      [
+        "low"
+        /* Low */
+      ]: 16e3,
       // Mobile voice optimized
-      ["medium" /* Medium */]: 32e3,
+      [
+        "medium"
+        /* Medium */
+      ]: 32e3,
       // Mobile good quality
-      ["high" /* High */]: 48e3
+      [
+        "high"
+        /* High */
+      ]: 48e3
       // Mobile high quality
     };
     this.deviceDetection = DeviceDetection.getInstance();
@@ -8803,9 +5701,15 @@ var AudioRecordingManager = class {
       mimeType: "audio/webm",
       recorderType: import_recordrtc.default.StereoAudioRecorder,
       numberOfAudioChannels: 1,
-      desiredSampRate: sampleRates[quality] || sampleRates["medium" /* Medium */],
+      desiredSampRate: sampleRates[quality] || sampleRates[
+        "medium"
+        /* Medium */
+      ],
       // Add bitrate control for better compression
-      bitsPerSecond: bitRates[quality] || bitRates["medium" /* Medium */]
+      bitsPerSecond: bitRates[quality] || bitRates[
+        "medium"
+        /* Medium */
+      ]
     };
   }
   /**
@@ -8945,14 +5849,196 @@ var AudioRecordingManager = class {
   }
 };
 
-// src/ui/InlineRecorderPanel.ts
-var import_obsidian15 = require("obsidian");
+// src-rebuild/utils/ButtonPositionManager.ts
+var ButtonPositionManager = class {
+  constructor(containerEl, buttonEl, activeContainer, buttonSize, margin, onPositionChange, onDragEnd, onClick) {
+    this.containerEl = containerEl;
+    this.buttonEl = buttonEl;
+    this.activeContainer = activeContainer;
+    this.buttonSize = buttonSize;
+    this.margin = margin;
+    this.onPositionChange = onPositionChange;
+    this.onDragEnd = onDragEnd;
+    this.onClick = onClick;
+    this.isDragging = false;
+    this.hasMoved = false;
+    this.dragStartX = 0;
+    this.dragStartY = 0;
+    this.currentX = 0;
+    this.currentY = 0;
+    this.lastContainerWidth = null;
+    this.relativeX = 0;
+    this.relativeY = 0;
+    this.DRAG_THRESHOLD = 5;
+    this.handleDragStart = (e) => {
+      if (e.button !== 0)
+        return;
+      e.preventDefault();
+      e.stopPropagation();
+      this.isDragging = true;
+      this.hasMoved = false;
+      this.dragStartX = e.clientX - this.currentX;
+      this.dragStartY = e.clientY - this.currentY;
+      this.buttonEl.classList.add("is-dragging");
+    };
+    this.handleDragEnd = (e) => {
+      if (!this.isDragging)
+        return;
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      this.isDragging = false;
+      this.buttonEl.classList.remove("is-dragging");
+      if (this.hasMoved) {
+        this.onDragEnd({
+          x: this.currentX,
+          y: this.currentY
+        });
+      }
+      setTimeout(() => {
+        this.hasMoved = false;
+      }, 100);
+    };
+    this.handleDragMove = (e) => {
+      if (!this.isDragging)
+        return;
+      e.preventDefault();
+      e.stopPropagation();
+      const newX = e.clientX - this.dragStartX;
+      const newY = e.clientY - this.dragStartY;
+      if (!this.hasMoved && (Math.abs(newX - this.currentX) > this.DRAG_THRESHOLD || Math.abs(newY - this.currentY) > this.DRAG_THRESHOLD)) {
+        this.hasMoved = true;
+      }
+      this.setPosition(newX, newY);
+      this.constrainPosition();
+    };
+    this.handleTouchStart = (e) => {
+      if (e.touches.length !== 1)
+        return;
+      e.preventDefault();
+      const touch = e.touches[0];
+      this.isDragging = true;
+      this.hasMoved = false;
+      this.dragStartX = touch.clientX - this.currentX;
+      this.dragStartY = touch.clientY - this.currentY;
+      this.buttonEl.classList.add("is-dragging");
+    };
+    this.handleTouchMove = (e) => {
+      if (!this.isDragging || e.touches.length !== 1)
+        return;
+      e.preventDefault();
+      const touch = e.touches[0];
+      const newX = touch.clientX - this.dragStartX;
+      const newY = touch.clientY - this.dragStartY;
+      if (!this.hasMoved && (Math.abs(newX - this.currentX) > this.DRAG_THRESHOLD || Math.abs(newY - this.currentY) > this.DRAG_THRESHOLD)) {
+        this.hasMoved = true;
+      }
+      this.setPosition(newX, newY);
+      this.constrainPosition();
+    };
+    this.handleTouchEnd = () => {
+      if (!this.isDragging)
+        return;
+      const wasDragging = this.hasMoved;
+      this.isDragging = false;
+      this.buttonEl.classList.remove("is-dragging");
+      if (!wasDragging) {
+        this.onClick();
+      } else {
+        this.onDragEnd({
+          x: this.currentX,
+          y: this.currentY
+        });
+      }
+      this.hasMoved = false;
+    };
+    this._boundHandlers = {
+      move: this.handleDragMove.bind(this),
+      end: this.handleDragEnd.bind(this),
+      touchMove: this.handleTouchMove.bind(this),
+      touchEnd: this.handleTouchEnd.bind(this)
+    };
+    this.setupEventListeners();
+  }
+  setPosition(x, y, updateRelative = true) {
+    this.currentX = x;
+    this.currentY = y;
+    if (updateRelative && this.activeContainer) {
+      const containerRect = this.activeContainer.getBoundingClientRect();
+      this.relativeX = x / containerRect.width;
+      this.relativeY = y / containerRect.height;
+    }
+    this.onPositionChange(x, y);
+  }
+  constrainPosition() {
+    if (!this.activeContainer)
+      return;
+    const containerRect = this.activeContainer.getBoundingClientRect();
+    this.lastContainerWidth = containerRect.width;
+    if (containerRect.width < this.buttonSize + this.margin * 2 || containerRect.height < this.buttonSize + this.margin * 2) {
+      return;
+    }
+    const maxX = containerRect.width - this.buttonSize - this.margin;
+    const maxY = containerRect.height - this.buttonSize - this.margin;
+    const targetX = this.relativeX * containerRect.width;
+    const targetY = this.relativeY * containerRect.height;
+    const x = Math.max(this.margin, Math.min(targetX, maxX));
+    const y = Math.max(this.margin, Math.min(targetY, maxY));
+    this.setPosition(x, y, false);
+  }
+  updateContainer(newContainer) {
+    if (!newContainer) {
+      this.activeContainer = null;
+      return;
+    }
+    const oldContainer = this.activeContainer;
+    this.activeContainer = newContainer;
+    if (oldContainer) {
+      const newRect = newContainer.getBoundingClientRect();
+      const newX = this.relativeX * newRect.width;
+      const newY = this.relativeY * newRect.height;
+      this.setPosition(newX, newY, false);
+    }
+    this.constrainPosition();
+  }
+  setupEventListeners() {
+    this.buttonEl.addEventListener("mousedown", this.handleDragStart.bind(this));
+    document.addEventListener("mousemove", this._boundHandlers.move);
+    document.addEventListener("mouseup", this._boundHandlers.end);
+    this.buttonEl.addEventListener("touchstart", this.handleTouchStart.bind(this), { passive: false });
+    document.addEventListener("touchmove", this._boundHandlers.touchMove);
+    document.addEventListener("touchend", this._boundHandlers.touchEnd);
+  }
+  getCurrentPosition() {
+    return {
+      x: this.currentX,
+      y: this.currentY
+    };
+  }
+  /**
+   * Handles cleanup of position manager resources
+   */
+  cleanup() {
+    this.buttonEl.removeEventListener("mousedown", this.handleDragStart);
+    this.buttonEl.removeEventListener("touchstart", this.handleTouchStart);
+    document.removeEventListener("mousemove", this._boundHandlers.move);
+    document.removeEventListener("mouseup", this._boundHandlers.end);
+    document.removeEventListener("touchmove", this._boundHandlers.touchMove);
+    document.removeEventListener("touchend", this._boundHandlers.touchEnd);
+  }
+};
 
-// src/utils/audio/ChunkQueue.ts
+// src-rebuild/ui/DesktopDockPill.ts
+var import_obsidian5 = require("obsidian");
+
+// src-rebuild/utils/transcription/StreamingTranscriptionService.ts
+var import_obsidian4 = require("obsidian");
+
+// src-rebuild/utils/audio/ChunkQueue.ts
 var ChunkQueue = class {
   constructor(maxQueueSize, memoryLimit, onMemoryWarning) {
     this.queue = [];
-    // in bytes
     this.currentMemoryUsage = 0;
     this.processingCount = 0;
     this.paused = false;
@@ -9088,228 +6174,7 @@ var ChunkQueue = class {
   }
 };
 
-// src/utils/transcription/ResultCompiler.ts
-var ResultCompiler = class {
-  constructor(startTimestamp) {
-    this.segments = [];
-    this.totalDuration = 0;
-    this.durationOverrideMs = null;
-    this.startTimestamp = startTimestamp || Date.now();
-  }
-  addSegment(chunk) {
-    const segment = {
-      startTime: chunk.metadata.timestamp - this.startTimestamp,
-      endTime: chunk.metadata.timestamp - this.startTimestamp + chunk.metadata.duration,
-      text: chunk.transcript.trim(),
-      chunkId: chunk.metadata.id
-    };
-    const insertIndex = this.segments.findIndex((s) => s.startTime > segment.startTime);
-    if (insertIndex === -1) {
-      this.segments.push(segment);
-    } else {
-      this.segments.splice(insertIndex, 0, segment);
-    }
-    this.totalDuration = Math.max(this.totalDuration, segment.endTime);
-  }
-  getPartialResult(includeTimestamps = false) {
-    if (this.segments.length === 0)
-      return "";
-    if (includeTimestamps) {
-      const turnBased = this.getPartialResultBySpeakerTurns();
-      if (turnBased) {
-        return turnBased;
-      }
-      let result = "";
-      let previousSpeakerLabel = null;
-      for (let i = 0; i < this.segments.length; i++) {
-        const segment = this.segments[i];
-        const normalized = this.normalizeRepeatedSpeakerLabel(segment.text, previousSpeakerLabel);
-        const text = normalized.text;
-        if (i > 0)
-          result += "\n\n";
-        result += `[${this.formatTime(segment.startTime)}] ${text}`;
-        previousSpeakerLabel = normalized.nextSpeakerLabel;
-      }
-      return result;
-    } else {
-      let result = "";
-      let previousSpeakerLabel = null;
-      for (let i = 0; i < this.segments.length; i++) {
-        const segment = this.segments[i];
-        const prevSegment = i > 0 ? this.segments[i - 1] : null;
-        const normalized = this.normalizeRepeatedSpeakerLabel(
-          segment.text,
-          previousSpeakerLabel
-        );
-        const text = normalized.text;
-        if (prevSegment && segment.startTime - prevSegment.endTime > 1e3) {
-          result += "\n\n...\n\n";
-        } else if (i > 0) {
-          result += " ";
-        }
-        result += text;
-        previousSpeakerLabel = normalized.nextSpeakerLabel;
-      }
-      return result;
-    }
-  }
-  normalizeRepeatedSpeakerLabel(text, previousSpeakerLabel) {
-    const raw = (text || "").trim();
-    if (!raw) {
-      return { text: raw, nextSpeakerLabel: previousSpeakerLabel };
-    }
-    const match = /^(Speaker\s+\d+):\s*/i.exec(raw);
-    if (!match) {
-      return { text: raw, nextSpeakerLabel: previousSpeakerLabel };
-    }
-    const currentLabel = match[1];
-    if (previousSpeakerLabel && currentLabel.toLowerCase() === previousSpeakerLabel.toLowerCase()) {
-      const stripped = raw.slice(match[0].length).trim();
-      return {
-        text: stripped || raw,
-        nextSpeakerLabel: currentLabel
-      };
-    }
-    return {
-      text: raw,
-      nextSpeakerLabel: currentLabel
-    };
-  }
-  getPartialResultBySpeakerTurns() {
-    const turns = [];
-    let currentTurn = null;
-    let hasSpeakerLabels = false;
-    for (const segment of this.segments) {
-      const raw = (segment.text || "").trim();
-      if (!raw)
-        continue;
-      const parsed = this.extractSpeakerLabelAndBody(raw);
-      const speaker = parsed.speakerLabel;
-      const textPart = parsed.body || raw;
-      if (speaker)
-        hasSpeakerLabels = true;
-      if (!currentTurn) {
-        currentTurn = {
-          startTime: segment.startTime,
-          speakerLabel: speaker,
-          textParts: textPart ? [textPart] : []
-        };
-        continue;
-      }
-      if (speaker && speaker !== currentTurn.speakerLabel) {
-        turns.push(currentTurn);
-        currentTurn = {
-          startTime: segment.startTime,
-          speakerLabel: speaker,
-          textParts: textPart ? [textPart] : []
-        };
-        continue;
-      }
-      if (speaker && !currentTurn.speakerLabel) {
-        turns.push(currentTurn);
-        currentTurn = {
-          startTime: segment.startTime,
-          speakerLabel: speaker,
-          textParts: textPart ? [textPart] : []
-        };
-        continue;
-      }
-      if (textPart) {
-        currentTurn.textParts.push(textPart);
-      }
-    }
-    if (currentTurn) {
-      turns.push(currentTurn);
-    }
-    if (!hasSpeakerLabels || turns.length === 0) {
-      return null;
-    }
-    return turns.map((turn) => {
-      const text = turn.textParts.join(" ").replace(/\s+/g, " ").trim();
-      if (!text)
-        return "";
-      if (turn.speakerLabel) {
-        return `[${this.formatTime(turn.startTime)}] ${turn.speakerLabel}: ${text}`;
-      }
-      return `[${this.formatTime(turn.startTime)}] ${text}`;
-    }).filter(Boolean).join("\n\n");
-  }
-  extractSpeakerLabelAndBody(text) {
-    const match = /^(Speaker\s+\d+):\s*(.*)$/i.exec(text.trim());
-    if (!match) {
-      return { speakerLabel: null, body: text.trim() };
-    }
-    return {
-      speakerLabel: match[1],
-      body: (match[2] || "").trim()
-    };
-  }
-  getFinalResult(includeTimestamps = false, includeMetadata = false) {
-    if (this.segments.length === 0)
-      return "";
-    let result = "";
-    if (includeMetadata) {
-      const recordingDate = new Date(this.startTimestamp).toLocaleString();
-      const effectiveDurationMs = this.durationOverrideMs !== null ? Math.max(this.totalDuration, this.durationOverrideMs) : this.totalDuration;
-      const duration = this.formatTime(effectiveDurationMs);
-      result += `## Recording Information
-`;
-      result += `- Date: ${recordingDate}
-`;
-      result += `- Duration: ${duration}
-`;
-      result += `- Segments: ${this.segments.length}
-
-`;
-      result += `---
-
-`;
-    }
-    result += includeTimestamps ? "## Transcription with Timestamps\n\n" : "## Transcription\n\n";
-    result += this.getPartialResult(includeTimestamps);
-    return result;
-  }
-  formatTime(milliseconds) {
-    const totalSeconds = Math.floor(milliseconds / 1e3);
-    const hours = Math.floor(totalSeconds / 3600);
-    const minutes = Math.floor(totalSeconds / 60);
-    const seconds = totalSeconds % 60;
-    if (hours > 0) {
-      const mm = Math.floor(totalSeconds % 3600 / 60);
-      return `${hours.toString().padStart(2, "0")}:${mm.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
-    }
-    return `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
-  }
-  getSegmentCount() {
-    return this.segments.length;
-  }
-  getTotalDuration() {
-    return this.totalDuration;
-  }
-  setDurationOverride(milliseconds) {
-    if (Number.isFinite(milliseconds) && milliseconds >= 0) {
-      this.durationOverrideMs = Math.floor(milliseconds);
-    }
-  }
-  clear() {
-    this.segments = [];
-    this.totalDuration = 0;
-    this.durationOverrideMs = null;
-  }
-  // For error recovery - get unprocessed segments
-  getMissingSegments(processedChunkIds) {
-    const allIndices = new Set(Array.from({ length: this.segments.length }, (_, i) => i));
-    const processedIndices = new Set(
-      this.segments.map((seg, index) => processedChunkIds.has(seg.chunkId) ? index : -1).filter((index) => index !== -1)
-    );
-    return Array.from(allIndices).filter((index) => !processedIndices.has(index));
-  }
-};
-
-// src/utils/transcription/StreamingTranscriptionService.ts
-var import_obsidian12 = require("obsidian");
-
-// src/utils/live/DeepgramLiveAdapter.ts
+// src-rebuild/utils/live/DeepgramLiveAdapter.ts
 var _DeepgramLiveAdapter = class {
   constructor(options) {
     this.options = options;
@@ -9549,7 +6414,600 @@ var DeepgramLiveAdapter = _DeepgramLiveAdapter;
 DeepgramLiveAdapter.OPEN_TIMEOUT_MS = 12e3;
 DeepgramLiveAdapter.STOP_TIMEOUT_MS = 1e4;
 
-// src/utils/live/WebAudioPcmSource.ts
+// src-rebuild/utils/recovery/JobStore.ts
+var _JobStore = class {
+  constructor(plugin) {
+    this.plugin = plugin;
+    this.writeChain = Promise.resolve();
+  }
+  async upsertJob(job) {
+    await this.withState(async (state) => {
+      const idx = state.jobs.findIndex((j) => j.jobId === job.jobId);
+      if (idx >= 0) {
+        state.jobs[idx] = { ...state.jobs[idx], ...job, updatedAt: new Date().toISOString() };
+      } else {
+        state.jobs.push(job);
+      }
+    });
+  }
+  async updateJobStatus(jobId, status, error) {
+    await this.withState(async (state) => {
+      const idx = state.jobs.findIndex((j) => j.jobId === jobId);
+      if (idx < 0)
+        return;
+      state.jobs[idx] = {
+        ...state.jobs[idx],
+        status,
+        updatedAt: new Date().toISOString(),
+        error
+      };
+    });
+  }
+  async upsertCheckpoint(checkpoint) {
+    await this.withState(async (state) => {
+      const idx = state.checkpoints.findIndex(
+        (c) => c.jobId === checkpoint.jobId && c.index === checkpoint.index
+      );
+      if (idx >= 0) {
+        state.checkpoints[idx] = {
+          ...state.checkpoints[idx],
+          ...checkpoint,
+          updatedAt: new Date().toISOString()
+        };
+      } else {
+        state.checkpoints.push(checkpoint);
+      }
+    });
+  }
+  async getIncompleteJobs() {
+    const state = await this.readState();
+    return state.jobs.filter((j) => j.status === "queued" || j.status === "running" || j.status === "failed");
+  }
+  async getLatestIncompleteJob(kind, targetFile) {
+    const jobs = await this.getIncompleteJobs();
+    return jobs.filter((j) => kind ? j.kind === kind : true).filter((j) => targetFile ? j.targetFile === targetFile : true).sort((a, b) => a.updatedAt < b.updatedAt ? 1 : -1)[0];
+  }
+  async getJob(jobId) {
+    const state = await this.readState();
+    return state.jobs.find((j) => j.jobId === jobId);
+  }
+  async getCheckpoints(jobId) {
+    const state = await this.readState();
+    return state.checkpoints.filter((c) => c.jobId === jobId).sort((a, b) => a.index - b.index);
+  }
+  async getLatestCommittedCheckpoint(jobId, stage) {
+    const checkpoints = await this.getCheckpoints(jobId);
+    return checkpoints.filter((c) => c.stage === stage && c.status === "committed").sort((a, b) => {
+      if (a.index !== b.index)
+        return b.index - a.index;
+      return a.updatedAt < b.updatedAt ? 1 : -1;
+    })[0];
+  }
+  async prune(options) {
+    var _a, _b, _c;
+    const maxJobs = (_a = options == null ? void 0 : options.maxJobs) != null ? _a : 500;
+    const maxCheckpoints = (_b = options == null ? void 0 : options.maxCheckpoints) != null ? _b : 2e3;
+    const maxAgeMs = (_c = options == null ? void 0 : options.maxAgeMs) != null ? _c : 14 * 24 * 60 * 60 * 1e3;
+    const cutoff = Date.now() - maxAgeMs;
+    await this.withState(async (state) => {
+      state.jobs = state.jobs.filter((job) => {
+        if (job.status === "queued" || job.status === "running")
+          return true;
+        return new Date(job.updatedAt).getTime() >= cutoff;
+      }).sort((a, b) => a.updatedAt < b.updatedAt ? 1 : -1).slice(0, maxJobs);
+      const keepJobIds = new Set(state.jobs.map((j) => j.jobId));
+      state.checkpoints = state.checkpoints.filter((cp) => keepJobIds.has(cp.jobId)).sort((a, b) => a.updatedAt < b.updatedAt ? 1 : -1).slice(0, maxCheckpoints);
+    });
+  }
+  async demoteStaleFailedToCanceled(maxAgeMs) {
+    let changed = 0;
+    const cutoff = Date.now() - Math.max(0, maxAgeMs);
+    await this.withState(async (state) => {
+      const nowIso = new Date().toISOString();
+      for (const job of state.jobs) {
+        if (job.status !== "failed")
+          continue;
+        const updatedAtMs = new Date(job.updatedAt).getTime();
+        if (!Number.isFinite(updatedAtMs) || updatedAtMs > cutoff)
+          continue;
+        job.status = "canceled";
+        job.updatedAt = nowIso;
+        changed += 1;
+      }
+    });
+    return changed;
+  }
+  async withState(mutator) {
+    const run = this.writeChain.then(async () => {
+      const state = await this.readState();
+      await mutator(state);
+      await this.writeState(state);
+    });
+    this.writeChain = run.catch((err) => {
+      console.error("[NeuroVox][JobStore] State write failed:", err);
+    });
+    await run;
+  }
+  async readState() {
+    const adapter = this.plugin.app.vault.adapter;
+    await this.ensureDir(adapter);
+    if (!await adapter.exists(_JobStore.FILE)) {
+      return { jobs: [], checkpoints: [] };
+    }
+    try {
+      const raw = await adapter.read(_JobStore.FILE);
+      let parsed;
+      try {
+        parsed = JSON.parse(raw);
+      } catch (e) {
+        await this.quarantineCorruptFile(adapter, _JobStore.FILE, raw);
+        return { jobs: [], checkpoints: [] };
+      }
+      return {
+        jobs: Array.isArray(parsed == null ? void 0 : parsed.jobs) ? parsed.jobs : [],
+        checkpoints: Array.isArray(parsed == null ? void 0 : parsed.checkpoints) ? parsed.checkpoints : []
+      };
+    } catch (e) {
+      return { jobs: [], checkpoints: [] };
+    }
+  }
+  async writeState(state) {
+    const adapter = this.plugin.app.vault.adapter;
+    await this.ensureDir(adapter);
+    await adapter.write(_JobStore.FILE, JSON.stringify(state, null, 2));
+  }
+  async ensureDir(adapter) {
+    if (!await adapter.exists(_JobStore.BASE_DIR)) {
+      await adapter.mkdir(_JobStore.BASE_DIR);
+    }
+  }
+  async quarantineCorruptFile(adapter, path, raw) {
+    try {
+      const quarantinePath = `${path}.corrupt.${Date.now()}.json`;
+      await adapter.write(quarantinePath, raw);
+      await adapter.remove(path);
+    } catch (e) {
+    }
+  }
+};
+var JobStore = _JobStore;
+JobStore.BASE_DIR = ".obsidian/plugins/neurovox/recovery";
+JobStore.FILE = ".obsidian/plugins/neurovox/recovery/jobs.json";
+
+// src-rebuild/utils/transcription/ResultCompiler.ts
+var ResultCompiler = class {
+  constructor(startTimestamp) {
+    this.segments = [];
+    this.totalDuration = 0;
+    this.durationOverrideMs = null;
+    this.startTimestamp = startTimestamp || Date.now();
+  }
+  addSegment(chunk) {
+    const segment = {
+      startTime: chunk.metadata.timestamp - this.startTimestamp,
+      endTime: chunk.metadata.timestamp - this.startTimestamp + chunk.metadata.duration,
+      text: chunk.transcript.trim(),
+      chunkId: chunk.metadata.id
+    };
+    const insertIndex = this.segments.findIndex((s) => s.startTime > segment.startTime);
+    if (insertIndex === -1) {
+      this.segments.push(segment);
+    } else {
+      this.segments.splice(insertIndex, 0, segment);
+    }
+    this.totalDuration = Math.max(this.totalDuration, segment.endTime);
+  }
+  getPartialResult(includeTimestamps = false) {
+    if (this.segments.length === 0)
+      return "";
+    if (includeTimestamps) {
+      const turnBased = this.getPartialResultBySpeakerTurns();
+      if (turnBased) {
+        return turnBased;
+      }
+      let result = "";
+      let previousSpeakerLabel = null;
+      for (let i = 0; i < this.segments.length; i++) {
+        const segment = this.segments[i];
+        const normalized = this.normalizeRepeatedSpeakerLabel(segment.text, previousSpeakerLabel);
+        const text = normalized.text;
+        if (i > 0)
+          result += "\n\n";
+        result += `[${this.formatTime(segment.startTime)}] ${text}`;
+        previousSpeakerLabel = normalized.nextSpeakerLabel;
+      }
+      return result;
+    } else {
+      let result = "";
+      let previousSpeakerLabel = null;
+      for (let i = 0; i < this.segments.length; i++) {
+        const segment = this.segments[i];
+        const prevSegment = i > 0 ? this.segments[i - 1] : null;
+        const normalized = this.normalizeRepeatedSpeakerLabel(
+          segment.text,
+          previousSpeakerLabel
+        );
+        const text = normalized.text;
+        if (prevSegment && segment.startTime - prevSegment.endTime > 1e3) {
+          result += "\n\n...\n\n";
+        } else if (i > 0) {
+          result += " ";
+        }
+        result += text;
+        previousSpeakerLabel = normalized.nextSpeakerLabel;
+      }
+      return result;
+    }
+  }
+  normalizeRepeatedSpeakerLabel(text, previousSpeakerLabel) {
+    const raw = (text || "").trim();
+    if (!raw) {
+      return { text: raw, nextSpeakerLabel: previousSpeakerLabel };
+    }
+    const match = /^(Speaker\s+\d+):\s*/i.exec(raw);
+    if (!match) {
+      return { text: raw, nextSpeakerLabel: previousSpeakerLabel };
+    }
+    const currentLabel = match[1];
+    if (previousSpeakerLabel && currentLabel.toLowerCase() === previousSpeakerLabel.toLowerCase()) {
+      const stripped = raw.slice(match[0].length).trim();
+      return {
+        text: stripped || raw,
+        nextSpeakerLabel: currentLabel
+      };
+    }
+    return {
+      text: raw,
+      nextSpeakerLabel: currentLabel
+    };
+  }
+  getPartialResultBySpeakerTurns() {
+    const turns = [];
+    let currentTurn = null;
+    let hasSpeakerLabels = false;
+    for (const segment of this.segments) {
+      const raw = (segment.text || "").trim();
+      if (!raw)
+        continue;
+      const parsed = this.extractSpeakerLabelAndBody(raw);
+      const speaker = parsed.speakerLabel;
+      const textPart = parsed.body || raw;
+      if (speaker)
+        hasSpeakerLabels = true;
+      if (!currentTurn) {
+        currentTurn = {
+          startTime: segment.startTime,
+          speakerLabel: speaker,
+          textParts: textPart ? [textPart] : []
+        };
+        continue;
+      }
+      if (speaker && speaker !== currentTurn.speakerLabel) {
+        turns.push(currentTurn);
+        currentTurn = {
+          startTime: segment.startTime,
+          speakerLabel: speaker,
+          textParts: textPart ? [textPart] : []
+        };
+        continue;
+      }
+      if (speaker && !currentTurn.speakerLabel) {
+        turns.push(currentTurn);
+        currentTurn = {
+          startTime: segment.startTime,
+          speakerLabel: speaker,
+          textParts: textPart ? [textPart] : []
+        };
+        continue;
+      }
+      if (textPart) {
+        currentTurn.textParts.push(textPart);
+      }
+    }
+    if (currentTurn) {
+      turns.push(currentTurn);
+    }
+    if (!hasSpeakerLabels || turns.length === 0) {
+      return null;
+    }
+    return turns.map((turn) => {
+      const text = turn.textParts.join(" ").replace(/\s+/g, " ").trim();
+      if (!text)
+        return "";
+      if (turn.speakerLabel) {
+        return `[${this.formatTime(turn.startTime)}] ${turn.speakerLabel}: ${text}`;
+      }
+      return `[${this.formatTime(turn.startTime)}] ${text}`;
+    }).filter(Boolean).join("\n\n");
+  }
+  extractSpeakerLabelAndBody(text) {
+    const match = /^(Speaker\s+\d+):\s*(.*)$/i.exec(text.trim());
+    if (!match) {
+      return { speakerLabel: null, body: text.trim() };
+    }
+    return {
+      speakerLabel: match[1],
+      body: (match[2] || "").trim()
+    };
+  }
+  getFinalResult(includeTimestamps = false, includeMetadata = false) {
+    if (this.segments.length === 0)
+      return "";
+    let result = "";
+    if (includeMetadata) {
+      const recordingDate = new Date(this.startTimestamp).toLocaleString();
+      const effectiveDurationMs = this.durationOverrideMs !== null ? Math.max(this.totalDuration, this.durationOverrideMs) : this.totalDuration;
+      const duration = this.formatTime(effectiveDurationMs);
+      result += `## Recording Information
+`;
+      result += `- Date: ${recordingDate}
+`;
+      result += `- Duration: ${duration}
+`;
+      result += `- Segments: ${this.segments.length}
+
+`;
+      result += `---
+
+`;
+    }
+    result += includeTimestamps ? "## Transcription with Timestamps\n\n" : "## Transcription\n\n";
+    result += this.getPartialResult(includeTimestamps);
+    return result;
+  }
+  formatTime(milliseconds) {
+    const totalSeconds = Math.floor(milliseconds / 1e3);
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    if (hours > 0) {
+      const mm = Math.floor(totalSeconds % 3600 / 60);
+      return `${hours.toString().padStart(2, "0")}:${mm.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+    }
+    return `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+  }
+  getSegmentCount() {
+    return this.segments.length;
+  }
+  getTotalDuration() {
+    return this.totalDuration;
+  }
+  setDurationOverride(milliseconds) {
+    if (Number.isFinite(milliseconds) && milliseconds >= 0) {
+      this.durationOverrideMs = Math.floor(milliseconds);
+    }
+  }
+  clear() {
+    this.segments = [];
+    this.totalDuration = 0;
+    this.durationOverrideMs = null;
+  }
+  // For error recovery - get unprocessed segments
+  getMissingSegments(processedChunkIds) {
+    const allIndices = new Set(Array.from({ length: this.segments.length }, (_, i) => i));
+    const processedIndices = new Set(
+      this.segments.map((seg, index) => processedChunkIds.has(seg.chunkId) ? index : -1).filter((index) => index !== -1)
+    );
+    return Array.from(allIndices).filter((index) => !processedIndices.has(index));
+  }
+};
+
+// src-rebuild/utils/telemetry/RuntimeLogger.ts
+var RuntimeLogger = class {
+  static createContext(prefix = "job") {
+    const now = Date.now();
+    const rand = Math.random().toString(36).slice(2, 8);
+    return {
+      jobId: `${prefix}_${now}_${rand}`,
+      correlationId: `corr_${now}_${rand}`
+    };
+  }
+  static async log(plugin, context, eventName, details = {}) {
+    const payload = {
+      eventName,
+      timestamp: new Date().toISOString(),
+      jobId: context.jobId,
+      correlationId: context.correlationId,
+      provider: plugin.settings.transcriptionProvider,
+      model: plugin.settings.transcriptionModel,
+      ...details
+    };
+    console.debug("[NeuroVox][Runtime]", payload);
+    this.logWriteChain = this.logWriteChain.then(async () => {
+      const adapter = plugin.app.vault.adapter;
+      await this.ensureLogDir(adapter);
+      const line = `${JSON.stringify(payload)}
+`;
+      if (this._hasAppend === void 0) {
+        this._hasAppend = typeof adapter.append === "function";
+      }
+      if (this._hasAppend) {
+        await adapter.append(this.LOG_FILE, line);
+        return;
+      }
+      const exists = await adapter.exists(this.LOG_FILE);
+      if (exists) {
+        const prev = await adapter.read(this.LOG_FILE);
+        await adapter.write(this.LOG_FILE, `${prev}${line}`);
+        return;
+      }
+      await adapter.write(this.LOG_FILE, line);
+    }).catch((error) => {
+      const reason = error instanceof Error ? error.message : String(error);
+      this.recentWriteFailures.push({ at: new Date().toISOString(), error: reason });
+      if (this.recentWriteFailures.length > 50) {
+        this.recentWriteFailures = this.recentWriteFailures.slice(-50);
+      }
+      console.error("[NeuroVox][Runtime] log write failed", { reason, payload });
+    });
+    await this.logWriteChain;
+  }
+  static async prune(plugin, options) {
+    var _a, _b;
+    const maxBytes = (_a = options == null ? void 0 : options.maxBytes) != null ? _a : this.MAX_BYTES_DEFAULT;
+    const maxAgeMs = (_b = options == null ? void 0 : options.maxAgeMs) != null ? _b : this.MAX_AGE_MS_DEFAULT;
+    this.logWriteChain = this.logWriteChain.then(async () => {
+      const adapter = plugin.app.vault.adapter;
+      const exists = await adapter.exists(this.LOG_FILE);
+      if (!exists)
+        return;
+      const raw = await adapter.read(this.LOG_FILE);
+      if (!raw)
+        return;
+      const cutoff = Date.now() - maxAgeMs;
+      const lines = raw.split("\n").filter(Boolean);
+      const retained = lines.filter((line) => {
+        try {
+          const parsed = JSON.parse(line);
+          const ts = new Date(parsed.timestamp).getTime();
+          return Number.isFinite(ts) && ts >= cutoff;
+        } catch (e) {
+          return false;
+        }
+      });
+      let pruned = retained.join("\n");
+      if (pruned.length > 0)
+        pruned += "\n";
+      if (pruned.length > maxBytes) {
+        pruned = pruned.slice(pruned.length - maxBytes);
+        const firstNewline = pruned.indexOf("\n");
+        if (firstNewline >= 0) {
+          pruned = pruned.slice(firstNewline + 1);
+        }
+      }
+      await adapter.write(this.LOG_FILE, pruned);
+    }).catch((error) => {
+      const reason = error instanceof Error ? error.message : String(error);
+      console.error("[NeuroVox][Runtime] prune failed", { reason });
+    });
+    await this.logWriteChain;
+  }
+  static async ensureLogDir(adapter) {
+    if (this.dirEnsured)
+      return;
+    const exists = await adapter.exists(this.LOG_DIR);
+    if (!exists) {
+      await adapter.mkdir(this.LOG_DIR);
+    }
+    this.dirEnsured = true;
+  }
+};
+RuntimeLogger.LOG_DIR = ".obsidian/plugins/neurovox/logs";
+RuntimeLogger.LOG_FILE = ".obsidian/plugins/neurovox/logs/latest.jsonl";
+RuntimeLogger.MAX_BYTES_DEFAULT = 10 * 1024 * 1024;
+RuntimeLogger.MAX_AGE_MS_DEFAULT = 7 * 24 * 60 * 60 * 1e3;
+RuntimeLogger.logWriteChain = Promise.resolve();
+RuntimeLogger.dirEnsured = false;
+RuntimeLogger.recentWriteFailures = [];
+RuntimeLogger._hasAppend = void 0;
+
+// src-rebuild/utils/transcription/TranscriptionService.ts
+var _TranscriptionService = class {
+  constructor(plugin) {
+    this.plugin = plugin;
+  }
+  /**
+   * Transcribes audio content and optionally generates post-processing
+   * @param audioBuffer The audio data to transcribe
+   * @returns The transcription result
+   */
+  async transcribeContent(audioBuffer, options) {
+    try {
+      const transcription = await this.transcribeAudioOnly(audioBuffer, options);
+      const postProcessing = await this.generatePostProcessingFromTranscript(transcription);
+      return {
+        transcription,
+        postProcessing
+      };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unknown error";
+      throw new Error(`Transcription failed: ${message}`);
+    }
+  }
+  async transcribeAudioOnly(audioBuffer, options) {
+    return this.transcribeAudio(audioBuffer, options);
+  }
+  async generatePostProcessingFromTranscript(transcription) {
+    if (!this.plugin.settings.generatePostProcessing) {
+      return void 0;
+    }
+    return this.generatePostProcessing(transcription);
+  }
+  /**
+   * Transcribes audio using the configured AI adapter
+   */
+  async transcribeAudio(audioBuffer, options) {
+    const adapter = await this.getAdapter(
+      this.plugin.settings.transcriptionProvider,
+      "transcription"
+    );
+    const transcription = await adapter.transcribeAudio(
+      audioBuffer,
+      this.plugin.settings.transcriptionModel,
+      options
+    );
+    if (!(options == null ? void 0 : options.allowEmptyTranscription) && (!transcription || !transcription.trim())) {
+      throw new Error("Transcription is empty");
+    }
+    return transcription;
+  }
+  /**
+   * Generates post-processing content using the configured AI adapter
+   */
+  async generatePostProcessing(transcription) {
+    const adapter = await this.getAdapter(
+      this.plugin.settings.postProcessingProvider,
+      "language"
+    );
+    const prompt = `${this.plugin.settings.postProcessingPrompt}
+
+${transcription}`;
+    return adapter.generateResponse(
+      prompt,
+      this.plugin.settings.postProcessingModel,
+      {
+        maxTokens: this.plugin.settings.postProcessingMaxTokens,
+        temperature: this.plugin.settings.postProcessingTemperature
+      }
+    );
+  }
+  /**
+   * Gets and validates the appropriate AI adapter
+   */
+  async getAdapter(provider, category) {
+    const adapter = this.plugin.aiAdapters.get(provider);
+    if (!adapter) {
+      throw new Error(`${provider} adapter not found`);
+    }
+    if (!adapter.isReady(category)) {
+      const apiKey = adapter.getApiKey();
+      if (!apiKey) {
+        throw new Error(`${provider} API key is not configured`);
+      }
+      const validated = await this.validateAdapterWithTimeout(adapter);
+      if (validated && adapter.isReady(category)) {
+        return adapter;
+      }
+      throw new Error(
+        `${provider} adapter is not ready for ${category}. Please check your settings and model availability.`
+      );
+    }
+    return adapter;
+  }
+  async validateAdapterWithTimeout(adapter) {
+    const timeoutMs = _TranscriptionService.ADAPTER_VALIDATION_TIMEOUT_MS;
+    return await Promise.race([
+      adapter.validateApiKey().catch(() => false),
+      new Promise((resolve) => {
+        window.setTimeout(() => resolve(false), timeoutMs);
+      })
+    ]);
+  }
+};
+var TranscriptionService = _TranscriptionService;
+TranscriptionService.ADAPTER_VALIDATION_TIMEOUT_MS = 4e3;
+
+// src-rebuild/utils/live/WebAudioPcmSource.ts
 var WebAudioPcmSource = class {
   constructor(stream, options) {
     this.stream = stream;
@@ -9679,122 +7137,7 @@ var WebAudioPcmSource = class {
   }
 };
 
-// src/utils/text/Romanization.ts
-function toRomanIfNeeded(text, enabled) {
-  if (!enabled)
-    return text;
-  if (!/[\u0900-\u097F]/.test(text))
-    return text;
-  return transliterateDevanagariToRoman(text);
-}
-function transliterateDevanagariToRoman(input) {
-  const independentVowels = {
-    "\u0905": "a",
-    "\u0906": "aa",
-    "\u0907": "i",
-    "\u0908": "ii",
-    "\u0909": "u",
-    "\u090A": "uu",
-    "\u090B": "ri",
-    "\u090F": "e",
-    "\u0910": "ai",
-    "\u0913": "o",
-    "\u0914": "au"
-  };
-  const consonants = {
-    "\u0915": "k",
-    "\u0916": "kh",
-    "\u0917": "g",
-    "\u0918": "gh",
-    "\u0919": "ng",
-    "\u091A": "ch",
-    "\u091B": "chh",
-    "\u091C": "j",
-    "\u091D": "jh",
-    "\u091E": "ny",
-    "\u091F": "t",
-    "\u0920": "th",
-    "\u0921": "d",
-    "\u0922": "dh",
-    "\u0923": "n",
-    "\u0924": "t",
-    "\u0925": "th",
-    "\u0926": "d",
-    "\u0927": "dh",
-    "\u0928": "n",
-    "\u092A": "p",
-    "\u092B": "ph",
-    "\u092C": "b",
-    "\u092D": "bh",
-    "\u092E": "m",
-    "\u092F": "y",
-    "\u0930": "r",
-    "\u0932": "l",
-    "\u0935": "v",
-    "\u0936": "sh",
-    "\u0937": "sh",
-    "\u0938": "s",
-    "\u0939": "h",
-    "\u0933": "l",
-    "\u0915\u094D\u0937": "ksh",
-    "\u091C\u094D\u091E": "gy"
-  };
-  const matras = {
-    "\u093E": "aa",
-    "\u093F": "i",
-    "\u0940": "ii",
-    "\u0941": "u",
-    "\u0942": "uu",
-    "\u0943": "ri",
-    "\u0947": "e",
-    "\u0948": "ai",
-    "\u094B": "o",
-    "\u094C": "au"
-  };
-  const specials = {
-    "\u0902": "n",
-    "\u0901": "n",
-    "\u0903": "h"
-  };
-  const virama = "\u094D";
-  const chars = Array.from(input);
-  let out = "";
-  for (let i = 0; i < chars.length; i++) {
-    const ch = chars[i];
-    if (independentVowels[ch]) {
-      out += independentVowels[ch];
-      continue;
-    }
-    if (specials[ch]) {
-      out += specials[ch];
-      continue;
-    }
-    if (consonants[ch]) {
-      const base = consonants[ch];
-      const next = chars[i + 1];
-      if (next === virama) {
-        out += base;
-        i += 1;
-        continue;
-      }
-      if (next && matras[next]) {
-        out += `${base}${matras[next]}`;
-        i += 1;
-        continue;
-      }
-      out += `${base}a`;
-      continue;
-    }
-    if (matras[ch]) {
-      out += matras[ch];
-      continue;
-    }
-    out += ch;
-  }
-  return out.replace(/[ \t]+/g, " ").replace(/\n{3,}/g, "\n\n").trim();
-}
-
-// src/utils/transcription/StreamingTranscriptionService.ts
+// src-rebuild/utils/transcription/StreamingTranscriptionService.ts
 var _StreamingTranscriptionService = class {
   constructor(plugin, callbacks) {
     this.plugin = plugin;
@@ -9833,7 +7176,7 @@ var _StreamingTranscriptionService = class {
     this.callbacks = callbacks || {};
     this.logContext = RuntimeLogger.createContext("stream");
     this.jobStore = new JobStore(plugin);
-    this.transportMode = this.plugin.settings.transcriptionProvider === "deepgram" /* Deepgram */ ? "deepgram_ws" : "chunk_queue";
+    this.transportMode = this.plugin.settings.transcriptionProvider === "deepgram" ? "deepgram_ws" : "chunk_queue";
     this.liveSessionStartTs = Date.now();
     if (this.transportMode === "deepgram_ws") {
       this.initializeLiveAdapter();
@@ -10222,7 +7565,7 @@ var _StreamingTranscriptionService = class {
   async ensureRecoveryJob() {
     if (this.recoveryJobInitialized)
       return;
-    const activeView = this.plugin.app.workspace.getActiveViewOfType(import_obsidian12.MarkdownView);
+    const activeView = this.plugin.app.workspace.getActiveViewOfType(import_obsidian4.MarkdownView);
     const activeFile = activeView == null ? void 0 : activeView.file;
     if (!activeFile)
       return;
@@ -10578,12 +7921,536 @@ StreamingTranscriptionService.FINALIZE_TIMEOUT_MS = 12 * 60 * 1e3;
 StreamingTranscriptionService.FOUR_HUNDRED_FALLBACK_THRESHOLD = 2;
 StreamingTranscriptionService.LIVE_DIARIZATION_STABILIZATION_MS = 2500;
 
-// src/ui/RecordingUI.ts
-var import_obsidian14 = require("obsidian");
+// src-rebuild/ui/DesktopDockPill.ts
+var _DesktopDockPill = class {
+  constructor(plugin) {
+    this.plugin = plugin;
+    this.state = "idle";
+    this.containerEl = null;
+    this.pillEl = null;
+    this.contentEl = null;
+    this.idleIconEl = null;
+    this.expandedEl = null;
+    this.recordingEl = null;
+    this.finalizingEl = null;
+    this.timerEl = null;
+    this.pauseBtnEl = null;
+    this.saveBtnEl = null;
+    this.timerSeconds = 0;
+    this.timerId = null;
+    this.isDisposed = false;
+    this.recordingManager = null;
+    this.streamingService = null;
+    this.documentInserter = null;
+    this.livePreviewMarkerId = null;
+    this.livePreviewWriteChain = Promise.resolve();
+    this.liveAudioCaptureActive = false;
+    this.activeFile = null;
+    this.cursorPosition = null;
+    this.onStateChange = null;
+    this.activeContainer = null;
+    this.deviceDetection = DeviceDetection.getInstance();
+    this.saveAudioOn = this.plugin.settings.saveLiveRecordingAudio || false;
+    this.useStreaming = this.plugin.settings.streamingMode != null ? this.plugin.settings.streamingMode : this.deviceDetection.shouldUseStreamingMode();
+    this.createElement();
+  }
+  createElement() {
+    this.containerEl = document.createElement("div");
+    this.containerEl.classList.add("neurovox-button-container");
+    this.pillEl = document.createElement("div");
+    this.pillEl.classList.add("neurovox-dock-pill", "neurovox-dock-pill--desktop");
+    this.pillEl.setAttribute("data-state", "idle");
+    this.pillEl.setAttribute("aria-label", "Open transcription actions (drag to move)");
+    this.contentEl = document.createElement("div");
+    this.contentEl.classList.add("neurovox-dock-pill__content");
+    this.idleIconEl = document.createElement("div");
+    this.idleIconEl.classList.add("neurovox-dock-pill__idle-icon");
+    (0, import_obsidian5.setIcon)(this.idleIconEl, "mic");
+    this.contentEl.appendChild(this.idleIconEl);
+    this.expandedEl = document.createElement("div");
+    this.expandedEl.classList.add("neurovox-dock-pill__expanded");
+    const uploadBtn = this.makeIconBtn("upload", "neurovox-dock-pill__icon neurovox-dock-pill__upload");
+    this.bindIconTap(uploadBtn, () => this.handleUploadTap());
+    this.expandedEl.appendChild(uploadBtn);
+    this.saveBtnEl = this.makeIconBtn("save", "neurovox-dock-pill__icon neurovox-dock-pill__save");
+    if (this.saveAudioOn)
+      this.saveBtnEl.classList.add("active");
+    this.bindIconTap(this.saveBtnEl, () => this.handleSaveTap());
+    this.expandedEl.appendChild(this.saveBtnEl);
+    const micBtn = this.makeIconBtn("mic", "neurovox-dock-pill__icon neurovox-dock-pill__mic");
+    this.bindIconTap(micBtn, () => {
+      void this.handleMicTap();
+    });
+    this.expandedEl.appendChild(micBtn);
+    const closeBtn1 = this.makeIconBtn("x", "neurovox-dock-pill__icon neurovox-dock-pill__close");
+    this.bindIconTap(closeBtn1, () => this.handleCloseTap());
+    this.expandedEl.appendChild(closeBtn1);
+    const cancelJobsBtn = this.makeIconBtn("broom", "neurovox-dock-pill__icon neurovox-dock-pill__cancel-jobs");
+    cancelJobsBtn.setAttribute("aria-label", "Cancel in-flight transcription jobs");
+    this.bindIconTap(cancelJobsBtn, () => {
+      void this.handleCancelJobsTap();
+    });
+    this.expandedEl.appendChild(cancelJobsBtn);
+    this.contentEl.appendChild(this.expandedEl);
+    this.recordingEl = document.createElement("div");
+    this.recordingEl.classList.add("neurovox-dock-pill__recording");
+    const redDot = document.createElement("div");
+    redDot.classList.add("neurovox-dock-pill__red-dot");
+    this.recordingEl.appendChild(redDot);
+    this.timerEl = document.createElement("span");
+    this.timerEl.classList.add("neurovox-dock-pill__timer");
+    this.timerEl.textContent = "0:00";
+    this.recordingEl.appendChild(this.timerEl);
+    this.pauseBtnEl = this.makeIconBtn("pause", "neurovox-dock-pill__pause-btn");
+    this.bindIconTap(this.pauseBtnEl, () => this.handlePauseTap());
+    this.recordingEl.appendChild(this.pauseBtnEl);
+    const stopBtn = document.createElement("div");
+    stopBtn.classList.add("neurovox-dock-pill__stop-btn");
+    (0, import_obsidian5.setIcon)(stopBtn, "square");
+    this.bindIconTap(stopBtn, () => {
+      void this.handleStopTap();
+    });
+    this.recordingEl.appendChild(stopBtn);
+    const closeBtn2 = this.makeIconBtn("x", "neurovox-dock-pill__icon neurovox-dock-pill__close");
+    this.bindIconTap(closeBtn2, () => this.handleCloseTap());
+    this.recordingEl.appendChild(closeBtn2);
+    this.contentEl.appendChild(this.recordingEl);
+    this.finalizingEl = document.createElement("div");
+    this.finalizingEl.classList.add("neurovox-dock-pill__finalizing");
+    const loaderIcon = document.createElement("div");
+    loaderIcon.classList.add("neurovox-dock-pill__loader-icon");
+    (0, import_obsidian5.setIcon)(loaderIcon, "loader");
+    this.finalizingEl.appendChild(loaderIcon);
+    const statusText = document.createElement("span");
+    statusText.classList.add("neurovox-dock-pill__status-text");
+    statusText.textContent = "Transcribing";
+    this.finalizingEl.appendChild(statusText);
+    const closeBtn3 = this.makeIconBtn("x", "neurovox-dock-pill__icon neurovox-dock-pill__close");
+    this.bindIconTap(closeBtn3, () => this.handleCloseTap());
+    this.finalizingEl.appendChild(closeBtn3);
+    this.contentEl.appendChild(this.finalizingEl);
+    this.pillEl.appendChild(this.contentEl);
+    this.containerEl.appendChild(this.pillEl);
+  }
+  makeIconBtn(iconName, cls) {
+    const btn = document.createElement("div");
+    btn.classList.add("clickable-icon");
+    cls.split(" ").forEach((c) => btn.classList.add(c));
+    (0, import_obsidian5.setIcon)(btn, iconName);
+    return btn;
+  }
+  bindIconTap(el, handler) {
+    el.addEventListener("mousedown", (e) => {
+      e.stopPropagation();
+    });
+    el.addEventListener("click", (e) => {
+      e.stopPropagation();
+      handler();
+    });
+  }
+  setActiveContainer(container) {
+    this.activeContainer = container;
+  }
+  getContainerEl() {
+    return this.containerEl;
+  }
+  getButtonEl() {
+    return this.pillEl;
+  }
+  getIdleIconEl() {
+    return this.idleIconEl;
+  }
+  updateButtonColor(color) {
+    if (this.pillEl && color) {
+      this.pillEl.style.setProperty("--neurovox-button-color", color);
+    }
+  }
+  handlePillTap() {
+    if (this.state === "idle") {
+      this.ensureActiveFile();
+      this.setState("expanded");
+    } else if (this.state === "expanded") {
+      this.setState("idle");
+    }
+  }
+  ensureActiveFile() {
+    const activeView = this.plugin.app.workspace.getActiveViewOfType(import_obsidian5.MarkdownView);
+    if (activeView && activeView.file) {
+      this.activeFile = activeView.file;
+      try {
+        this.cursorPosition = activeView.editor.getCursor();
+      } catch (e) {
+        this.cursorPosition = null;
+      }
+    }
+  }
+  handleUploadTap() {
+    if (this.state !== "expanded")
+      return;
+    const activeView = this.plugin.app.workspace.getActiveViewOfType(import_obsidian5.MarkdownView);
+    if (!activeView || !activeView.file) {
+      new import_obsidian5.Notice("No active note found to insert transcription.");
+      return;
+    }
+    this.activeFile = activeView.file;
+    this.cursorPosition = activeView.editor.getCursor();
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".mp3,.wav,.webm,.m4a,.ogg,.mp4,audio/*";
+    input.onchange = async () => {
+      const file = input.files && input.files[0];
+      if (!file)
+        return;
+      try {
+        this.setState("finalizing");
+        const blob = new Blob([await file.arrayBuffer()], { type: file.type || "audio/wav" });
+        await this.plugin.recordingProcessor.processRecording(blob, this.activeFile, this.cursorPosition, file.name);
+        new import_obsidian5.Notice(`Transcribed uploaded audio: ${file.name}`);
+        this.setState("idle");
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        new import_obsidian5.Notice(`Failed to transcribe uploaded audio: ${message}`);
+        this.setState("idle");
+      }
+    };
+    input.click();
+  }
+  handleSaveTap() {
+    if (this.state !== "expanded")
+      return;
+    this.saveAudioOn = !this.saveAudioOn;
+    this.plugin.settings.saveLiveRecordingAudio = this.saveAudioOn;
+    void this.plugin.saveSettings({ refreshUi: false, triggerFloatingRefresh: false }).catch(() => {
+    });
+    if (this.saveBtnEl)
+      this.saveBtnEl.classList.toggle("active", this.saveAudioOn);
+  }
+  async handleMicTap() {
+    if (this.state !== "expanded")
+      return;
+    const activeView = this.plugin.app.workspace.getActiveViewOfType(import_obsidian5.MarkdownView);
+    if (!activeView || !activeView.file) {
+      new import_obsidian5.Notice("No active note found to insert transcription.");
+      return;
+    }
+    this.activeFile = activeView.file;
+    this.cursorPosition = activeView.editor.getCursor();
+    await this.startRecordingSession();
+  }
+  async handleCancelJobsTap() {
+    if (this.state !== "expanded")
+      return;
+    try {
+      const pending = await this.plugin.recordingProcessor.getIncompleteJobs();
+      if (pending.length === 0) {
+        new import_obsidian5.Notice("No incomplete jobs to cancel.");
+        return;
+      }
+      await Promise.all(pending.map((job) => this.plugin.recordingProcessor.cancelJob(job.jobId)));
+      new import_obsidian5.Notice(`Canceled ${pending.length} incomplete job(s).`);
+    } catch (e) {
+      new import_obsidian5.Notice("Failed to cancel incomplete jobs.");
+    }
+  }
+  async startRecordingSession() {
+    if (this.isDisposed)
+      return;
+    try {
+      if (!this.recordingManager) {
+        this.recordingManager = new AudioRecordingManager(this.plugin);
+      }
+      await this.recordingManager.initialize();
+      if (!this.documentInserter) {
+        this.documentInserter = new DocumentInserter(this.plugin);
+      }
+      if (this.useStreaming && !this.streamingService) {
+        this.streamingService = new StreamingTranscriptionService(this.plugin, {
+          onMemoryWarning: (usage) => {
+            new import_obsidian5.Notice(`Memory usage high: ${Math.round(usage)}%`);
+          },
+          onChunkCommitted: async (_chunkText, _metadata, partialResult) => {
+            if (!this.plugin.settings.showLiveChunkPreviewInNote)
+              return;
+            await this.enqueueLivePreviewUpdate(partialResult);
+          }
+        });
+        this.livePreviewMarkerId = this.streamingService.getRecoveryJobId();
+      }
+      if (this.useStreaming && this.streamingService) {
+        const stream = this.recordingManager.getStream();
+        if (!stream)
+          throw new Error("Microphone stream unavailable");
+        await this.streamingService.startLiveSession(stream);
+        if (this.saveAudioOn && !this.liveAudioCaptureActive) {
+          this.recordingManager.start();
+          this.liveAudioCaptureActive = true;
+        }
+      } else {
+        this.recordingManager.start();
+      }
+      this.timerSeconds = 0;
+      this.updateTimerDisplay();
+      this.startTimer();
+      this.setState("recording");
+      new import_obsidian5.Notice("Recording started");
+    } catch (error) {
+      this.handleFailure("Failed to start recording", error);
+    }
+  }
+  handlePauseTap() {
+    if (this.state !== "recording" && this.state !== "paused")
+      return;
+    try {
+      if (this.state === "paused") {
+        if (this.useStreaming && this.streamingService) {
+          this.streamingService.resumeLive();
+          if (this.liveAudioCaptureActive)
+            this.recordingManager.resume();
+        } else {
+          this.recordingManager.resume();
+        }
+        this.startTimer();
+        this.setState("recording");
+        (0, import_obsidian5.setIcon)(this.pauseBtnEl, "pause");
+      } else {
+        if (this.useStreaming && this.streamingService) {
+          this.streamingService.pauseLive();
+          if (this.liveAudioCaptureActive)
+            this.recordingManager.pause();
+        } else {
+          this.recordingManager.pause();
+        }
+        this.stopTimer();
+        this.setState("paused");
+        (0, import_obsidian5.setIcon)(this.pauseBtnEl, "play");
+      }
+    } catch (error) {
+      this.handleFailure("Failed to pause/resume", error);
+    }
+  }
+  async handleStopTap() {
+    if (this.state !== "recording" && this.state !== "paused")
+      return;
+    this.setState("finalizing");
+    this.stopTimer();
+    const markerIdForCleanup = this.livePreviewMarkerId;
+    try {
+      let finalBlob = null;
+      if (this.useStreaming) {
+        if (this.liveAudioCaptureActive) {
+          finalBlob = await this.stopRecorderWithTimeout();
+          this.liveAudioCaptureActive = false;
+        }
+      } else {
+        finalBlob = await this.stopRecorderWithTimeout();
+      }
+      if (this.useStreaming && this.streamingService) {
+        const result = await this.streamingService.finishProcessing();
+        this.streamingService = null;
+        if (!result.trim())
+          throw new Error("No transcription result received");
+        await this.plugin.recordingProcessor.processStreamingResult(
+          result,
+          this.activeFile,
+          this.cursorPosition,
+          { audioBlob: this.saveAudioOn ? finalBlob || void 0 : void 0, durationSeconds: this.timerSeconds }
+        );
+      } else {
+        if (!finalBlob)
+          throw new Error("No audio data received from recorder");
+        await this.plugin.recordingProcessor.processRecording(finalBlob, this.activeFile, this.cursorPosition);
+      }
+      this.resetRecordingState();
+      this.setState("idle");
+    } catch (error) {
+      if (this.streamingService) {
+        const msg = error instanceof Error ? error.message : String(error);
+        this.streamingService.abort(`finalize_failed:${msg}`);
+        this.streamingService = null;
+      }
+      this.handleFailure("Failed to stop recording", error);
+    } finally {
+      await this.clearLivePreviewBlock(markerIdForCleanup);
+    }
+  }
+  async stopRecorderWithTimeout() {
+    return await Promise.race([
+      this.recordingManager.stop(),
+      new Promise((_, reject) => window.setTimeout(() => reject(new Error("Recorder stop timed out")), _DesktopDockPill.RECORDER_STOP_TIMEOUT_MS))
+    ]);
+  }
+  handleCloseTap() {
+    if (this.state === "expanded") {
+      this.setState("idle");
+    } else if (this.state === "recording" || this.state === "paused") {
+      this.cancelRecording();
+      this.setState("idle");
+    } else if (this.state === "finalizing") {
+      this.cancelTranscription();
+      this.setState("idle");
+    }
+  }
+  cancelRecording() {
+    this.stopTimer();
+    if (this.useStreaming && this.streamingService) {
+      this.streamingService.abort("user_cancelled");
+      this.streamingService = null;
+    }
+    if (this.liveAudioCaptureActive) {
+      try {
+        this.recordingManager.stop();
+      } catch (e) {
+      }
+      this.liveAudioCaptureActive = false;
+    } else if (this.recordingManager) {
+      try {
+        this.recordingManager.stop();
+      } catch (e) {
+      }
+    }
+    this.resetRecordingState();
+    void this.clearLivePreviewBlock(this.livePreviewMarkerId);
+  }
+  cancelTranscription() {
+    if (this.streamingService) {
+      this.streamingService.abort("user_cancelled");
+      this.streamingService = null;
+    }
+    this.resetRecordingState();
+  }
+  resetRecordingState() {
+    this.timerSeconds = 0;
+    this.livePreviewMarkerId = null;
+    this.liveAudioCaptureActive = false;
+    if (this.recordingManager) {
+      this.recordingManager.cleanup();
+      this.recordingManager = null;
+    }
+    if (this.documentInserter) {
+      this.documentInserter = null;
+    }
+    if (this.pauseBtnEl) {
+      (0, import_obsidian5.setIcon)(this.pauseBtnEl, "pause");
+    }
+  }
+  setState(state) {
+    var _a;
+    this.state = state;
+    if (this.pillEl) {
+      this.pillEl.setAttribute("data-state", state);
+    }
+    requestAnimationFrame(() => this.applyEdgeNudge());
+    (_a = this.onStateChange) == null ? void 0 : _a.call(this, state);
+  }
+  applyEdgeNudge() {
+    if (!this.pillEl || !this.containerEl || !this.activeContainer)
+      return;
+    if (this.state === "idle") {
+      this.pillEl.style.transform = "";
+      return;
+    }
+    const targetWidths = { expanded: 216, recording: 220, paused: 220, finalizing: 156 };
+    const targetWidth = targetWidths[this.state] || 48;
+    const anchorRect = this.containerEl.getBoundingClientRect();
+    const leafRect = this.activeContainer.getBoundingClientRect();
+    const pillLeft = anchorRect.left;
+    const pillRightTarget = pillLeft + targetWidth;
+    const margin = 8;
+    const overflowRight = pillRightTarget - (leafRect.right - margin);
+    const overflowLeft = leafRect.left + margin - pillLeft;
+    if (overflowRight > 0) {
+      this.pillEl.style.transform = `translateX(${-overflowRight}px)`;
+    } else if (overflowLeft > 0) {
+      this.pillEl.style.transform = `translateX(${overflowLeft}px)`;
+    } else {
+      this.pillEl.style.transform = "";
+    }
+  }
+  startTimer() {
+    if (this.timerId !== null)
+      return;
+    this.timerId = window.setInterval(() => {
+      this.timerSeconds += 1;
+      this.updateTimerDisplay();
+    }, 1e3);
+  }
+  stopTimer() {
+    if (this.timerId !== null) {
+      window.clearInterval(this.timerId);
+      this.timerId = null;
+    }
+  }
+  updateTimerDisplay() {
+    if (!this.timerEl)
+      return;
+    this.timerEl.textContent = this.formatTimer(this.timerSeconds);
+  }
+  formatTimer(seconds) {
+    const m = Math.floor(seconds / 60);
+    const s = (seconds % 60).toString().padStart(2, "0");
+    return `${m}:${s}`;
+  }
+  async enqueueLivePreviewUpdate(partialResult) {
+    const markerId = this.livePreviewMarkerId;
+    if (!markerId || !this.documentInserter)
+      return;
+    this.livePreviewWriteChain = this.livePreviewWriteChain.then(async () => {
+      await this.documentInserter.upsertLiveTranscriptionBlock(this.activeFile, this.cursorPosition, markerId, partialResult);
+    }).catch(() => {
+    });
+    await this.livePreviewWriteChain;
+  }
+  async clearLivePreviewBlock(markerIdOverride) {
+    const markerId = markerIdOverride != null ? markerIdOverride : this.livePreviewMarkerId;
+    if (!markerId || !this.documentInserter)
+      return;
+    await this.livePreviewWriteChain.catch(() => {
+    });
+    try {
+      await this.documentInserter.removeLiveTranscriptionBlock(this.activeFile, markerId);
+    } catch (e) {
+    }
+  }
+  handleFailure(message, error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    new import_obsidian5.Notice(`${message}: ${detail}`);
+    this.resetRecordingState();
+    this.setState("idle");
+  }
+  show() {
+    if (this.containerEl)
+      this.containerEl.style.display = "";
+  }
+  hide() {
+    if (this.containerEl)
+      this.containerEl.style.display = "none";
+  }
+  dispose() {
+    this.isDisposed = true;
+    this.stopTimer();
+    if (this.state === "recording" || this.state === "paused") {
+      this.cancelRecording();
+    } else if (this.state === "finalizing") {
+      this.cancelTranscription();
+    }
+    if (this.containerEl) {
+      this.containerEl.remove();
+      this.containerEl = null;
+    }
+  }
+};
+var DesktopDockPill = _DesktopDockPill;
+DesktopDockPill.RECORDER_STOP_TIMEOUT_MS = 12e3;
 
-// src/ui/TouchableButton.ts
-var import_obsidian13 = require("obsidian");
-var TouchableButton = class extends import_obsidian13.ButtonComponent {
+// src-rebuild/ui/InlineRecorderPanel.ts
+var import_obsidian8 = require("obsidian");
+
+// src-rebuild/ui/RecordingUI.ts
+var import_obsidian7 = require("obsidian");
+
+// src-rebuild/ui/TouchableButton.ts
+var import_obsidian6 = require("obsidian");
+var TouchableButton = class extends import_obsidian6.ButtonComponent {
   constructor(options) {
     super(options.container);
     this.isProcessingAction = false;
@@ -10594,7 +8461,7 @@ var TouchableButton = class extends import_obsidian13.ButtonComponent {
   setupButton(options) {
     this.setButtonText(options.text);
     if (options.icon) {
-      (0, import_obsidian13.setIcon)(this.buttonEl, options.icon);
+      (0, import_obsidian6.setIcon)(this.buttonEl, options.icon);
     }
     if (options.classes) {
       options.classes.forEach((cls) => this.buttonEl.addClass(cls));
@@ -10697,7 +8564,7 @@ var TouchableButton = class extends import_obsidian13.ButtonComponent {
   }
 };
 
-// src/ui/RecordingUI.ts
+// src-rebuild/ui/RecordingUI.ts
 var RecordingUI = class {
   constructor(container, handlers) {
     this.container = container;
@@ -10791,7 +8658,7 @@ var RecordingUI = class {
     const iconName = isPaused ? "play" : "pause";
     const label = isPaused ? "Resume recording" : "Pause Recording";
     this.pauseButton.buttonEl.empty();
-    (0, import_obsidian14.setIcon)(this.pauseButton.buttonEl, iconName);
+    (0, import_obsidian7.setIcon)(this.pauseButton.buttonEl, iconName);
     this.pauseButton.buttonEl.setAttribute("aria-label", label);
     this.pauseButton.buttonEl.toggleClass("is-paused", isPaused);
   }
@@ -10807,7 +8674,7 @@ var RecordingUI = class {
   }
 };
 
-// src/utils/recorder/RecorderStateMachine.ts
+// src-rebuild/utils/recorder/RecorderStateMachine.ts
 function canStartRecording(state) {
   return state === "ready";
 }
@@ -10824,7 +8691,7 @@ function canEditSaveAudio(state) {
   return state === "ready";
 }
 
-// src/ui/InlineRecorderPanel.ts
+// src-rebuild/ui/InlineRecorderPanel.ts
 var _InlineRecorderPanel = class {
   constructor(options) {
     this.panelEl = null;
@@ -10895,7 +8762,7 @@ var _InlineRecorderPanel = class {
       if (this.useStreaming && !this.streamingService) {
         this.streamingService = new StreamingTranscriptionService(this.plugin, {
           onMemoryWarning: (usage) => {
-            new import_obsidian15.Notice(`Memory usage high: ${Math.round(usage)}%`);
+            new import_obsidian8.Notice(`Memory usage high: ${Math.round(usage)}%`);
           },
           onChunkCommitted: async (_chunkText, _metadata, partialResult) => {
             if (!this.plugin.settings.showLiveChunkPreviewInNote)
@@ -10922,7 +8789,7 @@ var _InlineRecorderPanel = class {
       (_a = this.ui) == null ? void 0 : _a.updateTimer(this.timerSeconds, Number.POSITIVE_INFINITY, 60);
       this.startTimer();
       this.setState("recording");
-      new import_obsidian15.Notice("Recording started");
+      new import_obsidian8.Notice("Recording started");
     } catch (error) {
       this.handleFailure("Failed to start recording", error);
     }
@@ -11113,7 +8980,7 @@ var _InlineRecorderPanel = class {
     checkbox.addEventListener("change", () => {
       if (!canEditSaveAudio(this.state)) {
         checkbox.checked = this.saveAudioForSession;
-        new import_obsidian15.Notice("Save audio can only be changed before recording starts.");
+        new import_obsidian8.Notice("Save audio can only be changed before recording starts.");
         return;
       }
       this.saveAudioForSession = checkbox.checked;
@@ -11134,7 +9001,7 @@ var _InlineRecorderPanel = class {
   }
   async handleUploadAudio() {
     if (!canUploadAudio(this.state)) {
-      new import_obsidian15.Notice("Upload audio is available before recording starts.");
+      new import_obsidian8.Notice("Upload audio is available before recording starts.");
       return;
     }
     const input = document.createElement("input");
@@ -11156,11 +9023,11 @@ var _InlineRecorderPanel = class {
           this.cursorPosition,
           file.name
         );
-        new import_obsidian15.Notice(`Transcribed uploaded audio: ${file.name}`);
+        new import_obsidian8.Notice(`Transcribed uploaded audio: ${file.name}`);
         this.dispose();
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
-        new import_obsidian15.Notice(`Failed to transcribe uploaded audio: ${message}`);
+        new import_obsidian8.Notice(`Failed to transcribe uploaded audio: ${message}`);
         this.setState("ready");
       }
     };
@@ -11170,13 +9037,13 @@ var _InlineRecorderPanel = class {
     try {
       const pending = await this.plugin.recordingProcessor.getIncompleteJobs();
       if (pending.length === 0) {
-        new import_obsidian15.Notice("No incomplete jobs to cancel.");
+        new import_obsidian8.Notice("No incomplete jobs to cancel.");
         return;
       }
       await Promise.all(pending.map((job) => this.plugin.recordingProcessor.cancelJob(job.jobId)));
-      new import_obsidian15.Notice(`Canceled ${pending.length} incomplete job(s).`);
+      new import_obsidian8.Notice(`Canceled ${pending.length} incomplete job(s).`);
     } catch (e) {
-      new import_obsidian15.Notice("Failed to cancel incomplete jobs.");
+      new import_obsidian8.Notice("Failed to cancel incomplete jobs.");
     }
   }
   positionPanel(panelEl, anchor) {
@@ -11295,7 +9162,7 @@ var _InlineRecorderPanel = class {
   }
   handleFailure(message, error) {
     const detail = error instanceof Error ? error.message : String(error);
-    new import_obsidian15.Notice(`${message}: ${detail}`);
+    new import_obsidian8.Notice(`${message}: ${detail}`);
     this.dispose();
   }
   formatTimer(seconds) {
@@ -11307,8 +9174,227 @@ var _InlineRecorderPanel = class {
 var InlineRecorderPanel = _InlineRecorderPanel;
 InlineRecorderPanel.RECORDER_STOP_TIMEOUT_MS = 12e3;
 
-// src/ui/MobileDockPill.ts
-var MobileDockPill = class {
+// src-rebuild/ui/MobileDockPill.ts
+var import_obsidian10 = require("obsidian");
+
+// src-rebuild/ui/UploadBottomSheet.ts
+var import_obsidian9 = require("obsidian");
+var UploadBottomSheet = class {
+  constructor(options) {
+    this.plugin = options.plugin;
+    this.saveAudioOn = options.saveAudioOn;
+    this.onTranscribe = options.onTranscribe;
+    this.onCancel = options.onCancel;
+    this.selectedFile = null;
+    this.overlayEl = null;
+    this.sheetEl = null;
+    this.fileCardEl = null;
+    this.fileNameEl = null;
+    this.fileSizeEl = null;
+    this.ctaEl = null;
+    this.saveToggleEl = null;
+    this.fileInputEl = null;
+    this.chooseLinkEl = null;
+  }
+  open() {
+    this.overlayEl = document.createElement("div");
+    this.overlayEl.classList.add("neurovox-upload-overlay");
+    this.overlayEl.addEventListener("click", () => this.close());
+    document.body.appendChild(this.overlayEl);
+    this.sheetEl = document.createElement("div");
+    this.sheetEl.classList.add("neurovox-upload-sheet");
+    const handle = document.createElement("div");
+    handle.classList.add("neurovox-upload-sheet__handle");
+    this.sheetEl.appendChild(handle);
+    const header = document.createElement("div");
+    header.classList.add("neurovox-upload-sheet__header");
+    const title = document.createElement("span");
+    title.classList.add("neurovox-upload-sheet__title");
+    title.textContent = "Upload Audio";
+    header.appendChild(title);
+    const description = document.createElement("div");
+    description.classList.add("neurovox-upload-sheet__description");
+    description.textContent = "Select an audio file to transcribe into your note.";
+    header.appendChild(description);
+    this.sheetEl.appendChild(header);
+    const picker = document.createElement("div");
+    picker.classList.add("neurovox-upload-sheet__picker");
+    const pickerIcon = document.createElement("div");
+    pickerIcon.classList.add("neurovox-upload-sheet__picker-icon");
+    (0, import_obsidian9.setIcon)(pickerIcon, "upload");
+    picker.appendChild(pickerIcon);
+    const pickerText = document.createElement("div");
+    pickerText.classList.add("neurovox-upload-sheet__picker-text");
+    pickerText.textContent = "Tap to select an audio file";
+    picker.appendChild(pickerText);
+    picker.addEventListener("click", () => this.openFilePicker());
+    this.sheetEl.appendChild(picker);
+    this.fileCardEl = document.createElement("div");
+    this.fileCardEl.classList.add("neurovox-upload-sheet__file-card");
+    const fileIcon = document.createElement("div");
+    fileIcon.classList.add("neurovox-upload-sheet__file-icon");
+    (0, import_obsidian9.setIcon)(fileIcon, "music");
+    this.fileCardEl.appendChild(fileIcon);
+    const fileInfo = document.createElement("div");
+    fileInfo.classList.add("neurovox-upload-sheet__file-info");
+    this.fileNameEl = document.createElement("div");
+    this.fileNameEl.classList.add("neurovox-upload-sheet__file-name");
+    fileInfo.appendChild(this.fileNameEl);
+    this.fileSizeEl = document.createElement("div");
+    this.fileSizeEl.classList.add("neurovox-upload-sheet__file-size");
+    fileInfo.appendChild(this.fileSizeEl);
+    this.fileCardEl.appendChild(fileInfo);
+    const fileCheck = document.createElement("div");
+    fileCheck.classList.add("neurovox-upload-sheet__file-check");
+    (0, import_obsidian9.setIcon)(fileCheck, "check-circle");
+    this.fileCardEl.appendChild(fileCheck);
+    this.sheetEl.appendChild(this.fileCardEl);
+    this.chooseLinkEl = document.createElement("button");
+    this.chooseLinkEl.classList.add("neurovox-upload-sheet__choose-link");
+    this.chooseLinkEl.textContent = "Choose a different file";
+    this.chooseLinkEl.style.display = "none";
+    this.chooseLinkEl.addEventListener("click", () => this.openFilePicker());
+    this.sheetEl.appendChild(this.chooseLinkEl);
+    const saveRow = document.createElement("div");
+    saveRow.classList.add("neurovox-upload-sheet__save-row");
+    const saveRowLeft = document.createElement("div");
+    saveRowLeft.classList.add("neurovox-upload-sheet__save-row-left");
+    const saveIcon = document.createElement("div");
+    saveIcon.classList.add("neurovox-upload-sheet__save-icon");
+    (0, import_obsidian9.setIcon)(saveIcon, "save");
+    saveRowLeft.appendChild(saveIcon);
+    const saveLabel = document.createElement("span");
+    saveLabel.classList.add("neurovox-upload-sheet__save-label");
+    saveLabel.textContent = "Save audio to vault";
+    saveRowLeft.appendChild(saveLabel);
+    saveRow.appendChild(saveRowLeft);
+    this.saveToggleEl = document.createElement("button");
+    this.saveToggleEl.classList.add("neurovox-upload-sheet__save-toggle");
+    if (this.saveAudioOn)
+      this.saveToggleEl.classList.add("active");
+    this.saveToggleEl.addEventListener("click", () => {
+      this.saveAudioOn = !this.saveAudioOn;
+      this.saveToggleEl.classList.toggle("active", this.saveAudioOn);
+    });
+    saveRow.appendChild(this.saveToggleEl);
+    this.sheetEl.appendChild(saveRow);
+    this.ctaEl = document.createElement("button");
+    this.ctaEl.classList.add("neurovox-upload-sheet__cta");
+    const sparklesIcon = document.createElement("span");
+    (0, import_obsidian9.setIcon)(sparklesIcon, "sparkles");
+    this.ctaEl.appendChild(sparklesIcon);
+    const ctaText = document.createElement("span");
+    ctaText.textContent = "Transcribe";
+    this.ctaEl.appendChild(ctaText);
+    this.ctaEl.addEventListener("click", () => {
+      if (!this.selectedFile)
+        return;
+      const file = this.selectedFile;
+      const save = this.saveAudioOn;
+      this.close();
+      this.onTranscribe(file, save);
+    });
+    this.sheetEl.appendChild(this.ctaEl);
+    document.body.appendChild(this.sheetEl);
+    this.fileInputEl = document.createElement("input");
+    this.fileInputEl.type = "file";
+    this.fileInputEl.accept = ".mp3,.wav,.webm,.m4a,.ogg,.mp4,audio/*";
+    this.fileInputEl.style.display = "none";
+    this.fileInputEl.addEventListener("change", () => {
+      var _a;
+      const file = (_a = this.fileInputEl.files) == null ? void 0 : _a[0];
+      if (file)
+        this.setFile(file);
+    });
+    document.body.appendChild(this.fileInputEl);
+    this.onEscBound = (e) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        this.close();
+      }
+    };
+    this.onPopStateBound = () => {
+      this.close();
+    };
+    document.addEventListener("keydown", this.onEscBound);
+    window.addEventListener("popstate", this.onPopStateBound);
+    requestAnimationFrame(() => {
+      if (this.overlayEl)
+        this.overlayEl.classList.add("visible");
+      if (this.sheetEl)
+        this.sheetEl.classList.add("visible");
+    });
+  }
+  openFilePicker() {
+    if (this.fileInputEl)
+      this.fileInputEl.click();
+  }
+  setFile(file) {
+    this.selectedFile = file;
+    if (this.fileNameEl)
+      this.fileNameEl.textContent = file.name;
+    if (this.fileSizeEl)
+      this.fileSizeEl.textContent = this.formatSize(file.size);
+    if (this.fileCardEl)
+      this.fileCardEl.classList.add("has-file");
+    if (this.ctaEl)
+      this.ctaEl.classList.add("enabled");
+    if (this.chooseLinkEl)
+      this.chooseLinkEl.style.display = "";
+  }
+  clearFile() {
+    this.selectedFile = null;
+    if (this.fileCardEl)
+      this.fileCardEl.classList.remove("has-file");
+    if (this.ctaEl)
+      this.ctaEl.classList.remove("enabled");
+    if (this.fileInputEl)
+      this.fileInputEl.value = "";
+    if (this.chooseLinkEl)
+      this.chooseLinkEl.style.display = "none";
+  }
+  formatSize(bytes) {
+    if (bytes < 1024)
+      return `${bytes} B`;
+    if (bytes < 1024 * 1024)
+      return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  }
+  close() {
+    if (this.onEscBound) {
+      document.removeEventListener("keydown", this.onEscBound);
+      this.onEscBound = null;
+    }
+    if (this.onPopStateBound) {
+      window.removeEventListener("popstate", this.onPopStateBound);
+      this.onPopStateBound = null;
+    }
+    if (this.overlayEl) {
+      this.overlayEl.classList.remove("visible");
+    }
+    if (this.sheetEl) {
+      this.sheetEl.classList.remove("visible");
+    }
+    setTimeout(() => {
+      if (this.overlayEl) {
+        this.overlayEl.remove();
+        this.overlayEl = null;
+      }
+      if (this.sheetEl) {
+        this.sheetEl.remove();
+        this.sheetEl = null;
+      }
+      if (this.fileInputEl) {
+        this.fileInputEl.remove();
+        this.fileInputEl = null;
+      }
+      this.onCancel();
+    }, 320);
+  }
+};
+
+// src-rebuild/ui/MobileDockPill.ts
+var _MobileDockPill = class {
   constructor(plugin) {
     this.plugin = plugin;
     this.state = "idle";
@@ -11345,7 +9431,6 @@ var MobileDockPill = class {
     this.useStreaming = this.plugin.settings.streamingMode != null ? this.plugin.settings.streamingMode : this.deviceDetection.shouldUseStreamingMode();
     this.createElement();
   }
-  static RECORDER_STOP_TIMEOUT_MS = 12e3;
   createElement() {
     this.containerEl = document.createElement("div");
     this.containerEl.classList.add("neurovox-dock-pill-container");
@@ -11354,29 +9439,39 @@ var MobileDockPill = class {
     this.pillEl.setAttribute("data-state", "idle");
     this.contentEl = document.createElement("div");
     this.contentEl.classList.add("neurovox-dock-pill__content");
-    // Idle icon
     this.idleIconEl = document.createElement("div");
     this.idleIconEl.classList.add("neurovox-dock-pill__idle-icon");
-    (0, import_obsidian16.setIcon)(this.idleIconEl, "mic");
+    (0, import_obsidian10.setIcon)(this.idleIconEl, "mic");
     this.contentEl.appendChild(this.idleIconEl);
-    // Expanded section
     this.expandedEl = document.createElement("div");
     this.expandedEl.classList.add("neurovox-dock-pill__expanded");
     const uploadBtn = this.makeIconBtn("upload", "neurovox-dock-pill__icon neurovox-dock-pill__upload");
-    uploadBtn.addEventListener("click", (e) => { e.stopPropagation(); this.handleUploadTap(); });
+    uploadBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      this.handleUploadTap();
+    });
     this.expandedEl.appendChild(uploadBtn);
     this.saveBtnEl = this.makeIconBtn("save", "neurovox-dock-pill__icon neurovox-dock-pill__save");
-    if (this.saveAudioOn) this.saveBtnEl.classList.add("active");
-    this.saveBtnEl.addEventListener("click", (e) => { e.stopPropagation(); this.handleSaveTap(); });
+    if (this.saveAudioOn)
+      this.saveBtnEl.classList.add("active");
+    this.saveBtnEl.addEventListener("click", (e) => {
+      e.stopPropagation();
+      this.handleSaveTap();
+    });
     this.expandedEl.appendChild(this.saveBtnEl);
     const micBtn = this.makeIconBtn("mic", "neurovox-dock-pill__icon neurovox-dock-pill__mic");
-    micBtn.addEventListener("click", (e) => { e.stopPropagation(); this.handleMicTap(); });
+    micBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      this.handleMicTap();
+    });
     this.expandedEl.appendChild(micBtn);
     const closeBtn1 = this.makeIconBtn("x", "neurovox-dock-pill__icon neurovox-dock-pill__close");
-    closeBtn1.addEventListener("click", (e) => { e.stopPropagation(); this.handleCloseTap(); });
+    closeBtn1.addEventListener("click", (e) => {
+      e.stopPropagation();
+      this.handleCloseTap();
+    });
     this.expandedEl.appendChild(closeBtn1);
     this.contentEl.appendChild(this.expandedEl);
-    // Recording section
     this.recordingEl = document.createElement("div");
     this.recordingEl.classList.add("neurovox-dock-pill__recording");
     const redDot = document.createElement("div");
@@ -11387,42 +9482,54 @@ var MobileDockPill = class {
     this.timerEl.textContent = "0:00";
     this.recordingEl.appendChild(this.timerEl);
     this.pauseBtnEl = this.makeIconBtn("pause", "neurovox-dock-pill__pause-btn");
-    this.pauseBtnEl.addEventListener("click", (e) => { e.stopPropagation(); this.handlePauseTap(); });
+    this.pauseBtnEl.addEventListener("click", (e) => {
+      e.stopPropagation();
+      this.handlePauseTap();
+    });
     this.recordingEl.appendChild(this.pauseBtnEl);
     const stopBtn = document.createElement("div");
     stopBtn.classList.add("neurovox-dock-pill__stop-btn");
-    (0, import_obsidian16.setIcon)(stopBtn, "square");
-    stopBtn.addEventListener("click", (e) => { e.stopPropagation(); this.handleStopTap(); });
+    (0, import_obsidian10.setIcon)(stopBtn, "square");
+    stopBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      this.handleStopTap();
+    });
     this.recordingEl.appendChild(stopBtn);
     const closeBtn2 = this.makeIconBtn("x", "neurovox-dock-pill__icon neurovox-dock-pill__close");
-    closeBtn2.addEventListener("click", (e) => { e.stopPropagation(); this.handleCloseTap(); });
+    closeBtn2.addEventListener("click", (e) => {
+      e.stopPropagation();
+      this.handleCloseTap();
+    });
     this.recordingEl.appendChild(closeBtn2);
     this.contentEl.appendChild(this.recordingEl);
-    // Finalizing section
     this.finalizingEl = document.createElement("div");
     this.finalizingEl.classList.add("neurovox-dock-pill__finalizing");
     const loaderIcon = document.createElement("div");
     loaderIcon.classList.add("neurovox-dock-pill__loader-icon");
-    (0, import_obsidian16.setIcon)(loaderIcon, "loader");
+    (0, import_obsidian10.setIcon)(loaderIcon, "loader");
     this.finalizingEl.appendChild(loaderIcon);
     const statusText = document.createElement("span");
     statusText.classList.add("neurovox-dock-pill__status-text");
     statusText.textContent = "Transcribing";
     this.finalizingEl.appendChild(statusText);
     const closeBtn3 = this.makeIconBtn("x", "neurovox-dock-pill__icon neurovox-dock-pill__close");
-    closeBtn3.addEventListener("click", (e) => { e.stopPropagation(); this.handleCloseTap(); });
+    closeBtn3.addEventListener("click", (e) => {
+      e.stopPropagation();
+      this.handleCloseTap();
+    });
     this.finalizingEl.appendChild(closeBtn3);
     this.contentEl.appendChild(this.finalizingEl);
     this.pillEl.appendChild(this.contentEl);
     this.containerEl.appendChild(this.pillEl);
-    // Pill tap (for idle state)
-    this.pillEl.addEventListener("click", () => { this.handlePillTap(); });
+    this.pillEl.addEventListener("click", () => {
+      this.handlePillTap();
+    });
   }
   makeIconBtn(iconName, cls) {
     const btn = document.createElement("div");
     btn.classList.add("clickable-icon");
     cls.split(" ").forEach((c) => btn.classList.add(c));
-    (0, import_obsidian16.setIcon)(btn, iconName);
+    (0, import_obsidian10.setIcon)(btn, iconName);
     return btn;
   }
   handlePillTap() {
@@ -11431,10 +9538,11 @@ var MobileDockPill = class {
     }
   }
   handleUploadTap() {
-    if (this.state !== "expanded") return;
-    const activeView = this.plugin.app.workspace.getActiveViewOfType(import_obsidian16.MarkdownView);
+    if (this.state !== "expanded")
+      return;
+    const activeView = this.plugin.app.workspace.getActiveViewOfType(import_obsidian10.MarkdownView);
     if (!activeView || !activeView.file) {
-      new import_obsidian16.Notice("No active note found to insert transcription.");
+      new import_obsidian10.Notice("No active note found to insert transcription.");
       return;
     }
     this.activeFile = activeView.file;
@@ -11445,8 +9553,10 @@ var MobileDockPill = class {
       onTranscribe: (file, saveAudio) => {
         this.saveAudioOn = saveAudio;
         this.plugin.settings.saveLiveRecordingAudio = saveAudio;
-        void this.plugin.saveSettings({ refreshUi: false, triggerFloatingRefresh: false }).catch(() => {});
-        if (this.saveBtnEl) this.saveBtnEl.classList.toggle("active", saveAudio);
+        void this.plugin.saveSettings({ refreshUi: false, triggerFloatingRefresh: false }).catch(() => {
+        });
+        if (this.saveBtnEl)
+          this.saveBtnEl.classList.toggle("active", saveAudio);
         void this.processUploadedFile(file);
       },
       onCancel: () => {
@@ -11460,26 +9570,30 @@ var MobileDockPill = class {
       this.setState("finalizing");
       const blob = new Blob([await file.arrayBuffer()], { type: file.type || "audio/wav" });
       await this.plugin.recordingProcessor.processRecording(blob, this.activeFile, this.cursorPosition, file.name);
-      new import_obsidian16.Notice(`Transcribed uploaded audio: ${file.name}`);
+      new import_obsidian10.Notice(`Transcribed uploaded audio: ${file.name}`);
       this.setState("idle");
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      new import_obsidian16.Notice(`Failed to transcribe: ${message}`);
+      new import_obsidian10.Notice(`Failed to transcribe: ${message}`);
       this.setState("idle");
     }
   }
   handleSaveTap() {
-    if (this.state !== "expanded") return;
+    if (this.state !== "expanded")
+      return;
     this.saveAudioOn = !this.saveAudioOn;
     this.plugin.settings.saveLiveRecordingAudio = this.saveAudioOn;
-    void this.plugin.saveSettings({ refreshUi: false, triggerFloatingRefresh: false }).catch(() => {});
-    if (this.saveBtnEl) this.saveBtnEl.classList.toggle("active", this.saveAudioOn);
+    void this.plugin.saveSettings({ refreshUi: false, triggerFloatingRefresh: false }).catch(() => {
+    });
+    if (this.saveBtnEl)
+      this.saveBtnEl.classList.toggle("active", this.saveAudioOn);
   }
   async handleMicTap() {
-    if (this.state !== "expanded") return;
-    const activeView = this.plugin.app.workspace.getActiveViewOfType(import_obsidian16.MarkdownView);
+    if (this.state !== "expanded")
+      return;
+    const activeView = this.plugin.app.workspace.getActiveViewOfType(import_obsidian10.MarkdownView);
     if (!activeView || !activeView.file) {
-      new import_obsidian16.Notice("No active note found to insert transcription.");
+      new import_obsidian10.Notice("No active note found to insert transcription.");
       return;
     }
     this.activeFile = activeView.file;
@@ -11487,7 +9601,8 @@ var MobileDockPill = class {
     await this.startRecordingSession();
   }
   async startRecordingSession() {
-    if (this.isDisposed) return;
+    if (this.isDisposed)
+      return;
     try {
       if (!this.recordingManager) {
         this.recordingManager = new AudioRecordingManager(this.plugin);
@@ -11499,10 +9614,11 @@ var MobileDockPill = class {
       if (this.useStreaming && !this.streamingService) {
         this.streamingService = new StreamingTranscriptionService(this.plugin, {
           onMemoryWarning: (usage) => {
-            new import_obsidian16.Notice(`Memory usage high: ${Math.round(usage)}%`);
+            new import_obsidian10.Notice(`Memory usage high: ${Math.round(usage)}%`);
           },
           onChunkCommitted: async (_chunkText, _metadata, partialResult) => {
-            if (!this.plugin.settings.showLiveChunkPreviewInNote) return;
+            if (!this.plugin.settings.showLiveChunkPreviewInNote)
+              return;
             await this.enqueueLivePreviewUpdate(partialResult);
           }
         });
@@ -11510,7 +9626,8 @@ var MobileDockPill = class {
       }
       if (this.useStreaming && this.streamingService) {
         const stream = this.recordingManager.getStream();
-        if (!stream) throw new Error("Microphone stream unavailable");
+        if (!stream)
+          throw new Error("Microphone stream unavailable");
         await this.streamingService.startLiveSession(stream);
         if (this.saveAudioOn && !this.liveAudioCaptureActive) {
           this.recordingManager.start();
@@ -11523,41 +9640,45 @@ var MobileDockPill = class {
       this.updateTimerDisplay();
       this.startTimer();
       this.setState("recording");
-      new import_obsidian16.Notice("Recording started");
+      new import_obsidian10.Notice("Recording started");
     } catch (error) {
       this.handleFailure("Failed to start recording", error);
     }
   }
   handlePauseTap() {
-    if (this.state !== "recording" && this.state !== "paused") return;
+    if (this.state !== "recording" && this.state !== "paused")
+      return;
     try {
       if (this.state === "paused") {
         if (this.useStreaming && this.streamingService) {
           this.streamingService.resumeLive();
-          if (this.liveAudioCaptureActive) this.recordingManager.resume();
+          if (this.liveAudioCaptureActive)
+            this.recordingManager.resume();
         } else {
           this.recordingManager.resume();
         }
         this.startTimer();
         this.setState("recording");
-        (0, import_obsidian16.setIcon)(this.pauseBtnEl, "pause");
+        (0, import_obsidian10.setIcon)(this.pauseBtnEl, "pause");
       } else {
         if (this.useStreaming && this.streamingService) {
           this.streamingService.pauseLive();
-          if (this.liveAudioCaptureActive) this.recordingManager.pause();
+          if (this.liveAudioCaptureActive)
+            this.recordingManager.pause();
         } else {
           this.recordingManager.pause();
         }
         this.stopTimer();
         this.setState("paused");
-        (0, import_obsidian16.setIcon)(this.pauseBtnEl, "play");
+        (0, import_obsidian10.setIcon)(this.pauseBtnEl, "play");
       }
     } catch (error) {
       this.handleFailure("Failed to pause/resume", error);
     }
   }
   async handleStopTap() {
-    if (this.state !== "recording" && this.state !== "paused") return;
+    if (this.state !== "recording" && this.state !== "paused")
+      return;
     this.setState("finalizing");
     this.stopTimer();
     const markerIdForCleanup = this.livePreviewMarkerId;
@@ -11574,13 +9695,17 @@ var MobileDockPill = class {
       if (this.useStreaming && this.streamingService) {
         const result = await this.streamingService.finishProcessing();
         this.streamingService = null;
-        if (!result.trim()) throw new Error("No transcription result received");
+        if (!result.trim())
+          throw new Error("No transcription result received");
         await this.plugin.recordingProcessor.processStreamingResult(
-          result, this.activeFile, this.cursorPosition,
+          result,
+          this.activeFile,
+          this.cursorPosition,
           { audioBlob: this.saveAudioOn ? finalBlob || void 0 : void 0, durationSeconds: this.timerSeconds }
         );
       } else {
-        if (!finalBlob) throw new Error("No audio data received from recorder");
+        if (!finalBlob)
+          throw new Error("No audio data received from recorder");
         await this.plugin.recordingProcessor.processRecording(finalBlob, this.activeFile, this.cursorPosition);
       }
       this.resetRecordingState();
@@ -11599,7 +9724,7 @@ var MobileDockPill = class {
   async stopRecorderWithTimeout() {
     return await Promise.race([
       this.recordingManager.stop(),
-      new Promise((_, reject) => window.setTimeout(() => reject(new Error("Recorder stop timed out")), MobileDockPill.RECORDER_STOP_TIMEOUT_MS))
+      new Promise((_, reject) => window.setTimeout(() => reject(new Error("Recorder stop timed out")), _MobileDockPill.RECORDER_STOP_TIMEOUT_MS))
     ]);
   }
   handleCloseTap() {
@@ -11620,10 +9745,16 @@ var MobileDockPill = class {
       this.streamingService = null;
     }
     if (this.liveAudioCaptureActive) {
-      try { this.recordingManager.stop(); } catch (e) {}
+      try {
+        this.recordingManager.stop();
+      } catch (e) {
+      }
       this.liveAudioCaptureActive = false;
     } else if (this.recordingManager) {
-      try { this.recordingManager.stop(); } catch (e) {}
+      try {
+        this.recordingManager.stop();
+      } catch (e) {
+      }
     }
     this.resetRecordingState();
     void this.clearLivePreviewBlock(this.livePreviewMarkerId);
@@ -11647,7 +9778,7 @@ var MobileDockPill = class {
       this.documentInserter = null;
     }
     if (this.pauseBtnEl) {
-      (0, import_obsidian16.setIcon)(this.pauseBtnEl, "pause");
+      (0, import_obsidian10.setIcon)(this.pauseBtnEl, "pause");
     }
   }
   setState(state) {
@@ -11659,7 +9790,8 @@ var MobileDockPill = class {
     (_a = this.onStateChange) == null ? void 0 : _a.call(this, state);
   }
   startTimer() {
-    if (this.timerId !== null) return;
+    if (this.timerId !== null)
+      return;
     this.timerId = window.setInterval(() => {
       this.timerSeconds += 1;
       this.updateTimerDisplay();
@@ -11672,7 +9804,8 @@ var MobileDockPill = class {
     }
   }
   updateTimerDisplay() {
-    if (!this.timerEl) return;
+    if (!this.timerEl)
+      return;
     this.timerEl.textContent = this.formatTimer(this.timerSeconds);
   }
   formatTimer(seconds) {
@@ -11682,28 +9815,34 @@ var MobileDockPill = class {
   }
   async enqueueLivePreviewUpdate(partialResult) {
     const markerId = this.livePreviewMarkerId;
-    if (!markerId || !this.documentInserter) return;
+    if (!markerId || !this.documentInserter)
+      return;
     this.livePreviewWriteChain = this.livePreviewWriteChain.then(async () => {
       await this.documentInserter.upsertLiveTranscriptionBlock(this.activeFile, this.cursorPosition, markerId, partialResult);
-    }).catch(() => {});
+    }).catch(() => {
+    });
     await this.livePreviewWriteChain;
   }
   async clearLivePreviewBlock(markerIdOverride) {
     const markerId = markerIdOverride != null ? markerIdOverride : this.livePreviewMarkerId;
-    if (!markerId || !this.documentInserter) return;
-    await this.livePreviewWriteChain.catch(() => {});
+    if (!markerId || !this.documentInserter)
+      return;
+    await this.livePreviewWriteChain.catch(() => {
+    });
     try {
       await this.documentInserter.removeLiveTranscriptionBlock(this.activeFile, markerId);
-    } catch (e) {}
+    } catch (e) {
+    }
   }
   handleFailure(message, error) {
     const detail = error instanceof Error ? error.message : String(error);
-    new import_obsidian16.Notice(`${message}: ${detail}`);
+    new import_obsidian10.Notice(`${message}: ${detail}`);
     this.resetRecordingState();
     this.setState("idle");
   }
   attachTo(viewContent) {
-    if (!this.containerEl) return;
+    if (!this.containerEl)
+      return;
     if (this.containerEl.parentNode !== document.body) {
       document.body.appendChild(this.containerEl);
     }
@@ -11712,10 +9851,12 @@ var MobileDockPill = class {
     this.startDockTracking();
   }
   startOverlayObserver() {
-    if (this.overlayObserver) return;
+    if (this.overlayObserver)
+      return;
     this.overlayCheckPending = false;
     this.overlayObserver = new MutationObserver(() => {
-      if (this.overlayCheckPending) return;
+      if (this.overlayCheckPending)
+        return;
       this.overlayCheckPending = true;
       requestAnimationFrame(() => {
         this.updateVisibilityForOverlays();
@@ -11725,100 +9866,104 @@ var MobileDockPill = class {
     this.overlayObserver.observe(document.body, { childList: true, subtree: true });
   }
   updateVisibilityForOverlays() {
-    if (!this.containerEl) return;
-    const hasOverlay = document.querySelector('.modal-container') !== null
-      || document.querySelector('.menu') !== null
-      || document.querySelector('.prompt') !== null
-      || document.querySelector('.suggestion-container') !== null
-      || document.querySelector('.neurovox-upload-overlay') !== null
-      || this.isMobileDrawerOpen()
-      || !this.hasActiveMarkdownView();
+    if (!this.containerEl)
+      return;
+    const hasOverlay = document.querySelector(".modal-container") !== null || document.querySelector(".menu") !== null || document.querySelector(".prompt") !== null || document.querySelector(".suggestion-container") !== null || document.querySelector(".neurovox-upload-overlay") !== null || this.isMobileDrawerOpen() || !this.hasActiveMarkdownView();
     if (hasOverlay) {
-      this.containerEl.style.visibility = 'hidden';
-      this.containerEl.style.pointerEvents = 'none';
+      this.containerEl.style.visibility = "hidden";
+      this.containerEl.style.pointerEvents = "none";
     } else {
-      this.containerEl.style.visibility = '';
-      this.containerEl.style.pointerEvents = '';
+      this.containerEl.style.visibility = "";
+      this.containerEl.style.pointerEvents = "";
     }
   }
   isMobileDrawerOpen() {
-    const drawers = document.querySelectorAll('.workspace-drawer');
-    if (drawers.length === 0) return false;
+    const drawers = document.querySelectorAll(".workspace-drawer");
+    if (drawers.length === 0)
+      return false;
     const vw = window.innerWidth;
     for (const drawer of drawers) {
       const rect = drawer.getBoundingClientRect();
-      if (rect.width <= 0) continue;
-      if (drawer.classList.contains('mod-left') && rect.right > 1) return true;
-      if (drawer.classList.contains('mod-right') && rect.left < vw - 1) return true;
+      if (rect.width <= 0)
+        continue;
+      if (drawer.classList.contains("mod-left") && rect.right > 1)
+        return true;
+      if (drawer.classList.contains("mod-right") && rect.left < vw - 1)
+        return true;
     }
     return false;
   }
   hasActiveMarkdownView() {
     try {
-      return !!this.plugin.app.workspace.getActiveViewOfType(import_obsidian16.MarkdownView);
+      return !!this.plugin.app.workspace.getActiveViewOfType(import_obsidian10.MarkdownView);
     } catch (e) {
       return true;
     }
   }
   resolveDockEl() {
-    if (this.dockEl && this.dockEl.isConnected) return this.dockEl;
-    this.dockEl = document.querySelector('.mobile-navbar')
-        || document.querySelector('.workspace-tab-header-container-inner')
-        || document.querySelector('.mod-mobile .workspace-tab-header-container');
+    if (this.dockEl && this.dockEl.isConnected)
+      return this.dockEl;
+    this.dockEl = document.querySelector(".mobile-navbar") || document.querySelector(".workspace-tab-header-container-inner") || document.querySelector(".mod-mobile .workspace-tab-header-container");
     return this.dockEl;
   }
   startDockTracking() {
-    if (this.dockTrackingRafId !== null) return;
-    if (!this.resolveDockEl()) return;
+    if (this.dockTrackingRafId !== null)
+      return;
+    if (!this.resolveDockEl())
+      return;
     const track = () => {
-        if (this.isDisposed || !this.containerEl) {
-            this.dockTrackingRafId = null;
-            return;
+      if (this.isDisposed || !this.containerEl) {
+        this.dockTrackingRafId = null;
+        return;
+      }
+      const dockEl = this.resolveDockEl();
+      if (dockEl) {
+        const dockRect = dockEl.getBoundingClientRect();
+        const dockMissing = dockRect.width === 0 && dockRect.height === 0;
+        const distFromBottom = dockMissing ? -1 : window.innerHeight - dockRect.top;
+        if (distFromBottom !== this.lastDockBottom) {
+          this.lastDockBottom = distFromBottom;
+          if (distFromBottom <= 0) {
+            this.containerEl.style.transform = "translateX(-50%) translateY(100%)";
+          } else {
+            this.containerEl.style.transform = "translateX(-50%)";
+            this.containerEl.style.bottom = distFromBottom + 6 + "px";
+          }
         }
-        const dockEl = this.resolveDockEl();
-        if (dockEl) {
-            const dockRect = dockEl.getBoundingClientRect();
-            const dockMissing = dockRect.width === 0 && dockRect.height === 0;
-            const distFromBottom = dockMissing ? -1 : window.innerHeight - dockRect.top;
-            if (distFromBottom !== this.lastDockBottom) {
-                this.lastDockBottom = distFromBottom;
-                if (distFromBottom <= 0) {
-                    this.containerEl.style.transform = 'translateX(-50%) translateY(100%)';
-                } else {
-                    this.containerEl.style.transform = 'translateX(-50%)';
-                    this.containerEl.style.bottom = (distFromBottom + 6) + 'px';
-                }
-            }
-        }
-        this.updateVisibilityForOverlays();
-        this.dockTrackingRafId = requestAnimationFrame(track);
+      }
+      this.updateVisibilityForOverlays();
+      this.dockTrackingRafId = requestAnimationFrame(track);
     };
     this.dockTrackingRafId = requestAnimationFrame(track);
   }
   stopDockTracking() {
     if (this.dockTrackingRafId !== null) {
-        cancelAnimationFrame(this.dockTrackingRafId);
-        this.dockTrackingRafId = null;
+      cancelAnimationFrame(this.dockTrackingRafId);
+      this.dockTrackingRafId = null;
     }
     this.lastDockBottom = null;
     this.dockEl = null;
   }
   measureAndPositionAboveDock() {
-    if (!this.containerEl) return;
+    if (!this.containerEl)
+      return;
     this.dockEl = null;
     const dockEl = this.resolveDockEl();
     if (dockEl) {
       const dockRect = dockEl.getBoundingClientRect();
-      if (dockRect.width === 0 && dockRect.height === 0) return;
+      if (dockRect.width === 0 && dockRect.height === 0)
+        return;
       const distFromBottom = window.innerHeight - dockRect.top;
-      this.containerEl.style.bottom = (distFromBottom + 6) + 'px';
+      this.containerEl.style.bottom = distFromBottom + 6 + "px";
     }
   }
   show() {
-    if (this.containerEl) this.containerEl.style.display = "";
+    if (this.containerEl)
+      this.containerEl.style.display = "";
   }
   hide() {
-    if (this.containerEl) this.containerEl.style.display = "none";
+    if (this.containerEl)
+      this.containerEl.style.display = "none";
   }
   dispose() {
     this.isDisposed = true;
@@ -11839,683 +9984,10 @@ var MobileDockPill = class {
     }
   }
 };
+var MobileDockPill = _MobileDockPill;
+MobileDockPill.RECORDER_STOP_TIMEOUT_MS = 12e3;
 
-// src/ui/DesktopDockPill.ts
-var DesktopDockPill = class {
-  constructor(plugin) {
-    this.plugin = plugin;
-    this.state = "idle";
-    this.containerEl = null;
-    this.pillEl = null;
-    this.contentEl = null;
-    this.idleIconEl = null;
-    this.expandedEl = null;
-    this.recordingEl = null;
-    this.finalizingEl = null;
-    this.timerEl = null;
-    this.pauseBtnEl = null;
-    this.saveBtnEl = null;
-    this.timerSeconds = 0;
-    this.timerId = null;
-    this.isDisposed = false;
-    this.recordingManager = null;
-    this.streamingService = null;
-    this.documentInserter = null;
-    this.livePreviewMarkerId = null;
-    this.livePreviewWriteChain = Promise.resolve();
-    this.liveAudioCaptureActive = false;
-    this.activeFile = null;
-    this.cursorPosition = null;
-    this.onStateChange = null;
-    this.activeContainer = null;
-    this.deviceDetection = DeviceDetection.getInstance();
-    this.saveAudioOn = this.plugin.settings.saveLiveRecordingAudio || false;
-    this.useStreaming = this.plugin.settings.streamingMode != null ? this.plugin.settings.streamingMode : this.deviceDetection.shouldUseStreamingMode();
-    this.createElement();
-  }
-  static RECORDER_STOP_TIMEOUT_MS = 12e3;
-  createElement() {
-    this.containerEl = document.createElement("div");
-    this.containerEl.classList.add("neurovox-button-container");
-    this.pillEl = document.createElement("div");
-    this.pillEl.classList.add("neurovox-dock-pill", "neurovox-dock-pill--desktop");
-    this.pillEl.setAttribute("data-state", "idle");
-    this.pillEl.setAttribute("aria-label", "Open transcription actions (drag to move)");
-    this.contentEl = document.createElement("div");
-    this.contentEl.classList.add("neurovox-dock-pill__content");
-    this.idleIconEl = document.createElement("div");
-    this.idleIconEl.classList.add("neurovox-dock-pill__idle-icon");
-    (0, import_obsidian16.setIcon)(this.idleIconEl, "mic");
-    this.contentEl.appendChild(this.idleIconEl);
-    this.expandedEl = document.createElement("div");
-    this.expandedEl.classList.add("neurovox-dock-pill__expanded");
-    const uploadBtn = this.makeIconBtn("upload", "neurovox-dock-pill__icon neurovox-dock-pill__upload");
-    this.bindIconTap(uploadBtn, () => this.handleUploadTap());
-    this.expandedEl.appendChild(uploadBtn);
-    this.saveBtnEl = this.makeIconBtn("save", "neurovox-dock-pill__icon neurovox-dock-pill__save");
-    if (this.saveAudioOn) this.saveBtnEl.classList.add("active");
-    this.bindIconTap(this.saveBtnEl, () => this.handleSaveTap());
-    this.expandedEl.appendChild(this.saveBtnEl);
-    const micBtn = this.makeIconBtn("mic", "neurovox-dock-pill__icon neurovox-dock-pill__mic");
-    this.bindIconTap(micBtn, () => { void this.handleMicTap(); });
-    this.expandedEl.appendChild(micBtn);
-    const closeBtn1 = this.makeIconBtn("x", "neurovox-dock-pill__icon neurovox-dock-pill__close");
-    this.bindIconTap(closeBtn1, () => this.handleCloseTap());
-    this.expandedEl.appendChild(closeBtn1);
-    const cancelJobsBtn = this.makeIconBtn("broom", "neurovox-dock-pill__icon neurovox-dock-pill__cancel-jobs");
-    cancelJobsBtn.setAttribute("aria-label", "Cancel in-flight transcription jobs");
-    this.bindIconTap(cancelJobsBtn, () => { void this.handleCancelJobsTap(); });
-    this.expandedEl.appendChild(cancelJobsBtn);
-    this.contentEl.appendChild(this.expandedEl);
-    this.recordingEl = document.createElement("div");
-    this.recordingEl.classList.add("neurovox-dock-pill__recording");
-    const redDot = document.createElement("div");
-    redDot.classList.add("neurovox-dock-pill__red-dot");
-    this.recordingEl.appendChild(redDot);
-    this.timerEl = document.createElement("span");
-    this.timerEl.classList.add("neurovox-dock-pill__timer");
-    this.timerEl.textContent = "0:00";
-    this.recordingEl.appendChild(this.timerEl);
-    this.pauseBtnEl = this.makeIconBtn("pause", "neurovox-dock-pill__pause-btn");
-    this.bindIconTap(this.pauseBtnEl, () => this.handlePauseTap());
-    this.recordingEl.appendChild(this.pauseBtnEl);
-    const stopBtn = document.createElement("div");
-    stopBtn.classList.add("neurovox-dock-pill__stop-btn");
-    (0, import_obsidian16.setIcon)(stopBtn, "square");
-    this.bindIconTap(stopBtn, () => { void this.handleStopTap(); });
-    this.recordingEl.appendChild(stopBtn);
-    const closeBtn2 = this.makeIconBtn("x", "neurovox-dock-pill__icon neurovox-dock-pill__close");
-    this.bindIconTap(closeBtn2, () => this.handleCloseTap());
-    this.recordingEl.appendChild(closeBtn2);
-    this.contentEl.appendChild(this.recordingEl);
-    this.finalizingEl = document.createElement("div");
-    this.finalizingEl.classList.add("neurovox-dock-pill__finalizing");
-    const loaderIcon = document.createElement("div");
-    loaderIcon.classList.add("neurovox-dock-pill__loader-icon");
-    (0, import_obsidian16.setIcon)(loaderIcon, "loader");
-    this.finalizingEl.appendChild(loaderIcon);
-    const statusText = document.createElement("span");
-    statusText.classList.add("neurovox-dock-pill__status-text");
-    statusText.textContent = "Transcribing";
-    this.finalizingEl.appendChild(statusText);
-    const closeBtn3 = this.makeIconBtn("x", "neurovox-dock-pill__icon neurovox-dock-pill__close");
-    this.bindIconTap(closeBtn3, () => this.handleCloseTap());
-    this.finalizingEl.appendChild(closeBtn3);
-    this.contentEl.appendChild(this.finalizingEl);
-    this.pillEl.appendChild(this.contentEl);
-    this.containerEl.appendChild(this.pillEl);
-  }
-  makeIconBtn(iconName, cls) {
-    const btn = document.createElement("div");
-    btn.classList.add("clickable-icon");
-    cls.split(" ").forEach((c) => btn.classList.add(c));
-    (0, import_obsidian16.setIcon)(btn, iconName);
-    return btn;
-  }
-  bindIconTap(el, handler) {
-    el.addEventListener("mousedown", (e) => { e.stopPropagation(); });
-    el.addEventListener("click", (e) => { e.stopPropagation(); handler(); });
-  }
-  setActiveContainer(container) {
-    this.activeContainer = container;
-  }
-  getContainerEl() {
-    return this.containerEl;
-  }
-  getButtonEl() {
-    return this.pillEl;
-  }
-  getIdleIconEl() {
-    return this.idleIconEl;
-  }
-  updateButtonColor(color) {
-    if (this.pillEl && color) {
-      this.pillEl.style.setProperty("--neurovox-button-color", color);
-    }
-  }
-  handlePillTap() {
-    if (this.state === "idle") {
-      this.ensureActiveFile();
-      this.setState("expanded");
-    } else if (this.state === "expanded") {
-      this.setState("idle");
-    }
-  }
-  ensureActiveFile() {
-    const activeView = this.plugin.app.workspace.getActiveViewOfType(import_obsidian16.MarkdownView);
-    if (activeView && activeView.file) {
-      this.activeFile = activeView.file;
-      try {
-        this.cursorPosition = activeView.editor.getCursor();
-      } catch (e) {
-        this.cursorPosition = null;
-      }
-    }
-  }
-  handleUploadTap() {
-    if (this.state !== "expanded") return;
-    const activeView = this.plugin.app.workspace.getActiveViewOfType(import_obsidian16.MarkdownView);
-    if (!activeView || !activeView.file) {
-      new import_obsidian16.Notice("No active note found to insert transcription.");
-      return;
-    }
-    this.activeFile = activeView.file;
-    this.cursorPosition = activeView.editor.getCursor();
-    const input = document.createElement("input");
-    input.type = "file";
-    input.accept = ".mp3,.wav,.webm,.m4a,.ogg,.mp4,audio/*";
-    input.onchange = async () => {
-      const file = input.files && input.files[0];
-      if (!file) return;
-      try {
-        this.setState("finalizing");
-        const blob = new Blob([await file.arrayBuffer()], { type: file.type || "audio/wav" });
-        await this.plugin.recordingProcessor.processRecording(blob, this.activeFile, this.cursorPosition, file.name);
-        new import_obsidian16.Notice(`Transcribed uploaded audio: ${file.name}`);
-        this.setState("idle");
-      } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
-        new import_obsidian16.Notice(`Failed to transcribe uploaded audio: ${message}`);
-        this.setState("idle");
-      }
-    };
-    input.click();
-  }
-  handleSaveTap() {
-    if (this.state !== "expanded") return;
-    this.saveAudioOn = !this.saveAudioOn;
-    this.plugin.settings.saveLiveRecordingAudio = this.saveAudioOn;
-    void this.plugin.saveSettings({ refreshUi: false, triggerFloatingRefresh: false }).catch(() => {});
-    if (this.saveBtnEl) this.saveBtnEl.classList.toggle("active", this.saveAudioOn);
-  }
-  async handleMicTap() {
-    if (this.state !== "expanded") return;
-    const activeView = this.plugin.app.workspace.getActiveViewOfType(import_obsidian16.MarkdownView);
-    if (!activeView || !activeView.file) {
-      new import_obsidian16.Notice("No active note found to insert transcription.");
-      return;
-    }
-    this.activeFile = activeView.file;
-    this.cursorPosition = activeView.editor.getCursor();
-    await this.startRecordingSession();
-  }
-  async handleCancelJobsTap() {
-    if (this.state !== "expanded") return;
-    try {
-      const pending = await this.plugin.recordingProcessor.getIncompleteJobs();
-      if (pending.length === 0) {
-        new import_obsidian16.Notice("No incomplete jobs to cancel.");
-        return;
-      }
-      await Promise.all(pending.map((job) => this.plugin.recordingProcessor.cancelJob(job.jobId)));
-      new import_obsidian16.Notice(`Canceled ${pending.length} incomplete job(s).`);
-    } catch (e) {
-      new import_obsidian16.Notice("Failed to cancel incomplete jobs.");
-    }
-  }
-  async startRecordingSession() {
-    if (this.isDisposed) return;
-    try {
-      if (!this.recordingManager) {
-        this.recordingManager = new AudioRecordingManager(this.plugin);
-      }
-      await this.recordingManager.initialize();
-      if (!this.documentInserter) {
-        this.documentInserter = new DocumentInserter(this.plugin);
-      }
-      if (this.useStreaming && !this.streamingService) {
-        this.streamingService = new StreamingTranscriptionService(this.plugin, {
-          onMemoryWarning: (usage) => {
-            new import_obsidian16.Notice(`Memory usage high: ${Math.round(usage)}%`);
-          },
-          onChunkCommitted: async (_chunkText, _metadata, partialResult) => {
-            if (!this.plugin.settings.showLiveChunkPreviewInNote) return;
-            await this.enqueueLivePreviewUpdate(partialResult);
-          }
-        });
-        this.livePreviewMarkerId = this.streamingService.getRecoveryJobId();
-      }
-      if (this.useStreaming && this.streamingService) {
-        const stream = this.recordingManager.getStream();
-        if (!stream) throw new Error("Microphone stream unavailable");
-        await this.streamingService.startLiveSession(stream);
-        if (this.saveAudioOn && !this.liveAudioCaptureActive) {
-          this.recordingManager.start();
-          this.liveAudioCaptureActive = true;
-        }
-      } else {
-        this.recordingManager.start();
-      }
-      this.timerSeconds = 0;
-      this.updateTimerDisplay();
-      this.startTimer();
-      this.setState("recording");
-      new import_obsidian16.Notice("Recording started");
-    } catch (error) {
-      this.handleFailure("Failed to start recording", error);
-    }
-  }
-  handlePauseTap() {
-    if (this.state !== "recording" && this.state !== "paused") return;
-    try {
-      if (this.state === "paused") {
-        if (this.useStreaming && this.streamingService) {
-          this.streamingService.resumeLive();
-          if (this.liveAudioCaptureActive) this.recordingManager.resume();
-        } else {
-          this.recordingManager.resume();
-        }
-        this.startTimer();
-        this.setState("recording");
-        (0, import_obsidian16.setIcon)(this.pauseBtnEl, "pause");
-      } else {
-        if (this.useStreaming && this.streamingService) {
-          this.streamingService.pauseLive();
-          if (this.liveAudioCaptureActive) this.recordingManager.pause();
-        } else {
-          this.recordingManager.pause();
-        }
-        this.stopTimer();
-        this.setState("paused");
-        (0, import_obsidian16.setIcon)(this.pauseBtnEl, "play");
-      }
-    } catch (error) {
-      this.handleFailure("Failed to pause/resume", error);
-    }
-  }
-  async handleStopTap() {
-    if (this.state !== "recording" && this.state !== "paused") return;
-    this.setState("finalizing");
-    this.stopTimer();
-    const markerIdForCleanup = this.livePreviewMarkerId;
-    try {
-      let finalBlob = null;
-      if (this.useStreaming) {
-        if (this.liveAudioCaptureActive) {
-          finalBlob = await this.stopRecorderWithTimeout();
-          this.liveAudioCaptureActive = false;
-        }
-      } else {
-        finalBlob = await this.stopRecorderWithTimeout();
-      }
-      if (this.useStreaming && this.streamingService) {
-        const result = await this.streamingService.finishProcessing();
-        this.streamingService = null;
-        if (!result.trim()) throw new Error("No transcription result received");
-        await this.plugin.recordingProcessor.processStreamingResult(
-          result, this.activeFile, this.cursorPosition,
-          { audioBlob: this.saveAudioOn ? finalBlob || void 0 : void 0, durationSeconds: this.timerSeconds }
-        );
-      } else {
-        if (!finalBlob) throw new Error("No audio data received from recorder");
-        await this.plugin.recordingProcessor.processRecording(finalBlob, this.activeFile, this.cursorPosition);
-      }
-      this.resetRecordingState();
-      this.setState("idle");
-    } catch (error) {
-      if (this.streamingService) {
-        const msg = error instanceof Error ? error.message : String(error);
-        this.streamingService.abort(`finalize_failed:${msg}`);
-        this.streamingService = null;
-      }
-      this.handleFailure("Failed to stop recording", error);
-    } finally {
-      await this.clearLivePreviewBlock(markerIdForCleanup);
-    }
-  }
-  async stopRecorderWithTimeout() {
-    return await Promise.race([
-      this.recordingManager.stop(),
-      new Promise((_, reject) => window.setTimeout(() => reject(new Error("Recorder stop timed out")), DesktopDockPill.RECORDER_STOP_TIMEOUT_MS))
-    ]);
-  }
-  handleCloseTap() {
-    if (this.state === "expanded") {
-      this.setState("idle");
-    } else if (this.state === "recording" || this.state === "paused") {
-      this.cancelRecording();
-      this.setState("idle");
-    } else if (this.state === "finalizing") {
-      this.cancelTranscription();
-      this.setState("idle");
-    }
-  }
-  cancelRecording() {
-    this.stopTimer();
-    if (this.useStreaming && this.streamingService) {
-      this.streamingService.abort("user_cancelled");
-      this.streamingService = null;
-    }
-    if (this.liveAudioCaptureActive) {
-      try { this.recordingManager.stop(); } catch (e) {}
-      this.liveAudioCaptureActive = false;
-    } else if (this.recordingManager) {
-      try { this.recordingManager.stop(); } catch (e) {}
-    }
-    this.resetRecordingState();
-    void this.clearLivePreviewBlock(this.livePreviewMarkerId);
-  }
-  cancelTranscription() {
-    if (this.streamingService) {
-      this.streamingService.abort("user_cancelled");
-      this.streamingService = null;
-    }
-    this.resetRecordingState();
-  }
-  resetRecordingState() {
-    this.timerSeconds = 0;
-    this.livePreviewMarkerId = null;
-    this.liveAudioCaptureActive = false;
-    if (this.recordingManager) {
-      this.recordingManager.cleanup();
-      this.recordingManager = null;
-    }
-    if (this.documentInserter) {
-      this.documentInserter = null;
-    }
-    if (this.pauseBtnEl) {
-      (0, import_obsidian16.setIcon)(this.pauseBtnEl, "pause");
-    }
-  }
-  setState(state) {
-    var _a;
-    this.state = state;
-    if (this.pillEl) {
-      this.pillEl.setAttribute("data-state", state);
-    }
-    requestAnimationFrame(() => this.applyEdgeNudge());
-    (_a = this.onStateChange) == null ? void 0 : _a.call(this, state);
-  }
-  applyEdgeNudge() {
-    if (!this.pillEl || !this.containerEl || !this.activeContainer) return;
-    if (this.state === "idle") {
-      this.pillEl.style.transform = "";
-      return;
-    }
-    const targetWidths = { expanded: 216, recording: 220, paused: 220, finalizing: 156 };
-    const targetWidth = targetWidths[this.state] || 48;
-    const anchorRect = this.containerEl.getBoundingClientRect();
-    const leafRect = this.activeContainer.getBoundingClientRect();
-    const pillLeft = anchorRect.left;
-    const pillRightTarget = pillLeft + targetWidth;
-    const margin = 8;
-    const overflowRight = pillRightTarget - (leafRect.right - margin);
-    const overflowLeft = (leafRect.left + margin) - pillLeft;
-    if (overflowRight > 0) {
-      this.pillEl.style.transform = `translateX(${-overflowRight}px)`;
-    } else if (overflowLeft > 0) {
-      this.pillEl.style.transform = `translateX(${overflowLeft}px)`;
-    } else {
-      this.pillEl.style.transform = "";
-    }
-  }
-  startTimer() {
-    if (this.timerId !== null) return;
-    this.timerId = window.setInterval(() => {
-      this.timerSeconds += 1;
-      this.updateTimerDisplay();
-    }, 1e3);
-  }
-  stopTimer() {
-    if (this.timerId !== null) {
-      window.clearInterval(this.timerId);
-      this.timerId = null;
-    }
-  }
-  updateTimerDisplay() {
-    if (!this.timerEl) return;
-    this.timerEl.textContent = this.formatTimer(this.timerSeconds);
-  }
-  formatTimer(seconds) {
-    const m = Math.floor(seconds / 60);
-    const s = (seconds % 60).toString().padStart(2, "0");
-    return `${m}:${s}`;
-  }
-  async enqueueLivePreviewUpdate(partialResult) {
-    const markerId = this.livePreviewMarkerId;
-    if (!markerId || !this.documentInserter) return;
-    this.livePreviewWriteChain = this.livePreviewWriteChain.then(async () => {
-      await this.documentInserter.upsertLiveTranscriptionBlock(this.activeFile, this.cursorPosition, markerId, partialResult);
-    }).catch(() => {});
-    await this.livePreviewWriteChain;
-  }
-  async clearLivePreviewBlock(markerIdOverride) {
-    const markerId = markerIdOverride != null ? markerIdOverride : this.livePreviewMarkerId;
-    if (!markerId || !this.documentInserter) return;
-    await this.livePreviewWriteChain.catch(() => {});
-    try {
-      await this.documentInserter.removeLiveTranscriptionBlock(this.activeFile, markerId);
-    } catch (e) {}
-  }
-  handleFailure(message, error) {
-    const detail = error instanceof Error ? error.message : String(error);
-    new import_obsidian16.Notice(`${message}: ${detail}`);
-    this.resetRecordingState();
-    this.setState("idle");
-  }
-  show() {
-    if (this.containerEl) this.containerEl.style.display = "";
-  }
-  hide() {
-    if (this.containerEl) this.containerEl.style.display = "none";
-  }
-  dispose() {
-    this.isDisposed = true;
-    this.stopTimer();
-    if (this.state === "recording" || this.state === "paused") {
-      this.cancelRecording();
-    } else if (this.state === "finalizing") {
-      this.cancelTranscription();
-    }
-    if (this.containerEl) {
-      this.containerEl.remove();
-      this.containerEl = null;
-    }
-  }
-};
-
-// src/ui/UploadBottomSheet.ts
-var UploadBottomSheet = class {
-  constructor(options) {
-    this.plugin = options.plugin;
-    this.saveAudioOn = options.saveAudioOn;
-    this.onTranscribe = options.onTranscribe;
-    this.onCancel = options.onCancel;
-    this.selectedFile = null;
-    this.overlayEl = null;
-    this.sheetEl = null;
-    this.fileCardEl = null;
-    this.fileNameEl = null;
-    this.fileSizeEl = null;
-    this.ctaEl = null;
-    this.saveToggleEl = null;
-    this.fileInputEl = null;
-    this.chooseLinkEl = null;
-  }
-  open() {
-    // Overlay
-    this.overlayEl = document.createElement("div");
-    this.overlayEl.classList.add("neurovox-upload-overlay");
-    this.overlayEl.addEventListener("click", () => this.close());
-    document.body.appendChild(this.overlayEl);
-    // Sheet
-    this.sheetEl = document.createElement("div");
-    this.sheetEl.classList.add("neurovox-upload-sheet");
-    // Handle bar
-    const handle = document.createElement("div");
-    handle.classList.add("neurovox-upload-sheet__handle");
-    this.sheetEl.appendChild(handle);
-    // Header (centered title + description)
-    const header = document.createElement("div");
-    header.classList.add("neurovox-upload-sheet__header");
-    const title = document.createElement("span");
-    title.classList.add("neurovox-upload-sheet__title");
-    title.textContent = "Upload Audio";
-    header.appendChild(title);
-    const description = document.createElement("div");
-    description.classList.add("neurovox-upload-sheet__description");
-    description.textContent = "Select an audio file to transcribe into your note.";
-    header.appendChild(description);
-    this.sheetEl.appendChild(header);
-    // File picker area
-    const picker = document.createElement("div");
-    picker.classList.add("neurovox-upload-sheet__picker");
-    const pickerIcon = document.createElement("div");
-    pickerIcon.classList.add("neurovox-upload-sheet__picker-icon");
-    (0, import_obsidian16.setIcon)(pickerIcon, "upload");
-    picker.appendChild(pickerIcon);
-    const pickerText = document.createElement("div");
-    pickerText.classList.add("neurovox-upload-sheet__picker-text");
-    pickerText.textContent = "Tap to select an audio file";
-    picker.appendChild(pickerText);
-    picker.addEventListener("click", () => this.openFilePicker());
-    this.sheetEl.appendChild(picker);
-    // File card (hidden initially)
-    this.fileCardEl = document.createElement("div");
-    this.fileCardEl.classList.add("neurovox-upload-sheet__file-card");
-    const fileIcon = document.createElement("div");
-    fileIcon.classList.add("neurovox-upload-sheet__file-icon");
-    (0, import_obsidian16.setIcon)(fileIcon, "music");
-    this.fileCardEl.appendChild(fileIcon);
-    const fileInfo = document.createElement("div");
-    fileInfo.classList.add("neurovox-upload-sheet__file-info");
-    this.fileNameEl = document.createElement("div");
-    this.fileNameEl.classList.add("neurovox-upload-sheet__file-name");
-    fileInfo.appendChild(this.fileNameEl);
-    this.fileSizeEl = document.createElement("div");
-    this.fileSizeEl.classList.add("neurovox-upload-sheet__file-size");
-    fileInfo.appendChild(this.fileSizeEl);
-    this.fileCardEl.appendChild(fileInfo);
-    const fileCheck = document.createElement("div");
-    fileCheck.classList.add("neurovox-upload-sheet__file-check");
-    (0, import_obsidian16.setIcon)(fileCheck, "check-circle");
-    this.fileCardEl.appendChild(fileCheck);
-    this.sheetEl.appendChild(this.fileCardEl);
-    // "Choose a different file" link
-    this.chooseLinkEl = document.createElement("button");
-    this.chooseLinkEl.classList.add("neurovox-upload-sheet__choose-link");
-    this.chooseLinkEl.textContent = "Choose a different file";
-    this.chooseLinkEl.style.display = "none";
-    this.chooseLinkEl.addEventListener("click", () => this.openFilePicker());
-    this.sheetEl.appendChild(this.chooseLinkEl);
-    // Save audio toggle row
-    const saveRow = document.createElement("div");
-    saveRow.classList.add("neurovox-upload-sheet__save-row");
-    const saveRowLeft = document.createElement("div");
-    saveRowLeft.classList.add("neurovox-upload-sheet__save-row-left");
-    const saveIcon = document.createElement("div");
-    saveIcon.classList.add("neurovox-upload-sheet__save-icon");
-    (0, import_obsidian16.setIcon)(saveIcon, "save");
-    saveRowLeft.appendChild(saveIcon);
-    const saveLabel = document.createElement("span");
-    saveLabel.classList.add("neurovox-upload-sheet__save-label");
-    saveLabel.textContent = "Save audio to vault";
-    saveRowLeft.appendChild(saveLabel);
-    saveRow.appendChild(saveRowLeft);
-    this.saveToggleEl = document.createElement("button");
-    this.saveToggleEl.classList.add("neurovox-upload-sheet__save-toggle");
-    if (this.saveAudioOn) this.saveToggleEl.classList.add("active");
-    this.saveToggleEl.addEventListener("click", () => {
-      this.saveAudioOn = !this.saveAudioOn;
-      this.saveToggleEl.classList.toggle("active", this.saveAudioOn);
-    });
-    saveRow.appendChild(this.saveToggleEl);
-    this.sheetEl.appendChild(saveRow);
-    // Transcribe CTA with sparkles icon
-    this.ctaEl = document.createElement("button");
-    this.ctaEl.classList.add("neurovox-upload-sheet__cta");
-    const sparklesIcon = document.createElement("span");
-    (0, import_obsidian16.setIcon)(sparklesIcon, "sparkles");
-    this.ctaEl.appendChild(sparklesIcon);
-    const ctaText = document.createElement("span");
-    ctaText.textContent = "Transcribe";
-    this.ctaEl.appendChild(ctaText);
-    this.ctaEl.addEventListener("click", () => {
-      if (!this.selectedFile) return;
-      const file = this.selectedFile;
-      const save = this.saveAudioOn;
-      this.close();
-      this.onTranscribe(file, save);
-    });
-    this.sheetEl.appendChild(this.ctaEl);
-    document.body.appendChild(this.sheetEl);
-    // Hidden file input
-    this.fileInputEl = document.createElement("input");
-    this.fileInputEl.type = "file";
-    this.fileInputEl.accept = ".mp3,.wav,.webm,.m4a,.ogg,.mp4,audio/*";
-    this.fileInputEl.style.display = "none";
-    this.fileInputEl.addEventListener("change", () => {
-      var _a;
-      const file = (_a = this.fileInputEl.files) == null ? void 0 : _a[0];
-      if (file) this.setFile(file);
-    });
-    document.body.appendChild(this.fileInputEl);
-    // Keyboard and back-button dismiss
-    this.onEscBound = (e) => {
-      if (e.key === "Escape") {
-        e.preventDefault();
-        this.close();
-      }
-    };
-    this.onPopStateBound = () => {
-      this.close();
-    };
-    document.addEventListener("keydown", this.onEscBound);
-    window.addEventListener("popstate", this.onPopStateBound);
-    // Animate in
-    requestAnimationFrame(() => {
-      if (this.overlayEl) this.overlayEl.classList.add("visible");
-      if (this.sheetEl) this.sheetEl.classList.add("visible");
-    });
-  }
-  openFilePicker() {
-    if (this.fileInputEl) this.fileInputEl.click();
-  }
-  setFile(file) {
-    this.selectedFile = file;
-    if (this.fileNameEl) this.fileNameEl.textContent = file.name;
-    if (this.fileSizeEl) this.fileSizeEl.textContent = this.formatSize(file.size);
-    if (this.fileCardEl) this.fileCardEl.classList.add("has-file");
-    if (this.ctaEl) this.ctaEl.classList.add("enabled");
-    if (this.chooseLinkEl) this.chooseLinkEl.style.display = "";
-  }
-  clearFile() {
-    this.selectedFile = null;
-    if (this.fileCardEl) this.fileCardEl.classList.remove("has-file");
-    if (this.ctaEl) this.ctaEl.classList.remove("enabled");
-    if (this.fileInputEl) this.fileInputEl.value = "";
-    if (this.chooseLinkEl) this.chooseLinkEl.style.display = "none";
-  }
-  formatSize(bytes) {
-    if (bytes < 1024) return `${bytes} B`;
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-  }
-  close() {
-    if (this.onEscBound) {
-      document.removeEventListener("keydown", this.onEscBound);
-      this.onEscBound = null;
-    }
-    if (this.onPopStateBound) {
-      window.removeEventListener("popstate", this.onPopStateBound);
-      this.onPopStateBound = null;
-    }
-    if (this.overlayEl) {
-      this.overlayEl.classList.remove("visible");
-    }
-    if (this.sheetEl) {
-      this.sheetEl.classList.remove("visible");
-    }
-    setTimeout(() => {
-      if (this.overlayEl) { this.overlayEl.remove(); this.overlayEl = null; }
-      if (this.sheetEl) { this.sheetEl.remove(); this.sheetEl = null; }
-      if (this.fileInputEl) { this.fileInputEl.remove(); this.fileInputEl = null; }
-      this.onCancel();
-    }, 320);
-  }
-};
-
-// src/ui/FloatingButton.ts
+// src-rebuild/ui/FloatingButton.ts
 var _FloatingButton = class {
   constructor(plugin, pluginData, onClickCallback) {
     this.plugin = plugin;
@@ -12649,7 +10121,7 @@ var _FloatingButton = class {
     } else {
       this.buttonEl.setAttribute("aria-label", "Start recording (drag to move)");
     }
-    (0, import_obsidian16.setIcon)(this.buttonEl, "mic");
+    (0, import_obsidian11.setIcon)(this.buttonEl, "mic");
     this.buttonEl.addEventListener("click", (event) => {
       var _a, _b;
       if (((_a = this.positionManager) == null ? void 0 : _a.isDragging) || ((_b = this.positionManager) == null ? void 0 : _b.hasMoved)) {
@@ -12777,9 +10249,11 @@ var _FloatingButton = class {
   }
   registerActiveLeafChangeEvent() {
     this.activeLeafRef = this.plugin.app.workspace.on("active-leaf-change", () => {
-      if (this.isDisposed) return;
+      if (this.isDisposed)
+        return;
       requestAnimationFrame(() => {
-        if (this.isDisposed) return;
+        if (this.isDisposed)
+          return;
         this.attachToActiveLeaf();
       });
     });
@@ -12787,9 +10261,11 @@ var _FloatingButton = class {
   }
   registerLayoutChangeEvent() {
     this.layoutChangeRef = this.plugin.app.workspace.on("layout-change", () => {
-      if (this.isDisposed) return;
+      if (this.isDisposed)
+        return;
       requestAnimationFrame(() => {
-        if (this.isDisposed) return;
+        if (this.isDisposed)
+          return;
         if (this.positionManager && this.activeLeafContainer) {
           this.positionManager.updateContainer(this.activeLeafContainer);
         }
@@ -12802,15 +10278,18 @@ var _FloatingButton = class {
   }
   registerResizeEvent() {
     this.resizeRef = this.plugin.app.workspace.on("resize", () => {
-      if (this.isDisposed) return;
+      if (this.isDisposed)
+        return;
       if (this.resizeTimeout) {
         clearTimeout(this.resizeTimeout);
       }
       this.resizeTimeout = setTimeout(() => {
-        if (this.isDisposed) return;
+        if (this.isDisposed)
+          return;
         if (this.activeLeafContainer && this.positionManager) {
           requestAnimationFrame(() => {
-            if (this.isDisposed) return;
+            if (this.isDisposed)
+              return;
             if (this.positionManager && this.activeLeafContainer) {
               this.positionManager.updateContainer(this.activeLeafContainer);
             }
@@ -12824,20 +10303,21 @@ var _FloatingButton = class {
     this.plugin.registerEvent(this.resizeRef);
   }
   attachToActiveLeaf() {
-    if (this.isDisposed) return;
+    if (this.isDisposed)
+      return;
     if (this.isMobileDevice && this.mobilePill) {
-      const activeLeaf = this.plugin.app.workspace.getActiveViewOfType(import_obsidian16.MarkdownView);
-      if (!activeLeaf) {
+      const activeLeaf2 = this.plugin.app.workspace.getActiveViewOfType(import_obsidian11.MarkdownView);
+      if (!activeLeaf2) {
         this.mobilePill.hide();
         return;
       }
-      const viewContent = activeLeaf.containerEl.querySelector(".view-content");
-      if (!(viewContent instanceof HTMLElement)) {
+      const viewContent2 = activeLeaf2.containerEl.querySelector(".view-content");
+      if (!(viewContent2 instanceof HTMLElement)) {
         this.mobilePill.hide();
         return;
       }
-      this.activeLeafContainer = viewContent;
-      this.mobilePill.attachTo(viewContent);
+      this.activeLeafContainer = viewContent2;
+      this.mobilePill.attachTo(viewContent2);
       if (this.plugin.settings.showFloatingButton) {
         this.mobilePill.show();
       } else {
@@ -12845,7 +10325,7 @@ var _FloatingButton = class {
       }
       return;
     }
-    const activeLeaf = this.plugin.app.workspace.getActiveViewOfType(import_obsidian16.MarkdownView);
+    const activeLeaf = this.plugin.app.workspace.getActiveViewOfType(import_obsidian11.MarkdownView);
     if (!activeLeaf) {
       return;
     }
@@ -13102,9 +10582,9 @@ var _FloatingButton = class {
       this.audioManager.start();
       this.isRecording = true;
       this.updateRecordingState(true);
-      new import_obsidian16.Notice("Recording started");
+      new import_obsidian11.Notice("Recording started");
     } catch (error) {
-      new import_obsidian16.Notice("Failed to start recording");
+      new import_obsidian11.Notice("Failed to start recording");
       this.cleanup();
     }
   }
@@ -13120,9 +10600,9 @@ var _FloatingButton = class {
         return;
       this.isProcessing = true;
       this.updateProcessingState(true);
-      const activeView = this.plugin.app.workspace.getActiveViewOfType(import_obsidian16.MarkdownView);
+      const activeView = this.plugin.app.workspace.getActiveViewOfType(import_obsidian11.MarkdownView);
       if (!activeView || !activeView.file) {
-        new import_obsidian16.Notice("No active file to insert recording");
+        new import_obsidian11.Notice("No active file to insert recording");
         return;
       }
       await this.plugin.recordingProcessor.processRecording(
@@ -13131,7 +10611,7 @@ var _FloatingButton = class {
         activeView.editor.getCursor()
       );
     } catch (error) {
-      new import_obsidian16.Notice("Failed to stop recording");
+      new import_obsidian11.Notice("Failed to stop recording");
     } finally {
       this.cleanup();
     }
@@ -13186,12 +10666,12 @@ var _FloatingButton = class {
     const ext = ((_b = file.name.split(".").pop()) == null ? void 0 : _b.toLowerCase()) || "";
     const valid = ["mp3", "wav", "webm", "m4a", "ogg", "mp4"];
     if (!valid.includes(ext) && !file.type.startsWith("audio/")) {
-      new import_obsidian16.Notice("Dropped file is not a supported audio format.");
+      new import_obsidian11.Notice("Dropped file is not a supported audio format.");
       return;
     }
-    const activeView = this.plugin.app.workspace.getActiveViewOfType(import_obsidian16.MarkdownView);
+    const activeView = this.plugin.app.workspace.getActiveViewOfType(import_obsidian11.MarkdownView);
     if (!(activeView == null ? void 0 : activeView.file)) {
-      new import_obsidian16.Notice("Open a note first to insert dropped audio transcription.");
+      new import_obsidian11.Notice("Open a note first to insert dropped audio transcription.");
       return;
     }
     const confirmed = await this.openDropReviewModal(file, activeView.file, source);
@@ -13209,10 +10689,10 @@ var _FloatingButton = class {
         activeView.editor.getCursor(),
         file.name
       );
-      new import_obsidian16.Notice(`Transcribed dropped audio: ${file.name}`);
+      new import_obsidian11.Notice(`Transcribed dropped audio: ${file.name}`);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      new import_obsidian16.Notice(`Failed to transcribe dropped audio: ${message}`);
+      new import_obsidian11.Notice(`Failed to transcribe dropped audio: ${message}`);
     } finally {
       this.isProcessing = false;
       this.updateProcessingState(false);
@@ -13234,13 +10714,13 @@ var _FloatingButton = class {
       this.inlineRecorderPanel.toggleCollapsed();
       return;
     }
-    const activeView = this.plugin.app.workspace.getActiveViewOfType(import_obsidian16.MarkdownView);
+    const activeView = this.plugin.app.workspace.getActiveViewOfType(import_obsidian11.MarkdownView);
     if (!activeView || !activeView.file) {
-      new import_obsidian16.Notice("No active note found to insert transcription.");
+      new import_obsidian11.Notice("No active note found to insert transcription.");
       return;
     }
     if (!this.activeLeafContainer) {
-      new import_obsidian16.Notice("Recorder panel unavailable in this view.");
+      new import_obsidian11.Notice("Recorder panel unavailable in this view.");
       return;
     }
     const anchor = this.getCurrentPosition();
@@ -13278,14 +10758,14 @@ var _FloatingButton = class {
     this.plugin.settings.includeTimestamps = true;
     try {
       await this.plugin.saveSettings({ refreshUi: false, triggerFloatingRefresh: false });
-      new import_obsidian16.Notice("Enabled mobile speaker-turn timestamps by default.");
+      new import_obsidian11.Notice("Enabled mobile speaker-turn timestamps by default.");
     } catch (e) {
     }
   }
 };
 var FloatingButton = _FloatingButton;
 FloatingButton.instance = null;
-var DropReviewModal = class extends import_obsidian16.Modal {
+var DropReviewModal = class extends import_obsidian11.Modal {
   constructor(appPlugin, file, targetFile, source, onResolve) {
     super(appPlugin.app);
     this.file = file;
@@ -13328,9 +10808,2687 @@ var DropReviewModal = class extends import_obsidian16.Modal {
   }
 };
 
-// src/modals/TimerModal.ts
+// src-rebuild/adapters/GroqAdapter.ts
+var GroqAdapter = class extends AIAdapter {
+  constructor(settings) {
+    super(
+      settings,
+      "groq"
+      /* Groq */
+    );
+    this.apiKey = "";
+  }
+  getApiKey() {
+    return this.apiKey;
+  }
+  setApiKeyInternal(key) {
+    this.apiKey = key;
+  }
+  getApiBaseUrl() {
+    return "https://api.groq.com/openai/v1";
+  }
+  getTextGenerationEndpoint() {
+    return "/chat/completions";
+  }
+  getTranscriptionEndpoint() {
+    return "/audio/transcriptions";
+  }
+  async validateApiKeyImpl() {
+    if (!this.apiKey) {
+      return false;
+    }
+    try {
+      await this.makeAPIRequest(
+        `${this.getApiBaseUrl()}/chat/completions`,
+        "POST",
+        {
+          "Content-Type": "application/json"
+        },
+        JSON.stringify({
+          model: "llama-3.1-8b-instant",
+          messages: [{ role: "user", content: "test" }],
+          max_tokens: 1
+        })
+      );
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+  parseTextGenerationResponse(response) {
+    var _a, _b, _c;
+    if ((_c = (_b = (_a = response == null ? void 0 : response.choices) == null ? void 0 : _a[0]) == null ? void 0 : _b.message) == null ? void 0 : _c.content) {
+      return response.choices[0].message.content;
+    }
+    throw new Error("Invalid response format from Groq");
+  }
+  parseTranscriptionResponse(response) {
+    if (response == null ? void 0 : response.text) {
+      return response.text;
+    }
+    throw new Error("Invalid transcription response format from Groq");
+  }
+};
+
+// src-rebuild/utils/queue/LocalQueueBackend.ts
+var _LocalQueueBackend = class {
+  constructor(plugin) {
+    this.plugin = plugin;
+    this.writeChain = Promise.resolve();
+    this.dirEnsured = false;
+  }
+  async enqueue(payload) {
+    const now = new Date().toISOString();
+    const job = {
+      id: `q_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+      status: "queued",
+      payload,
+      attemptCount: 0,
+      createdAt: now,
+      updatedAt: now
+    };
+    await this.withState(async (state) => {
+      state.jobs.push(job);
+    });
+    return job;
+  }
+  async claim(workerId, leaseMs, preferredJobId) {
+    let result = null;
+    await this.withState(async (state) => {
+      const nowMs = Date.now();
+      const claimable = state.jobs.filter((j) => this.canBeClaimed(j, nowMs)).sort((a, b) => a.createdAt < b.createdAt ? -1 : 1);
+      const next = (preferredJobId ? claimable.find((j) => j.id === preferredJobId) : void 0) || claimable[0];
+      if (!next)
+        return;
+      const leaseToken = this.newLeaseToken();
+      next.status = "claimed";
+      next.leaseOwner = workerId;
+      next.leaseToken = leaseToken;
+      next.leaseExpiresAt = new Date(nowMs + leaseMs).toISOString();
+      next.updatedAt = new Date().toISOString();
+      next.attemptCount += 1;
+      result = { job: { ...next }, leaseToken };
+    });
+    return result;
+  }
+  async heartbeat(jobId, workerId, leaseToken, leaseMs) {
+    await this.withState(async (state) => {
+      const job = this.mustGetJob(state, jobId);
+      this.assertLease(job, workerId, leaseToken);
+      if (job.status !== "claimed" && job.status !== "running")
+        return;
+      job.status = "running";
+      job.leaseExpiresAt = new Date(Date.now() + leaseMs).toISOString();
+      job.updatedAt = new Date().toISOString();
+    });
+  }
+  async complete(jobId, workerId, leaseToken, resultRef) {
+    await this.withState(async (state) => {
+      const job = this.mustGetJob(state, jobId);
+      if (job.status === "completed")
+        return;
+      this.assertLease(job, workerId, leaseToken);
+      job.status = "completed";
+      job.resultRef = resultRef;
+      job.updatedAt = new Date().toISOString();
+      this.clearLease(job);
+    });
+  }
+  async fail(jobId, workerId, leaseToken, reason, retryAt) {
+    await this.withState(async (state) => {
+      const job = this.mustGetJob(state, jobId);
+      this.assertLease(job, workerId, leaseToken);
+      job.reason = reason;
+      job.retryAt = retryAt;
+      job.status = retryAt ? "retry_scheduled" : "failed";
+      job.updatedAt = new Date().toISOString();
+      this.clearLease(job);
+    });
+  }
+  async retry(jobId, reason) {
+    await this.withState(async (state) => {
+      const job = this.mustGetJob(state, jobId);
+      if (job.status !== "failed" && job.status !== "retry_scheduled")
+        return;
+      job.status = "queued";
+      job.reason = reason;
+      job.updatedAt = new Date().toISOString();
+      job.retryAt = void 0;
+      this.clearLease(job);
+    });
+  }
+  async getSnapshot() {
+    const state = await this.readState();
+    return [...state.jobs].sort((a, b) => a.updatedAt < b.updatedAt ? 1 : -1);
+  }
+  async prune(options) {
+    var _a, _b;
+    const maxJobs = (_a = options == null ? void 0 : options.maxJobs) != null ? _a : 500;
+    const maxAgeMs = (_b = options == null ? void 0 : options.maxAgeMs) != null ? _b : 14 * 24 * 60 * 60 * 1e3;
+    const cutoff = Date.now() - maxAgeMs;
+    await this.withState(async (state) => {
+      const retained = state.jobs.filter((job) => {
+        if (job.status === "queued" || job.status === "claimed" || job.status === "running" || job.status === "retry_scheduled") {
+          return true;
+        }
+        return new Date(job.updatedAt).getTime() >= cutoff;
+      }).sort((a, b) => a.updatedAt < b.updatedAt ? 1 : -1).slice(0, maxJobs);
+      state.jobs = retained;
+    });
+  }
+  canBeClaimed(job, nowMs) {
+    if (job.status === "queued")
+      return true;
+    if (job.status === "retry_scheduled") {
+      return !!job.retryAt && new Date(job.retryAt).getTime() <= nowMs;
+    }
+    if ((job.status === "claimed" || job.status === "running") && job.leaseExpiresAt) {
+      return new Date(job.leaseExpiresAt).getTime() < nowMs;
+    }
+    return false;
+  }
+  mustGetJob(state, jobId) {
+    const job = state.jobs.find((j) => j.id === jobId);
+    if (!job)
+      throw new Error(`Queue job not found: ${jobId}`);
+    return job;
+  }
+  assertLease(job, workerId, leaseToken) {
+    if (job.leaseOwner !== workerId || job.leaseToken !== leaseToken) {
+      throw new Error("Lease validation failed");
+    }
+  }
+  clearLease(job) {
+    job.leaseOwner = void 0;
+    job.leaseToken = void 0;
+    job.leaseExpiresAt = void 0;
+  }
+  newLeaseToken() {
+    return `lease_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+  }
+  async withState(mutator) {
+    const run = this.writeChain.then(async () => {
+      const state = await this.readState();
+      await mutator(state);
+      await this.writeState(state);
+    });
+    this.writeChain = run.catch((err) => {
+      console.error("[NeuroVox][Queue] State write failed:", err);
+    });
+    await run;
+  }
+  async readState() {
+    const adapter = this.plugin.app.vault.adapter;
+    await this.ensureDir(adapter);
+    if (!await adapter.exists(_LocalQueueBackend.FILE)) {
+      return { jobs: [] };
+    }
+    try {
+      const raw = await adapter.read(_LocalQueueBackend.FILE);
+      let parsed;
+      try {
+        parsed = JSON.parse(raw);
+      } catch (e) {
+        await this.quarantineCorruptFile(adapter, _LocalQueueBackend.FILE, raw);
+        return { jobs: [] };
+      }
+      return { jobs: Array.isArray(parsed == null ? void 0 : parsed.jobs) ? parsed.jobs : [] };
+    } catch (e) {
+      return { jobs: [] };
+    }
+  }
+  async writeState(state) {
+    const adapter = this.plugin.app.vault.adapter;
+    await this.ensureDir(adapter);
+    await adapter.write(_LocalQueueBackend.FILE, JSON.stringify(state, null, 2));
+  }
+  async ensureDir(adapter) {
+    if (this.dirEnsured)
+      return;
+    if (!await adapter.exists(_LocalQueueBackend.BASE_DIR)) {
+      await adapter.mkdir(_LocalQueueBackend.BASE_DIR);
+    }
+    this.dirEnsured = true;
+  }
+  async quarantineCorruptFile(adapter, path, raw) {
+    try {
+      const quarantinePath = `${path}.corrupt.${Date.now()}.json`;
+      await adapter.write(quarantinePath, raw);
+      await adapter.remove(path);
+    } catch (e) {
+    }
+  }
+};
+var LocalQueueBackend = _LocalQueueBackend;
+LocalQueueBackend.BASE_DIR = ".obsidian/plugins/neurovox/queue";
+LocalQueueBackend.FILE = ".obsidian/plugins/neurovox/queue/local-queue.json";
+
+// src-rebuild/settings/SettingTab.ts
+var import_obsidian16 = require("obsidian");
+
+// src-rebuild/settings/accordions/ModelHookupAccordion.ts
+var import_obsidian13 = require("obsidian");
+
+// src-rebuild/settings/accordions/BaseAccordion.ts
+var import_obsidian12 = require("obsidian");
+var BaseAccordion = class {
+  constructor(containerEl, title, description = "") {
+    this.isOpen = false;
+    this.containerEl = containerEl;
+    this.accordionEl = this.containerEl.createDiv({ cls: "neurovox-accordion" });
+    this.headerEl = this.accordionEl.createDiv({ cls: "neurovox-accordion-header" });
+    const titleWrapper = this.headerEl.createDiv({ cls: "neurovox-accordion-title-wrapper" });
+    titleWrapper.createSpan({ text: title, cls: "neurovox-accordion-title" });
+    this.toggleIcon = this.headerEl.createSpan({ cls: "neurovox-accordion-toggle" });
+    this.updateToggleIcon();
+    if (description) {
+      const descriptionEl = this.accordionEl.createDiv({ cls: "neurovox-accordion-description" });
+      descriptionEl.createSpan({ text: description });
+    }
+    this.contentEl = this.accordionEl.createDiv({ cls: "neurovox-accordion-content" });
+    this.contentEl.style.display = "none";
+    this.headerEl.addEventListener("click", () => this.toggleAccordion());
+  }
+  toggleAccordion() {
+    this.isOpen = !this.isOpen;
+    this.contentEl.style.display = this.isOpen ? "block" : "none";
+    this.updateToggleIcon();
+    this.accordionEl.classList.toggle("neurovox-accordion-open", this.isOpen);
+  }
+  updateToggleIcon() {
+    this.toggleIcon.empty();
+    (0, import_obsidian12.setIcon)(this.toggleIcon, "chevron-right");
+    this.toggleIcon.classList.toggle("neurovox-accordion-icon-open", this.isOpen);
+  }
+  createSettingItem(name, desc) {
+    const setting = new import_obsidian12.Setting(this.contentEl);
+    setting.setName(name).setDesc(desc);
+    return setting;
+  }
+};
+
+// src-rebuild/settings/accordions/ModelHookupAccordion.ts
+var ModelHookupAccordion = class extends BaseAccordion {
+  constructor(containerEl, settings, getAdapter, plugin) {
+    super(
+      containerEl,
+      "\u{1F511} API Keys",
+      "Configure API keys for AI providers."
+    );
+    this.settings = settings;
+    this.getAdapter = getAdapter;
+    this.plugin = plugin;
+  }
+  setAccordions(recording, postProcessing) {
+    this.recordingAccordion = recording;
+    this.postProcessingAccordion = postProcessing;
+  }
+  async refreshAccordions() {
+    await Promise.all([
+      this.recordingAccordion.refresh(),
+      this.postProcessingAccordion.refresh()
+    ]);
+  }
+  render() {
+    const openaiSetting = new import_obsidian13.Setting(this.contentEl).setName("OpenAI API Key").setDesc("Enter your OpenAI API key").addText((text) => {
+      text.setPlaceholder("sk-...").setValue(this.settings.openaiApiKey);
+      text.inputEl.type = "password";
+      text.onChange(async (value) => {
+        const trimmedValue = value.trim();
+        this.settings.openaiApiKey = trimmedValue;
+        await this.plugin.saveSettings();
+        const adapter = this.getAdapter(
+          "openai"
+          /* OpenAI */
+        );
+        if (!adapter) {
+          return;
+        }
+        adapter.setApiKey(trimmedValue);
+        const isValid = await adapter.validateApiKey();
+        if (isValid) {
+          openaiSetting.setDesc("\u2705 API key validated successfully");
+          try {
+            await this.refreshAccordions();
+          } catch (error) {
+            openaiSetting.setDesc("\u2705 API key valid, but failed to update model lists");
+          }
+        } else {
+          openaiSetting.setDesc("\u274C Invalid API key. Please check your credentials.");
+        }
+      });
+    });
+    const groqSetting = new import_obsidian13.Setting(this.contentEl).setName("Groq API Key").setDesc("Enter your Groq API key").addText((text) => {
+      text.setPlaceholder("gsk_...").setValue(this.settings.groqApiKey);
+      text.inputEl.type = "password";
+      text.onChange(async (value) => {
+        const trimmedValue = value.trim();
+        this.settings.groqApiKey = trimmedValue;
+        await this.plugin.saveSettings();
+        const adapter = this.getAdapter(
+          "groq"
+          /* Groq */
+        );
+        if (!adapter) {
+          return;
+        }
+        adapter.setApiKey(trimmedValue);
+        const isValid = await adapter.validateApiKey();
+        if (isValid) {
+          groqSetting.setDesc("\u2705 API key validated successfully");
+          try {
+            await this.refreshAccordions();
+          } catch (error) {
+            groqSetting.setDesc("\u2705 API key valid, but failed to update model lists");
+          }
+        } else {
+          groqSetting.setDesc("\u274C Invalid API key. Please check your credentials.");
+        }
+      });
+    });
+    const deepgramSetting = new import_obsidian13.Setting(this.contentEl).setName("Deepgram API Key").setDesc("Enter your Deepgram API key").addText((text) => {
+      text.setPlaceholder("Enter your Deepgram API key...").setValue(this.settings.deepgramApiKey);
+      text.inputEl.type = "password";
+      text.onChange(async (value) => {
+        const trimmedValue = value.trim();
+        this.settings.deepgramApiKey = trimmedValue;
+        await this.plugin.saveSettings();
+        const adapter = this.getAdapter(
+          "deepgram"
+          /* Deepgram */
+        );
+        if (!adapter) {
+          return;
+        }
+        adapter.setApiKey(trimmedValue);
+        const isValid = await adapter.validateApiKey();
+        if (isValid) {
+          deepgramSetting.setDesc("\u2705 API key validated successfully");
+          try {
+            await this.refreshAccordions();
+          } catch (error) {
+            deepgramSetting.setDesc("\u2705 API key valid, but failed to update model lists");
+          }
+        } else {
+          deepgramSetting.setDesc("\u274C Invalid API key. Please check your credentials.");
+        }
+      });
+    });
+  }
+};
+
+// src-rebuild/settings/accordions/PostProcessingAccordion.ts
+var import_obsidian14 = require("obsidian");
+var PostProcessingAccordion = class extends BaseAccordion {
+  constructor(containerEl, settings, getAdapter, plugin) {
+    super(
+      containerEl,
+      "\u{1F4DD} Post-Processing",
+      "Configure AI post-processing preferences and customize the prompt template."
+    );
+    this.settings = settings;
+    this.getAdapter = getAdapter;
+    this.plugin = plugin;
+    this.modelDropdown = null;
+    this.modelSetting = null;
+    this.promptArea = null;
+    this.maxTokensSlider = null;
+    this.temperatureSlider = null;
+  }
+  async refresh() {
+    try {
+      if (!this.modelDropdown) {
+        return;
+      }
+      await this.setupModelDropdown(this.modelDropdown);
+      if (this.settings.postProcessingModel) {
+        await this.updateMaxTokensLimit(this.settings.postProcessingModel);
+      }
+    } catch (error) {
+      throw error;
+    }
+  }
+  render() {
+    this.addEnableToggle();
+    this.addModelSelection();
+    this.addPromptTemplate();
+    this.addSummaryFormat();
+    this.addMaxTokens();
+    this.addTemperatureControl();
+  }
+  addEnableToggle() {
+    new import_obsidian14.Setting(this.contentEl).setName("Enable AI Post-Processing").setDesc("Automatically generate AI post-processing after transcription").addToggle((toggle) => {
+      toggle.setValue(this.settings.generatePostProcessing).onChange(async (value) => {
+        this.settings.generatePostProcessing = value;
+        await this.plugin.saveSettings();
+      });
+    });
+  }
+  addModelSelection() {
+    if (this.modelSetting) {
+      this.modelSetting.settingEl.remove();
+    }
+    this.modelSetting = new import_obsidian14.Setting(this.contentEl).setName("Post-processing model").setDesc("Select the AI model for post-processing").addDropdown((dropdown) => {
+      this.modelDropdown = dropdown;
+      this.setupModelDropdown(dropdown);
+      dropdown.onChange(async (value) => {
+        this.settings.postProcessingModel = value;
+        const provider = this.getProviderFromModel(value);
+        if (provider) {
+          this.settings.postProcessingProvider = provider;
+          await this.plugin.saveSettings();
+        }
+        await this.updateMaxTokensLimit(value);
+      });
+    });
+  }
+  async setupModelDropdown(dropdown) {
+    dropdown.selectEl.empty();
+    let hasValidProvider = false;
+    for (const provider of [
+      "openai",
+      "groq"
+      /* Groq */
+    ]) {
+      const apiKey = this.settings[`${provider}ApiKey`];
+      if (apiKey) {
+        const models = AIModels[provider].filter((model) => model.category === "language");
+        if (models.length > 0) {
+          hasValidProvider = true;
+          const group = document.createElement("optgroup");
+          group.label = `${provider.toUpperCase()} Models`;
+          models.forEach((model) => {
+            const option = document.createElement("option");
+            option.value = model.id;
+            option.text = model.name;
+            group.appendChild(option);
+          });
+          dropdown.selectEl.appendChild(group);
+        }
+      }
+    }
+    if (!hasValidProvider) {
+      dropdown.addOption("none", "No API keys configured");
+      dropdown.setDisabled(true);
+      this.settings.postProcessingModel = "";
+    } else {
+      dropdown.setDisabled(false);
+      if (!this.settings.postProcessingModel) {
+        const firstOption = dropdown.selectEl.querySelector('option:not([value="none"])');
+        if (firstOption) {
+          const modelId = firstOption.value;
+          const provider = this.getProviderFromModel(modelId);
+          if (provider) {
+            this.settings.postProcessingProvider = provider;
+            this.settings.postProcessingModel = modelId;
+            dropdown.setValue(modelId);
+          }
+        }
+      } else {
+        dropdown.setValue(this.settings.postProcessingModel);
+      }
+    }
+    await this.plugin.saveSettings();
+  }
+  addPromptTemplate() {
+    new import_obsidian14.Setting(this.contentEl).setName("Post-processing template").setDesc("Customize the prompt used for generating summaries. Use {transcript} as a placeholder for the transcribed text.").addTextArea((text) => {
+      this.promptArea = text;
+      text.setPlaceholder("Please process the following transcript: {transcript}").setValue(this.settings.postProcessingPrompt).onChange(async (value) => {
+        this.settings.postProcessingPrompt = value;
+        await this.plugin.saveSettings();
+      });
+      text.inputEl.rows = 4;
+      text.inputEl.style.width = "100%";
+    });
+  }
+  addSummaryFormat() {
+    new import_obsidian14.Setting(this.contentEl).setName("Post-processing format").setDesc("Customize the post-processing callout format. Use {postProcessing} for the generated content").addTextArea((text) => {
+      text.setPlaceholder(">[!note]- Post-Processing\n>{postProcessing}").setValue(this.settings.postProcessingCalloutFormat).onChange(async (value) => {
+        this.settings.postProcessingCalloutFormat = value;
+        await this.plugin.saveSettings();
+      });
+      text.inputEl.rows = 4;
+      text.inputEl.style.width = "100%";
+    });
+  }
+  addMaxTokens() {
+    new import_obsidian14.Setting(this.contentEl).setName("Maximum post-processing length").setDesc("Set the maximum number of tokens for the post-processing output").addSlider((slider) => {
+      this.maxTokensSlider = slider;
+      slider.setLimits(100, 4096, 100).setValue(this.settings.postProcessingMaxTokens).setDynamicTooltip().onChange(async (value) => {
+        this.settings.postProcessingMaxTokens = value;
+        await this.plugin.saveSettings();
+      });
+    });
+  }
+  addTemperatureControl() {
+    new import_obsidian14.Setting(this.contentEl).setName("Post-processing creativity").setDesc("Adjust the creativity level of the post-processing (0 = more focused, 1 = more creative)").addSlider((slider) => {
+      this.temperatureSlider = slider;
+      slider.setLimits(0, 1, 0.1).setValue(this.settings.postProcessingTemperature).setDynamicTooltip().onChange(async (value) => {
+        this.settings.postProcessingTemperature = value;
+        await this.plugin.saveSettings();
+      });
+    });
+  }
+  getProviderFromModel(modelId) {
+    for (const [provider, models] of Object.entries(AIModels)) {
+      if (models.some((model) => model.id === modelId)) {
+        return provider;
+      }
+    }
+    return null;
+  }
+  async updateMaxTokensLimit(modelId) {
+    const model = getModelInfo(modelId);
+    const maxTokens = (model == null ? void 0 : model.maxTokens) || 1e3;
+    if (this.maxTokensSlider) {
+      this.maxTokensSlider.sliderEl.max = maxTokens.toString();
+      const currentValue = parseInt(this.maxTokensSlider.sliderEl.value);
+      if (currentValue > maxTokens) {
+        this.maxTokensSlider.setValue(maxTokens);
+        this.settings.postProcessingMaxTokens = maxTokens;
+        await this.plugin.saveSettings();
+      }
+    }
+  }
+};
+
+// src-rebuild/settings/accordions/RecordingAccordion.ts
+var import_obsidian15 = require("obsidian");
+var RecordingAccordion = class extends BaseAccordion {
+  constructor(containerEl, settings, getAdapter, plugin) {
+    super(containerEl, "\u{1F399} Recording", "Configure recording preferences and select a transcription model.");
+    this.settings = settings;
+    this.getAdapter = getAdapter;
+    this.plugin = plugin;
+    this.modelDropdown = null;
+    this.modelSetting = null;
+  }
+  render() {
+    this.createRecordingPathSetting();
+    this.createIphoneInboxPathSetting();
+    this.createTranscriptPathSetting();
+    this.createAudioQualitySetting();
+    this.createStreamingModeSetting();
+    this.createFloatingButtonSetting();
+    this.createMicButtonColorSetting();
+    this.createTranscriptionFormatSetting();
+    this.createTranscriptionModelSetting();
+    this.createSpeakerDiarizationSetting();
+    this.createDeepgramLanguageSettings();
+    this.createBatchChunkingSettings();
+  }
+  createTranscriptPathSetting() {
+    new import_obsidian15.Setting(this.contentEl).setName("Transcript path").setDesc("Specify the folder path to save transcripts relative to the vault root").addText((text) => {
+      text.setPlaceholder("Transcripts").setValue(this.settings.transcriptFolderPath).onChange(async (value) => {
+        this.settings.transcriptFolderPath = value.trim() || "Transcripts";
+        await this.plugin.saveSettings();
+      });
+    });
+  }
+  createRecordingPathSetting() {
+    new import_obsidian15.Setting(this.contentEl).setName("Recording path").setDesc("Specify the folder path to save recordings relative to the vault root").addText((text) => {
+      text.setPlaceholder("Recordings").setValue(this.settings.recordingFolderPath).onChange(async (value) => {
+        this.settings.recordingFolderPath = value.trim() || "Recordings";
+        await this.plugin.saveSettings();
+      });
+    });
+  }
+  createAudioQualitySetting() {
+    new import_obsidian15.Setting(this.contentEl).setName("Audio quality").setDesc("Set the recording quality (affects file size and clarity)").addDropdown((dropdown) => {
+      dropdown.addOption("low", "Voice optimized (smaller files)").addOption("medium", "CD quality (balanced)").addOption("high", "Enhanced quality (larger files)").setValue(this.settings.audioQuality).onChange(async (value) => {
+        this.settings.audioQuality = value;
+        await this.plugin.saveSettings();
+      });
+    });
+  }
+  createFloatingButtonSetting() {
+    const floatingBtnSetting = new import_obsidian15.Setting(this.contentEl).setName("Show floating button").setDesc("Show a floating microphone button for quick recording").addToggle((toggle) => {
+      toggle.setValue(this.settings.showFloatingButton).onChange(async (value) => {
+        this.settings.showFloatingButton = value;
+        await this.plugin.saveSettings();
+        this.plugin.events.trigger("floating-button-setting-changed", value);
+        this.refresh();
+      });
+    });
+  }
+  async refresh() {
+    try {
+      if (!this.modelDropdown) {
+        return;
+      }
+      await this.setupModelDropdown(this.modelDropdown);
+    } catch (error) {
+      throw error;
+    }
+  }
+  createMicButtonColorSetting() {
+    new import_obsidian15.Setting(this.contentEl).setName("Mic button color").setDesc("Choose the color for the microphone buttons").addColorPicker((color) => {
+      color.setValue(this.settings.micButtonColor).onChange(async (value) => {
+        this.settings.micButtonColor = value;
+        this.plugin.updateAllButtonColors();
+        await this.plugin.saveSettings();
+      });
+    });
+  }
+  createTranscriptionFormatSetting() {
+    new import_obsidian15.Setting(this.contentEl).setName("Transcription format").setDesc("Customize the transcription callout format. Use {audioPath} for audio file path and {transcription} for the transcribed text").addTextArea((text) => {
+      text.setPlaceholder(">[!info]- Transcription\n>![[{audioPath}]]\n>{transcription}").setValue(this.settings.transcriptionCalloutFormat).onChange(async (value) => {
+        this.settings.transcriptionCalloutFormat = value;
+        await this.plugin.saveSettings();
+      });
+      text.inputEl.rows = 4;
+      text.inputEl.style.width = "100%";
+    });
+  }
+  createTranscriptionModelSetting() {
+    if (this.modelSetting) {
+      this.modelSetting.settingEl.remove();
+    }
+    this.modelSetting = new import_obsidian15.Setting(this.contentEl).setName("Transcription model").setDesc("Select the AI model for transcription").addDropdown((dropdown) => {
+      this.modelDropdown = dropdown;
+      this.setupModelDropdown(dropdown);
+      dropdown.onChange(async (value) => {
+        this.settings.transcriptionModel = value;
+        const provider = this.getProviderFromModel(value);
+        if (provider) {
+          this.settings.transcriptionProvider = provider;
+          await this.plugin.saveSettings();
+        }
+      });
+    });
+  }
+  async setupModelDropdown(dropdown) {
+    dropdown.selectEl.empty();
+    let hasValidProvider = false;
+    for (const provider of [
+      "openai",
+      "groq",
+      "deepgram"
+      /* Deepgram */
+    ]) {
+      const apiKey = this.settings[`${provider}ApiKey`];
+      if (apiKey) {
+        const adapter = this.getAdapter(provider);
+        if (adapter) {
+          const models = adapter.getAvailableModels("transcription");
+          if (models.length > 0) {
+            hasValidProvider = true;
+            const group = document.createElement("optgroup");
+            group.label = `${provider.toUpperCase()} Models`;
+            models.forEach((model) => {
+              const option = document.createElement("option");
+              option.value = model.id;
+              option.text = `${model.name}`;
+              group.appendChild(option);
+            });
+            dropdown.selectEl.appendChild(group);
+          }
+        }
+      }
+    }
+    if (!hasValidProvider) {
+      dropdown.addOption("none", "No API keys configured");
+      dropdown.setDisabled(true);
+      this.settings.transcriptionModel = "";
+    } else {
+      dropdown.setDisabled(false);
+      if (!this.settings.transcriptionModel || !this.getProviderFromModel(this.settings.transcriptionModel)) {
+        const firstOption = dropdown.selectEl.querySelector('option:not([value="none"])');
+        if (firstOption) {
+          const modelId = firstOption.value;
+          const provider = this.getProviderFromModel(modelId);
+          if (provider) {
+            this.settings.transcriptionProvider = provider;
+            this.settings.transcriptionModel = modelId;
+            dropdown.setValue(modelId);
+            await this.plugin.saveSettings();
+          }
+        }
+      } else {
+        dropdown.setValue(this.settings.transcriptionModel);
+      }
+    }
+    await this.plugin.saveSettings();
+  }
+  createSpeakerDiarizationSetting() {
+    new import_obsidian15.Setting(this.contentEl).setName("Enable speaker diarization").setDesc("For Deepgram transcription, label lines by speaker (Speaker 1, Speaker 2, etc.)").addToggle((toggle) => {
+      toggle.setValue(this.settings.enableSpeakerDiarization).onChange(async (value) => {
+        this.settings.enableSpeakerDiarization = value;
+        await this.plugin.saveSettings();
+      });
+    });
+  }
+  createIphoneInboxPathSetting() {
+    new import_obsidian15.Setting(this.contentEl).setName("iPhone inbox path").setDesc("Folder used for iPhone Voice Memos shared via Files. Latest file can be transcribed with a command.").addText((text) => {
+      text.setPlaceholder("Recordings/Inbox").setValue(this.settings.iphoneInboxFolderPath).onChange(async (value) => {
+        this.settings.iphoneInboxFolderPath = value.trim() || "Recordings/Inbox";
+        await this.plugin.saveSettings();
+      });
+    });
+  }
+  createStreamingModeSetting() {
+    new import_obsidian15.Setting(this.contentEl).setName("Enable streaming mode").setDesc("Process recording in chunks during capture for better long-session reliability").addToggle((toggle) => {
+      toggle.setValue(this.settings.streamingMode).onChange(async (value) => {
+        this.settings.streamingMode = value;
+        await this.plugin.saveSettings();
+      });
+    });
+    new import_obsidian15.Setting(this.contentEl).setName("Use expandable floating recorder").setDesc("Expand the floating mic into a non-blocking recorder panel instead of opening a modal").addToggle((toggle) => {
+      toggle.setValue(this.settings.useExpandableFloatingRecorder).onChange(async (value) => {
+        this.settings.useExpandableFloatingRecorder = value;
+        await this.plugin.saveSettings();
+      });
+    });
+  }
+  createDeepgramLanguageSettings() {
+    new import_obsidian15.Setting(this.contentEl).setName("Deepgram language auto-detect").setDesc("Enable auto detection for mixed Hindi-English audio").addToggle((toggle) => {
+      toggle.setValue(this.settings.deepgramDetectLanguage).onChange(async (value) => {
+        this.settings.deepgramDetectLanguage = value;
+        await this.plugin.saveSettings();
+      });
+    });
+    new import_obsidian15.Setting(this.contentEl).setName("Deepgram language hints").setDesc("Comma-separated language hints, e.g. en,hi").addText((text) => {
+      text.setPlaceholder("en,hi").setValue(this.settings.deepgramLanguageHints).onChange(async (value) => {
+        this.settings.deepgramLanguageHints = value.trim() || "en,hi";
+        await this.plugin.saveSettings();
+      });
+    });
+    new import_obsidian15.Setting(this.contentEl).setName("Force Roman script output").setDesc("Convert Hindi Devanagari transcript text to roman letters").addToggle((toggle) => {
+      toggle.setValue(this.settings.forceRomanizedOutput).onChange(async (value) => {
+        this.settings.forceRomanizedOutput = value;
+        await this.plugin.saveSettings();
+      });
+    });
+    new import_obsidian15.Setting(this.contentEl).setName("Live diarization profile").setDesc("Tune Deepgram speaker-change stability vs latency in live mode").addDropdown((dropdown) => {
+      dropdown.addOption("accuracy_first", "Accuracy first (recommended)").addOption("balanced", "Balanced").addOption("low_latency", "Low latency").setValue(this.settings.deepgramLiveDiarizationProfile).onChange(async (value) => {
+        if (value !== "accuracy_first" && value !== "balanced" && value !== "low_latency") {
+          return;
+        }
+        this.settings.deepgramLiveDiarizationProfile = value;
+        await this.plugin.saveSettings();
+      });
+    });
+    new import_obsidian15.Setting(this.contentEl).setName("Show live chunks in note").setDesc("Display chunk-by-chunk live transcript in a temporary in-progress block").addToggle((toggle) => {
+      toggle.setValue(this.settings.showLiveChunkPreviewInNote).onChange(async (value) => {
+        this.settings.showLiveChunkPreviewInNote = value;
+        await this.plugin.saveSettings();
+      });
+    });
+    new import_obsidian15.Setting(this.contentEl).setName("Save live recording audio").setDesc("When enabled, live transcription also saves the full recording audio file locally").addToggle((toggle) => {
+      toggle.setValue(this.settings.saveLiveRecordingAudio).onChange(async (value) => {
+        this.settings.saveLiveRecordingAudio = value;
+        await this.plugin.saveSettings();
+      });
+    });
+    new import_obsidian15.Setting(this.contentEl).setName("Allow partial live finalize").setDesc("If some chunks fail, keep partial live transcript with a warning instead of hard fail").addToggle((toggle) => {
+      toggle.setValue(this.settings.allowPartialOnStreamFinalizeFailure).onChange(async (value) => {
+        this.settings.allowPartialOnStreamFinalizeFailure = value;
+        await this.plugin.saveSettings();
+      });
+    });
+    new import_obsidian15.Setting(this.contentEl).setName("Enable stream transport fallback").setDesc("If repeated chunk 400 errors occur, auto-fallback to safer WAV chunk transport").addToggle((toggle) => {
+      toggle.setValue(this.settings.streamTransportFallbackEnabled).onChange(async (value) => {
+        this.settings.streamTransportFallbackEnabled = value;
+        await this.plugin.saveSettings();
+      });
+    });
+  }
+  createBatchChunkingSettings() {
+    new import_obsidian15.Setting(this.contentEl).setName("Chunk large uploaded files").setDesc("Automatically split large uploaded audio files into queue-backed chunks").addToggle((toggle) => {
+      toggle.setValue(this.settings.enableBatchChunkingForUploads).onChange(async (value) => {
+        this.settings.enableBatchChunkingForUploads = value;
+        await this.plugin.saveSettings();
+      });
+    });
+    new import_obsidian15.Setting(this.contentEl).setName("Chunking threshold (MB)").setDesc("Uploaded files above this size use chunked batch transcription").addText((text) => {
+      text.setPlaceholder("25").setValue(String(this.settings.batchChunkThresholdMB)).onChange(async (value) => {
+        const parsed = Number(value);
+        this.settings.batchChunkThresholdMB = Number.isFinite(parsed) ? Math.min(512, Math.max(5, Math.round(parsed))) : 25;
+        await this.plugin.saveSettings();
+      });
+    });
+    new import_obsidian15.Setting(this.contentEl).setName("Chunk duration (seconds)").setDesc("Target duration for each uploaded-file chunk").addText((text) => {
+      text.setPlaceholder("360").setValue(String(this.settings.batchChunkDurationSec)).onChange(async (value) => {
+        const parsed = Number(value);
+        this.settings.batchChunkDurationSec = Number.isFinite(parsed) ? Math.min(1800, Math.max(30, Math.round(parsed))) : 360;
+        await this.plugin.saveSettings();
+      });
+    });
+    new import_obsidian15.Setting(this.contentEl).setName("Chunk overlap (seconds)").setDesc("Small overlap improves continuity at chunk boundaries").addText((text) => {
+      text.setPlaceholder("2").setValue(String(this.settings.batchChunkOverlapSec)).onChange(async (value) => {
+        const parsed = Number(value);
+        this.settings.batchChunkOverlapSec = Number.isFinite(parsed) ? Math.min(30, Math.max(0, Math.round(parsed))) : 2;
+        await this.plugin.saveSettings();
+      });
+    });
+    new import_obsidian15.Setting(this.contentEl).setName("Allow single-request override").setDesc("Show advanced troubleshooting option to force non-chunked upload mode").addToggle((toggle) => {
+      toggle.setValue(this.settings.allowSingleRequestOverride).onChange(async (value) => {
+        this.settings.allowSingleRequestOverride = value;
+        await this.plugin.saveSettings();
+      });
+    });
+    new import_obsidian15.Setting(this.contentEl).setName("Backend base URL").setDesc("Backend API root used for long-upload orchestration, e.g. https://api.example.com").addText((text) => {
+      text.setPlaceholder("https://api.example.com").setValue(this.settings.backendBaseUrl).onChange(async (value) => {
+        this.settings.backendBaseUrl = value.trim();
+        await this.plugin.saveSettings();
+      });
+    });
+    new import_obsidian15.Setting(this.contentEl).setName("Backend API key (optional)").setDesc("Bearer token for backend orchestration endpoints").addText((text) => {
+      text.setPlaceholder("Optional bearer token").setValue(this.settings.backendApiKey).onChange(async (value) => {
+        this.settings.backendApiKey = value.trim();
+        await this.plugin.saveSettings();
+      });
+      text.inputEl.type = "password";
+    });
+    new import_obsidian15.Setting(this.contentEl).setName("Backend poll interval (ms)").setDesc("How often NeuroVox polls backend job status").addText((text) => {
+      text.setPlaceholder("3000").setValue(String(this.settings.backendPollIntervalMs)).onChange(async (value) => {
+        const parsed = Number(value);
+        this.settings.backendPollIntervalMs = Number.isFinite(parsed) ? Math.min(3e4, Math.max(1e3, Math.round(parsed))) : 3e3;
+        await this.plugin.saveSettings();
+      });
+    });
+    new import_obsidian15.Setting(this.contentEl).setName("Backend job timeout (seconds)").setDesc("Maximum wait time for backend processing before timeout").addText((text) => {
+      text.setPlaceholder("1800").setValue(String(this.settings.backendJobTimeoutSec)).onChange(async (value) => {
+        const parsed = Number(value);
+        this.settings.backendJobTimeoutSec = Number.isFinite(parsed) ? Math.min(14400, Math.max(60, Math.round(parsed))) : 1800;
+        await this.plugin.saveSettings();
+      });
+    });
+  }
+  getProviderFromModel(modelId) {
+    for (const [provider, models] of Object.entries(AIModels)) {
+      if (models.some((model) => model.id === modelId)) {
+        return provider;
+      }
+    }
+    return null;
+  }
+};
+
+// src-rebuild/settings/SettingTab.ts
+var NeuroVoxSettingTab = class extends import_obsidian16.PluginSettingTab {
+  constructor(app, plugin) {
+    super(app, plugin);
+    this.recordingAccordion = null;
+    this.postProcessingAccordion = null;
+    this.plugin = plugin;
+  }
+  display() {
+    const { containerEl } = this;
+    containerEl.empty();
+    const modelHookupContainer = containerEl.createDiv();
+    const recordingContainer = containerEl.createDiv();
+    const postProcessingContainer = containerEl.createDiv();
+    this.recordingAccordion = new RecordingAccordion(
+      recordingContainer,
+      this.plugin.settings,
+      (provider) => this.plugin.aiAdapters.get(provider),
+      this.plugin
+    );
+    this.postProcessingAccordion = new PostProcessingAccordion(
+      postProcessingContainer,
+      this.plugin.settings,
+      (provider) => this.plugin.aiAdapters.get(provider),
+      this.plugin
+    );
+    const modelHookupAccordion = new ModelHookupAccordion(
+      modelHookupContainer,
+      this.plugin.settings,
+      (provider) => this.plugin.aiAdapters.get(provider),
+      this.plugin
+    );
+    modelHookupAccordion.setAccordions(this.recordingAccordion, this.postProcessingAccordion);
+    modelHookupAccordion.render();
+    this.recordingAccordion.render();
+    this.postProcessingAccordion.render();
+  }
+  getRecordingAccordion() {
+    return this.recordingAccordion;
+  }
+  getPostProcessingAccordion() {
+    return this.postProcessingAccordion;
+  }
+};
+
+// src-rebuild/adapters/OpenAIAdapter.ts
+var OpenAIAdapter = class extends AIAdapter {
+  constructor(settings) {
+    super(
+      settings,
+      "openai"
+      /* OpenAI */
+    );
+    this.apiKey = "";
+  }
+  getApiKey() {
+    return this.apiKey;
+  }
+  setApiKeyInternal(key) {
+    this.apiKey = key;
+  }
+  getApiBaseUrl() {
+    return "https://api.openai.com/v1";
+  }
+  getTextGenerationEndpoint() {
+    return "/chat/completions";
+  }
+  getTranscriptionEndpoint() {
+    return "/audio/transcriptions";
+  }
+  async validateApiKeyImpl() {
+    if (!this.apiKey) {
+      return false;
+    }
+    try {
+      await this.makeAPIRequest(
+        `${this.getApiBaseUrl()}/chat/completions`,
+        "POST",
+        {
+          "Content-Type": "application/json"
+        },
+        JSON.stringify({
+          model: "gpt-4o-mini",
+          messages: [{ role: "user", content: "test" }],
+          max_tokens: 1
+        })
+      );
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+  parseTextGenerationResponse(response) {
+    var _a, _b, _c;
+    if ((_c = (_b = (_a = response == null ? void 0 : response.choices) == null ? void 0 : _a[0]) == null ? void 0 : _b.message) == null ? void 0 : _c.content) {
+      return response.choices[0].message.content;
+    }
+    throw new Error("Invalid response format from OpenAI");
+  }
+  parseTranscriptionResponse(response) {
+    if (response == null ? void 0 : response.text) {
+      return response.text;
+    }
+    throw new Error("Invalid transcription response format from OpenAI");
+  }
+};
+
+// src-rebuild/utils/RecordingProcessor.ts
+var import_obsidian19 = require("obsidian");
+
+// src-rebuild/utils/audio/AudioChunker.ts
+var AudioChunker = class {
+  constructor(sampleRate, bitRate, mimeType = "audio/webm; codecs=opus") {
+    this.sampleRate = sampleRate;
+    this.bitRate = bitRate;
+    this.mimeType = mimeType;
+    this.MAX_AUDIO_SIZE_MB = 25;
+    this.MAX_AUDIO_SIZE_BYTES = this.MAX_AUDIO_SIZE_MB * 1024 * 1024;
+    this.CHUNK_OVERLAP_SECONDS = 2;
+  }
+  /**
+   * Splits an audio blob into smaller chunks if necessary
+   * @param audioBlob The audio blob to potentially split
+   * @returns Array of audio blobs (single item if no split needed)
+   */
+  async splitAudioBlob(audioBlob) {
+    if (audioBlob.size <= this.MAX_AUDIO_SIZE_BYTES) {
+      return [audioBlob];
+    }
+    try {
+      const chunks = [];
+      const chunkSize = this.MAX_AUDIO_SIZE_BYTES;
+      let offset = 0;
+      while (offset < audioBlob.size) {
+        const end = Math.min(offset + chunkSize, audioBlob.size);
+        const chunk = audioBlob.slice(offset, end);
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)({
+          sampleRate: this.sampleRate
+        });
+        const arrayBuffer = await chunk.arrayBuffer();
+        const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+        const processedChunk = await this.bufferToBlob(audioContext, audioBuffer, audioBlob.type);
+        chunks.push(processedChunk);
+        await audioContext.close();
+        offset += chunkSize;
+      }
+      return chunks;
+    } catch (error) {
+      return [audioBlob];
+    }
+  }
+  /**
+   * Concatenates multiple audio chunks back into a single blob
+   * @param chunks Array of audio blobs to combine
+   * @returns Single concatenated audio blob
+   */
+  async concatenateAudioChunks(chunks) {
+    try {
+      const firstChunk = chunks[0];
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)({
+        sampleRate: this.sampleRate
+      });
+      const processedChunks = [];
+      for (const chunk of chunks) {
+        const processedChunk = await this.processChunk(chunk, firstChunk.type, audioContext);
+        processedChunks.push(processedChunk);
+      }
+      await audioContext.close();
+      return new Blob(processedChunks, { type: firstChunk.type });
+    } catch (error) {
+      return chunks[0];
+    }
+  }
+  /**
+   * Creates a chunk from the audio buffer
+   */
+  async createChunk(audioContext, audioBuffer, startTime, endTime, mimeType) {
+    const chunkBuffer = audioContext.createBuffer(
+      audioBuffer.numberOfChannels,
+      Math.ceil((endTime - startTime) * audioBuffer.sampleRate),
+      audioBuffer.sampleRate
+    );
+    for (let channel = 0; channel < audioBuffer.numberOfChannels; channel++) {
+      const channelData = audioBuffer.getChannelData(channel);
+      const chunkData = chunkBuffer.getChannelData(channel);
+      const startSample = Math.floor(startTime * audioBuffer.sampleRate);
+      const endSample = Math.ceil(endTime * audioBuffer.sampleRate);
+      chunkData.set(channelData.subarray(startSample, endSample));
+    }
+    return await this.bufferToBlob(audioContext, chunkBuffer, mimeType);
+  }
+  /**
+   * Processes a single chunk for concatenation
+   */
+  async processChunk(chunk, mimeType, audioContext) {
+    try {
+      const arrayBuffer = await chunk.arrayBuffer();
+      const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+      return await this.bufferToBlob(audioContext, audioBuffer, mimeType);
+    } catch (error) {
+      return chunk;
+    }
+  }
+  /**
+   * Converts an AudioBuffer to a Blob using MediaRecorder
+   */
+  async bufferToBlob(audioContext, buffer, mimeType) {
+    if (!buffer.duration || !Number.isFinite(buffer.duration) || buffer.duration <= 0) {
+      throw new Error("bufferToBlob: invalid buffer duration");
+    }
+    return new Promise((resolve, reject) => {
+      const source = audioContext.createBufferSource();
+      source.buffer = buffer;
+      const destination = audioContext.createMediaStreamDestination();
+      source.connect(destination);
+      const recorder = new MediaRecorder(destination.stream, {
+        mimeType: this.mimeType,
+        bitsPerSecond: this.bitRate
+      });
+      const chunks = [];
+      let settled = false;
+      const safetyTimeout = setTimeout(() => {
+        if (!settled) {
+          settled = true;
+          reject(new Error("bufferToBlob: timed out waiting for MediaRecorder"));
+        }
+      }, buffer.duration * 1e3 + 1e4);
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0)
+          chunks.push(e.data);
+      };
+      recorder.onerror = (e) => {
+        if (!settled) {
+          settled = true;
+          clearTimeout(safetyTimeout);
+          reject(new Error("bufferToBlob: MediaRecorder error"));
+        }
+      };
+      recorder.onstop = () => {
+        if (!settled) {
+          settled = true;
+          clearTimeout(safetyTimeout);
+          resolve(new Blob(chunks, { type: mimeType }));
+        }
+      };
+      recorder.start();
+      source.start(0);
+      setTimeout(() => {
+        try {
+          source.stop();
+        } catch (e) {
+        }
+        try {
+          recorder.stop();
+        } catch (e) {
+        }
+      }, buffer.duration * 1e3);
+    });
+  }
+};
+
+// src-rebuild/utils/FileUtils.ts
 var import_obsidian17 = require("obsidian");
-var _TimerModal = class extends import_obsidian17.Modal {
+async function ensureDirectoryExists(app, folderPath) {
+  const normalizedPath = folderPath.replace(/^\/+|\/+$/g, "");
+  if (!normalizedPath) {
+    return "";
+  }
+  const parts = normalizedPath.split("/");
+  let currentPath = "";
+  for (const part of parts) {
+    currentPath = currentPath ? `${currentPath}/${part}` : part;
+    const folder = app.vault.getAbstractFileByPath(currentPath);
+    if (!folder) {
+      await app.vault.createFolder(currentPath);
+    } else if (!(folder instanceof import_obsidian17.TFolder)) {
+      throw new Error(`Path "${currentPath}" exists but is not a folder`);
+    }
+  }
+  return normalizedPath;
+}
+async function saveAudioFile(app, audioBlob, fileName, settings) {
+  const folderPath = settings.recordingFolderPath || "";
+  const normalizedFolder = await ensureDirectoryExists(app, folderPath);
+  const filePath = normalizedFolder ? `${normalizedFolder}/${fileName}` : fileName;
+  const arrayBuffer = await audioBlob.arrayBuffer();
+  const uint8Array = new Uint8Array(arrayBuffer);
+  const file = await app.vault.createBinary(filePath, uint8Array);
+  if (!file) {
+    throw new Error(`Failed to create audio file: ${filePath}`);
+  }
+  return file;
+}
+
+// src-rebuild/utils/audio/AudioFileManager.ts
+var AudioFileManager = class {
+  constructor(plugin) {
+    this.plugin = plugin;
+  }
+  /**
+   * Saves an audio blob to the configured recordings folder with a unique name
+   * @param audioBlob The audio data to save
+   * @returns Path to the saved audio file
+   */
+  async saveAudioFile(audioBlob) {
+    const folderPath = this.plugin.settings.recordingFolderPath || "";
+    await ensureDirectoryExists(this.plugin.app, folderPath);
+    const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+    const baseFileName = `recording-${timestamp}.webm`;
+    let fileName = baseFileName;
+    let filePath = folderPath ? `${folderPath}/${fileName}` : fileName;
+    let count = 1;
+    while (await this.plugin.app.vault.adapter.exists(filePath)) {
+      fileName = `recording-${timestamp}-${count}.webm`;
+      filePath = folderPath ? `${folderPath}/${fileName}` : fileName;
+      count++;
+    }
+    try {
+      const file = await saveAudioFile(
+        this.plugin.app,
+        audioBlob,
+        fileName,
+        this.plugin.settings
+      );
+      if (!file) {
+        throw new Error("Failed to create audio file");
+      }
+      return file.path;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unknown error";
+      throw new Error(`Failed to save audio file: ${message}`);
+    }
+  }
+  /**
+   * Removes temporary chunk files after processing is complete
+   * @param paths Array of file paths to remove
+   */
+  async removeTemporaryFiles(paths) {
+    for (const path of paths) {
+      try {
+        await this.plugin.app.vault.adapter.remove(path);
+      } catch (error) {
+      }
+    }
+  }
+};
+
+// src-rebuild/utils/audio/AudioProcessor.ts
+var AudioProcessor = class {
+  constructor(plugin) {
+    this.plugin = plugin;
+    this.MAX_AUDIO_SIZE_BYTES = 25 * 1024 * 1024;
+    this.SAMPLE_RATES = {
+      [
+        "low"
+        /* Low */
+      ]: 22050,
+      // Voice optimized (smaller files)
+      [
+        "medium"
+        /* Medium */
+      ]: 32e3,
+      // High quality voice (balanced)
+      [
+        "high"
+        /* High */
+      ]: 44100
+      // CD quality (larger files)
+    };
+    this.BIT_RATES = {
+      [
+        "low"
+        /* Low */
+      ]: 64e3,
+      // Good for voice
+      [
+        "medium"
+        /* Medium */
+      ]: 128e3,
+      // Excellent voice quality
+      [
+        "high"
+        /* High */
+      ]: 192e3
+      // Studio quality
+    };
+    this.audioChunker = new AudioChunker(
+      this.getSampleRate(),
+      this.getBitRate(),
+      "audio/webm; codecs=opus"
+    );
+    this.audioFileManager = new AudioFileManager(plugin);
+  }
+  /**
+   * Processes an audio blob, handling large files by chunking if necessary
+   * @param audioBlob The audio blob to process
+   * @param audioFilePath Optional path to save the audio file
+   * @returns Object containing paths to audio files and concatenated blob
+   */
+  async processAudio(audioBlob, audioFilePath) {
+    try {
+      const fileSizeMB = audioBlob.size / (1024 * 1024);
+      const provider = this.plugin.settings.transcriptionProvider;
+      if (this.canProviderHandleFile(provider, audioBlob.size)) {
+        const finalPath = audioFilePath || await this.audioFileManager.saveAudioFile(audioBlob);
+        return { finalPath, audioBlob };
+      } else {
+        throw new Error(this.getLargeFileErrorMessage(provider, fileSizeMB));
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unknown error";
+      throw new Error(`Failed to process audio: ${message}`);
+    }
+  }
+  /**
+   * Gets the sample rate based on the current audio quality setting
+   */
+  getSampleRate() {
+    return this.SAMPLE_RATES[this.plugin.settings.audioQuality] || this.SAMPLE_RATES[
+      "medium"
+      /* Medium */
+    ];
+  }
+  /**
+   * Gets the bit rate based on the current audio quality setting
+   */
+  getBitRate() {
+    return this.BIT_RATES[this.plugin.settings.audioQuality] || this.BIT_RATES[
+      "medium"
+      /* Medium */
+    ];
+  }
+  /**
+   * Checks if the provider can handle the given file size
+   */
+  canProviderHandleFile(provider, fileSize) {
+    const MAX_SIZE_25MB = 25 * 1024 * 1024;
+    const MAX_SIZE_2GB = 2 * 1024 * 1024 * 1024;
+    switch (provider) {
+      case "deepgram":
+        return fileSize <= MAX_SIZE_2GB;
+      case "openai":
+      case "groq":
+        return fileSize <= MAX_SIZE_25MB;
+      default:
+        return fileSize <= MAX_SIZE_25MB;
+    }
+  }
+  /**
+   * Generates a helpful error message for files that are too large
+   */
+  getLargeFileErrorMessage(provider, fileSizeMB) {
+    const fileSize = fileSizeMB.toFixed(1);
+    switch (provider) {
+      case "openai":
+        return `File too large (${fileSize}MB) for OpenAI. Switch to Deepgram for large files.`;
+      case "groq":
+        return `File too large (${fileSize}MB) for Groq. Switch to Deepgram for large files.`;
+      case "deepgram":
+        return `File too large (${fileSize}MB). Split the audio file into smaller segments.`;
+      default:
+        return `File too large (${fileSize}MB). Switch to Deepgram for large files.`;
+    }
+  }
+};
+
+// src-rebuild/utils/backend/BackendBatchOrchestrationService.ts
+var import_obsidian18 = require("obsidian");
+
+// src-rebuild/utils/backend/BackendStatusMapper.ts
+var UI_RANK = {
+  creating: 0,
+  uploading: 1,
+  queued: 2,
+  processing: 3,
+  completed: 4,
+  failed: 4
+};
+function mapBackendToUiState(statusRaw, stageRaw) {
+  const status = (statusRaw || "").trim().toLowerCase();
+  const stage = (stageRaw || "").trim().toLowerCase();
+  const probe = `${status} ${stage}`;
+  if (status === "failed" || status === "error" || status === "canceled")
+    return "failed";
+  if (status === "completed" || status === "done" || status === "succeeded")
+    return "completed";
+  if (probe.includes("upload"))
+    return "uploading";
+  if (probe.includes("creat"))
+    return "creating";
+  if (probe.includes("queue"))
+    return "queued";
+  if (probe.includes("process") || probe.includes("provider"))
+    return "processing";
+  if (status === "created")
+    return "creating";
+  if (status === "uploaded")
+    return "uploading";
+  return "processing";
+}
+function clampMonotonicUiState(previous, next) {
+  if (!previous)
+    return next;
+  if (previous === "failed" || previous === "completed")
+    return previous;
+  if (next === "failed" || next === "completed")
+    return next;
+  return UI_RANK[next] >= UI_RANK[previous] ? next : previous;
+}
+function formatUiStateLabel(state) {
+  switch (state) {
+    case "creating":
+      return "Creating job";
+    case "uploading":
+      return "Uploading source";
+    case "queued":
+      return "Queued";
+    case "processing":
+      return "Processing";
+    case "completed":
+      return "Completed";
+    case "failed":
+      return "Failed";
+    default:
+      return "Processing";
+  }
+}
+
+// src-rebuild/utils/backend/BackendCompletionGate.ts
+function isCompletedStatus(statusRaw) {
+  const status = (statusRaw || "").trim().toLowerCase();
+  return status === "completed" || status === "succeeded" || status === "done";
+}
+function isFailedTerminalStatus(statusRaw) {
+  const status = (statusRaw || "").trim().toLowerCase();
+  return status === "failed" || status === "error" || status === "canceled";
+}
+
+// src-rebuild/utils/backend/BackendBatchOrchestrationService.ts
+function validateBackendUrl(candidateUrl, backendBaseUrl) {
+  try {
+    const candidateOrigin = new URL(candidateUrl).origin;
+    const baseOrigin = new URL(backendBaseUrl).origin;
+    if (candidateOrigin !== baseOrigin) {
+      throw new Error(`Backend returned URL with unexpected origin: ${candidateOrigin} (expected ${baseOrigin})`);
+    }
+  } catch (e) {
+    if (e.message.includes("unexpected origin"))
+      throw e;
+    throw new Error(`Backend returned invalid URL: ${candidateUrl}`);
+  }
+}
+var _BackendBatchOrchestrationService = class {
+  constructor(plugin) {
+    this.plugin = plugin;
+  }
+  async transcribeLargeUpload(audioBlob, sourcePath, targetPath, logContext) {
+    const baseUrl = this.plugin.settings.backendBaseUrl.trim().replace(/\/+$/, "");
+    if (!baseUrl) {
+      throw new Error("Backend base URL is not configured.");
+    }
+    const createUrl = `${baseUrl}/api/v1/transcription/jobs`;
+    const createBody = {
+      sourceRef: sourcePath || null,
+      targetRef: targetPath,
+      provider: this.plugin.settings.transcriptionProvider,
+      model: this.plugin.settings.transcriptionModel,
+      mimeType: audioBlob.type || "application/octet-stream",
+      size: audioBlob.size,
+      options: {
+        deepgramDetectLanguage: this.plugin.settings.deepgramDetectLanguage,
+        deepgramLanguageHints: this.plugin.settings.deepgramLanguageHints,
+        enableSpeakerDiarization: this.plugin.settings.enableSpeakerDiarization,
+        forceRomanizedOutput: this.plugin.settings.forceRomanizedOutput
+      }
+    };
+    await RuntimeLogger.log(this.plugin, logContext, "backend_job_create", {
+      status: "started",
+      url: createUrl
+    });
+    const created = await this.requestJson(createUrl, "POST", createBody);
+    const jobId = (created.jobId || created.id || "").trim();
+    if (!jobId) {
+      throw new Error("Backend create job response missing job id.");
+    }
+    await RuntimeLogger.log(this.plugin, logContext, "backend_job_create", {
+      status: "success",
+      backendJobId: jobId
+    });
+    const uploadUrl = (created.uploadUrl || `${createUrl}/${encodeURIComponent(jobId)}/source`).trim();
+    const statusUrl = (created.statusUrl || `${createUrl}/${encodeURIComponent(jobId)}`).trim();
+    const startUrl = `${createUrl}/${encodeURIComponent(jobId)}/start`;
+    validateBackendUrl(statusUrl, baseUrl);
+    validateBackendUrl(startUrl, baseUrl);
+    await this.uploadSource(uploadUrl, audioBlob, logContext, jobId);
+    if (created.started !== true) {
+      await RuntimeLogger.log(this.plugin, logContext, "backend_job_start", {
+        status: "started",
+        backendJobId: jobId,
+        url: startUrl
+      });
+      await this.requestJson(startUrl, "POST", {});
+      await RuntimeLogger.log(this.plugin, logContext, "backend_job_start", {
+        status: "success",
+        backendJobId: jobId
+      });
+    }
+    const result = await this.pollForResult(statusUrl, created.resultUrl, jobId, logContext);
+    return result;
+  }
+  async uploadSource(uploadUrl, audioBlob, logContext, backendJobId) {
+    await RuntimeLogger.log(this.plugin, logContext, "backend_source_upload", {
+      status: "started",
+      backendJobId,
+      size: audioBlob.size,
+      mimeType: audioBlob.type || "application/octet-stream"
+    });
+    this.plugin.showProcessingStatus("Uploading source audio to backend");
+    const totalChunks = Math.max(
+      1,
+      Math.ceil(audioBlob.size / _BackendBatchOrchestrationService.CHUNK_SIZE_BYTES)
+    );
+    const mimeType = audioBlob.type || "application/octet-stream";
+    if (totalChunks === 1) {
+      const body = await audioBlob.arrayBuffer();
+      await (0, import_obsidian18.requestUrl)({
+        url: uploadUrl,
+        method: "PUT",
+        headers: this.buildHeaders({
+          "Content-Type": mimeType
+        }),
+        body,
+        throw: true
+      });
+    } else {
+      for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex += 1) {
+        const start = chunkIndex * _BackendBatchOrchestrationService.CHUNK_SIZE_BYTES;
+        const end = Math.min(
+          audioBlob.size,
+          start + _BackendBatchOrchestrationService.CHUNK_SIZE_BYTES
+        );
+        const chunk = audioBlob.slice(start, end, mimeType);
+        const chunkBody = await chunk.arrayBuffer();
+        const isFinalChunk = chunkIndex === totalChunks - 1;
+        this.plugin.showProcessingStatus(
+          `Uploading source audio to backend (${chunkIndex + 1}/${totalChunks})`
+        );
+        await (0, import_obsidian18.requestUrl)({
+          url: uploadUrl,
+          method: "PUT",
+          headers: this.buildHeaders({
+            "Content-Type": mimeType,
+            "X-NeuroVox-Chunk-Index": String(chunkIndex),
+            "X-NeuroVox-Chunk-Total": String(totalChunks),
+            "X-NeuroVox-Chunk-Final": isFinalChunk ? "true" : "false"
+          }),
+          body: chunkBody,
+          throw: true
+        });
+      }
+    }
+    await RuntimeLogger.log(this.plugin, logContext, "backend_source_upload", {
+      status: "success",
+      backendJobId,
+      chunkCount: totalChunks
+    });
+  }
+  async pollForResult(statusUrl, defaultResultUrl, backendJobId, logContext) {
+    const timeoutMs = this.plugin.settings.backendJobTimeoutSec * 1e3;
+    const pollMs = this.plugin.settings.backendPollIntervalMs;
+    const startedAt = Date.now();
+    let lastUiState = null;
+    let consecutiveErrors = 0;
+    let currentPollMs = pollMs;
+    while (Date.now() - startedAt < timeoutMs) {
+      let status;
+      try {
+        status = await this.requestJson(statusUrl, "GET");
+        consecutiveErrors = 0;
+      } catch (pollError) {
+        consecutiveErrors += 1;
+        console.warn(`[NeuroVox] Poll request failed (${consecutiveErrors}/5):`, pollError);
+        if (consecutiveErrors >= 5) {
+          throw new Error(`Backend poll failed 5 consecutive times. Last error: ${pollError instanceof Error ? pollError.message : String(pollError)}`);
+        }
+        await this.sleep(currentPollMs);
+        currentPollMs = Math.min(currentPollMs * 1.5, pollMs * 4);
+        continue;
+      }
+      const normalized = (status.status || "").toLowerCase();
+      const stage = status.stage || normalized || "processing";
+      const rawUiState = mapBackendToUiState(status.status, status.stage);
+      const uiState = clampMonotonicUiState(lastUiState, rawUiState);
+      if (uiState !== lastUiState) {
+        currentPollMs = pollMs;
+      }
+      lastUiState = uiState;
+      this.plugin.showProcessingStatus(`Backend: ${formatUiStateLabel(uiState)}`);
+      await RuntimeLogger.log(this.plugin, logContext, "backend_job_poll", {
+        status: "started",
+        backendJobId,
+        stage,
+        uiState,
+        progress: typeof status.progress === "number" ? status.progress : void 0
+      });
+      if (isCompletedStatus(normalized)) {
+        const inlineTranscript = (status.transcription || "").trim();
+        if (inlineTranscript.length > 0) {
+          await RuntimeLogger.log(this.plugin, logContext, "backend_job_complete", {
+            status: "success",
+            backendJobId,
+            transcriptionChars: inlineTranscript.length
+          });
+          return {
+            transcription: inlineTranscript,
+            postProcessing: status.postProcessing
+          };
+        }
+        const resultUrl = (status.resultUrl || defaultResultUrl || "").trim();
+        if (!resultUrl) {
+          throw new Error("Backend job completed but no result payload was provided.");
+        }
+        const result = await this.requestJson(resultUrl, "GET");
+        const transcript = (result.transcription || "").trim();
+        if (!transcript) {
+          throw new Error("Backend result payload missing transcription text.");
+        }
+        await RuntimeLogger.log(this.plugin, logContext, "backend_job_complete", {
+          status: "success",
+          backendJobId,
+          transcriptionChars: transcript.length
+        });
+        return {
+          transcription: transcript,
+          postProcessing: result.postProcessing
+        };
+      }
+      if (isFailedTerminalStatus(normalized)) {
+        const message = status.message || `Backend job ended with status "${normalized}"`;
+        await RuntimeLogger.log(this.plugin, logContext, "backend_job_complete", {
+          status: "failed",
+          backendJobId,
+          reason: message
+        });
+        throw new Error(message);
+      }
+      await this.sleep(currentPollMs);
+      currentPollMs = Math.min(currentPollMs * 1.5, pollMs * 4);
+    }
+    throw new Error(
+      `Backend job timed out after ${this.plugin.settings.backendJobTimeoutSec}s`
+    );
+  }
+  async requestJson(url, method, body) {
+    const response = await (0, import_obsidian18.requestUrl)({
+      url,
+      method,
+      headers: this.buildHeaders({
+        "Content-Type": "application/json"
+      }),
+      body: body !== void 0 ? JSON.stringify(body) : void 0,
+      throw: true
+    });
+    if (!response.json) {
+      throw new Error(`Backend returned invalid JSON response for ${method} ${url}`);
+    }
+    return response.json;
+  }
+  buildHeaders(extra) {
+    const headers = { ...extra };
+    const token = this.plugin.settings.backendApiKey.trim();
+    if (token.length > 0) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+    return headers;
+  }
+  sleep(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+};
+var BackendBatchOrchestrationService = _BackendBatchOrchestrationService;
+BackendBatchOrchestrationService.CHUNK_SIZE_BYTES = 8 * 1024 * 1024;
+
+// src-rebuild/utils/routing/BatchRoutingPolicy.ts
+var BatchRoutingPolicy = class {
+  constructor(settings) {
+    this.settings = settings;
+  }
+  decide(sourcePath, sizeBytes) {
+    const sourceType = this.detectSourceType(sourcePath);
+    const thresholdBytes = this.settings.batchChunkThresholdMB * 1024 * 1024;
+    const isLargeUpload = sourceType === "uploaded" && sizeBytes > thresholdBytes;
+    const backendEnabled = this.settings.enableBackendOrchestration;
+    const prefersBackend = this.settings.preferBackendForLargeUploads;
+    if (sourceType === "uploaded") {
+      return {
+        route: "backend_batch",
+        preferredRoute: "backend_batch",
+        sourceType,
+        isLargeUpload,
+        reason: backendEnabled ? "uploaded_cloud_route_enforced" : "uploaded_cloud_route_enforced_backend_disabled",
+        backendEnabled
+      };
+    }
+    return {
+      route: "direct_batch",
+      preferredRoute: "direct_batch",
+      sourceType,
+      isLargeUpload,
+      reason: isLargeUpload ? "large_upload_backend_not_preferred" : "default_direct_batch",
+      backendEnabled
+    };
+  }
+  detectSourceType(sourcePath) {
+    if (!sourcePath)
+      return "unknown";
+    const normalized = sourcePath.toLowerCase();
+    const recordingRoot = this.settings.recordingFolderPath.trim().toLowerCase();
+    if (recordingRoot.length > 0 && normalized.startsWith(`${recordingRoot}/`)) {
+      return "recorded";
+    }
+    return "uploaded";
+  }
+};
+
+// src-rebuild/utils/state/ProcessingState.ts
+var ProcessingState = class {
+  constructor() {
+    this.isProcessing = false;
+    this.currentStep = null;
+    this.steps = [];
+    this.startTime = Date.now();
+  }
+  /**
+   * Records the start of a processing step
+   */
+  startStep(name) {
+    this.currentStep = { name, startTime: performance.now() };
+    this.steps.push(this.currentStep);
+  }
+  /**
+   * Records the completion of the current step
+   */
+  completeStep() {
+    if (this.currentStep) {
+      this.currentStep.endTime = performance.now();
+    }
+  }
+  /**
+   * Returns timings for all completed steps
+   */
+  getTimings() {
+    return Object.fromEntries(
+      this.steps.filter((step) => step.endTime).map((step) => [
+        step.name,
+        step.endTime - step.startTime
+      ])
+    );
+  }
+  /**
+   * Updates chunk processing progress
+   */
+  updateProgress(processed, total) {
+    this.processedChunks = processed;
+    this.totalChunks = total;
+  }
+  /**
+   * Records an error that occurred during processing
+   */
+  setError(error) {
+    this.error = error instanceof Error ? error.message : error;
+  }
+  /**
+   * Gets the current processing progress
+   */
+  getProgress() {
+    return {
+      processed: this.processedChunks,
+      total: this.totalChunks
+    };
+  }
+  /**
+   * Gets whether processing is currently active
+   */
+  getIsProcessing() {
+    return this.isProcessing;
+  }
+  /**
+   * Sets the processing state
+   */
+  setIsProcessing(value) {
+    this.isProcessing = value;
+  }
+  /**
+   * Gets the current error if any
+   */
+  getError() {
+    return this.error;
+  }
+  /**
+   * Gets how long processing has been running
+   */
+  getDuration() {
+    return Date.now() - this.startTime;
+  }
+  /**
+   * Gets the name of the current processing step
+   */
+  getCurrentStepName() {
+    var _a;
+    return ((_a = this.currentStep) == null ? void 0 : _a.name) || null;
+  }
+  /**
+   * Resets the state to initial values
+   */
+  reset() {
+    this.isProcessing = false;
+    this.currentStep = null;
+    this.audioBlob = void 0;
+    this.transcription = void 0;
+    this.postProcessing = void 0;
+    this.startTime = Date.now();
+    this.error = void 0;
+    this.processedChunks = void 0;
+    this.totalChunks = void 0;
+    this.steps = [];
+  }
+  /**
+   * Converts the state to a JSON-compatible object for storage
+   */
+  toJSON() {
+    return {
+      isProcessing: this.isProcessing,
+      currentStep: this.currentStep,
+      transcription: this.transcription,
+      postProcessing: this.postProcessing,
+      startTime: this.startTime,
+      error: this.error,
+      processedChunks: this.processedChunks,
+      totalChunks: this.totalChunks
+    };
+  }
+  /**
+   * Restores state from a saved JSON object
+   */
+  fromJSON(data) {
+    var _a, _b, _c;
+    this.isProcessing = (_a = data.isProcessing) != null ? _a : false;
+    this.currentStep = (_b = data.currentStep) != null ? _b : null;
+    this.transcription = data.transcription;
+    this.postProcessing = data.postProcessing;
+    this.startTime = (_c = data.startTime) != null ? _c : Date.now();
+    this.error = data.error;
+    this.processedChunks = data.processedChunks;
+    this.totalChunks = data.totalChunks;
+  }
+};
+
+// src-rebuild/utils/retry/ErrorClassifier.ts
+function classifyError(error) {
+  const message = toMessage(error);
+  if (includesAny(message, [
+    "unauthorized",
+    "invalid api key",
+    "api key is not configured",
+    "forbidden"
+  ]) || matchesStatusCode(message, [401, 403])) {
+    return { errorClass: "auth", retryable: false };
+  }
+  if (includesAny(message, ["rate limit", "quota", "too many requests"]) || matchesStatusCode(message, [429])) {
+    return { errorClass: "rate_limit", retryable: true };
+  }
+  if (includesAny(message, [
+    "invalid request",
+    "invalid response format",
+    "invalid transcription response",
+    "file too large",
+    "payload",
+    "unprocessable"
+  ]) || matchesStatusCode(message, [400])) {
+    return { errorClass: "payload", retryable: false };
+  }
+  if (includesAny(message, ["timed out", "timeout", "etimedout"])) {
+    return { errorClass: "timeout", retryable: true };
+  }
+  if (includesAny(message, [
+    "network",
+    "failed to fetch",
+    "econn",
+    "enotfound",
+    "socket",
+    "dns",
+    "connection"
+  ])) {
+    return { errorClass: "network", retryable: true };
+  }
+  if (includesAny(message, [
+    "server error",
+    "internal server error",
+    "bad gateway"
+  ]) || matchesStatusCode(message, [500, 502, 503, 504])) {
+    return { errorClass: "server", retryable: true };
+  }
+  return { errorClass: "unknown", retryable: false };
+}
+function toMessage(error) {
+  if (error instanceof Error)
+    return error.message.toLowerCase();
+  if (typeof error === "string")
+    return error.toLowerCase();
+  return "unknown error";
+}
+function includesAny(value, patterns) {
+  return patterns.some((p) => value.includes(p));
+}
+function matchesStatusCode(message, codes) {
+  return codes.some((code) => new RegExp(`(?:^|\\b|status\\s*)${code}(?:\\b|$)`).test(message));
+}
+
+// src-rebuild/utils/RecordingProcessor.ts
+var _RecordingProcessor = class {
+  constructor(plugin) {
+    this.plugin = plugin;
+    this.config = {
+      maxRetries: 3,
+      retryDelay: 1e3
+    };
+    this.processingState = new ProcessingState();
+    this.audioProcessor = new AudioProcessor(plugin);
+    this.transcriptionService = new TranscriptionService(plugin);
+    this.documentInserter = new DocumentInserter(plugin);
+    this.jobStore = new JobStore(plugin);
+    this.queueBackend = new LocalQueueBackend(plugin);
+    this.batchRoutingPolicy = new BatchRoutingPolicy(plugin.settings);
+    this.backendBatchOrchestrationService = new BackendBatchOrchestrationService(plugin);
+  }
+  static getInstance(plugin) {
+    var _a;
+    return (_a = this.instance) != null ? _a : this.instance = new _RecordingProcessor(plugin);
+  }
+  /**
+   * Processes a recording: transcribes audio and inserts the content into the document
+   */
+  async processRecording(audioBlob, activeFile, cursorPosition, audioFilePath) {
+    const logContext = RuntimeLogger.createContext("batch");
+    const now = new Date().toISOString();
+    const resumeAnchor = await this.createResumeAnchor(activeFile, cursorPosition);
+    const baseJob = {
+      jobId: logContext.jobId,
+      kind: "batch",
+      status: "running",
+      sourceFile: audioFilePath,
+      targetFile: activeFile.path,
+      provider: this.plugin.settings.transcriptionProvider,
+      model: this.plugin.settings.transcriptionModel,
+      createdAt: now,
+      updatedAt: now,
+      insertionLine: cursorPosition.line,
+      insertionCh: cursorPosition.ch,
+      resumeAnchor
+    };
+    const workerId = "local_recording_processor";
+    const leaseMs = 3e4;
+    let queueJobId = null;
+    let leaseToken = null;
+    if (this.processingState.getIsProcessing()) {
+      throw new Error("Recording is already in progress.");
+    }
+    try {
+      this.processingState.reset();
+      this.processingState.setIsProcessing(true);
+      this.plugin.showProcessingStatus("Transcribing audio");
+      await this.jobStore.upsertJob(baseJob);
+      const payload = {
+        recoveryJobId: logContext.jobId,
+        sourceRef: audioFilePath,
+        targetRef: activeFile.path,
+        provider: this.plugin.settings.transcriptionProvider,
+        model: this.plugin.settings.transcriptionModel,
+        retryPolicy: {
+          maxAttempts: this.config.maxRetries + 1,
+          baseDelayMs: this.config.retryDelay
+        }
+      };
+      const enqueued = await this.queueBackend.enqueue(payload);
+      const claim = await this.queueBackend.claim(workerId, leaseMs, enqueued.id);
+      if (!claim) {
+        throw new Error("Could not claim queue job");
+      }
+      queueJobId = claim.job.id;
+      leaseToken = claim.leaseToken;
+      await this.jobStore.upsertJob({ ...baseJob, queueJobId });
+      await this.queueBackend.heartbeat(queueJobId, workerId, leaseToken, leaseMs);
+      await RuntimeLogger.log(this.plugin, logContext, "record_start", { status: "started" });
+      this.processingState.startStep("Audio Processing");
+      const audioResult = await this.audioProcessor.processAudio(audioBlob, audioFilePath);
+      await this.jobStore.upsertCheckpoint({
+        jobId: logContext.jobId,
+        index: 0,
+        status: "committed",
+        stage: "audio_ready",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      });
+      this.processingState.completeStep();
+      if (audioResult.processedChunks && audioResult.totalChunks) {
+        this.processingState.updateProgress(
+          audioResult.processedChunks,
+          audioResult.totalChunks
+        );
+      }
+      this.processingState.startStep("Transcription");
+      await RuntimeLogger.log(this.plugin, logContext, "provider_request", {
+        status: "started",
+        mimeType: audioResult.audioBlob.type || "application/octet-stream",
+        size: audioResult.audioBlob.size
+      });
+      const routeDecision = this.batchRoutingPolicy.decide(
+        audioFilePath,
+        audioResult.audioBlob.size
+      );
+      await RuntimeLogger.log(this.plugin, logContext, "batch_route_decision", {
+        status: "selected",
+        route: routeDecision.route,
+        preferredRoute: routeDecision.preferredRoute,
+        reason: routeDecision.reason,
+        sourceType: routeDecision.sourceType,
+        isLargeUpload: routeDecision.isLargeUpload
+      });
+      let result;
+      if (routeDecision.route === "backend_batch") {
+        try {
+          this.plugin.showProcessingStatus("Routing large upload to backend workers");
+          result = await this.backendBatchOrchestrationService.transcribeLargeUpload(
+            audioResult.audioBlob,
+            audioFilePath,
+            activeFile.path,
+            logContext
+          );
+        } catch (backendError) {
+          const uploadedCloudOnly = routeDecision.sourceType === "uploaded";
+          await RuntimeLogger.log(this.plugin, logContext, "backend_route_failure", {
+            status: "failed",
+            reason: backendError instanceof Error ? backendError.message : String(backendError),
+            failOpenEnabled: this.plugin.settings.backendFailOpenToDirect,
+            uploadedCloudOnly
+          });
+          if (uploadedCloudOnly || !this.plugin.settings.backendFailOpenToDirect) {
+            throw backendError;
+          }
+          this.plugin.showProcessingStatus(
+            "Backend route failed. Falling back to direct provider transcription."
+          );
+          const fallbackBuffer = await audioResult.audioBlob.arrayBuffer();
+          result = await this.executeWithRetry(
+            () => this.transcriptionService.transcribeContent(fallbackBuffer, {
+              mimeType: audioResult.audioBlob.type
+            }),
+            0,
+            {
+              onRetry: async (attempt, error) => {
+                this.plugin.showProcessingStatus(
+                  `Retrying transcription ${attempt}/${this.config.maxRetries + 1}`
+                );
+                const classified = classifyError(error);
+                await RuntimeLogger.log(this.plugin, logContext, "provider_retry", {
+                  status: "retrying",
+                  attempt,
+                  maxAttempts: this.config.maxRetries + 1,
+                  errorClass: classified.errorClass,
+                  retryable: classified.retryable,
+                  reason: error instanceof Error ? error.message : String(error)
+                });
+              },
+              onFailed: async (attempts, error, classification) => {
+                await RuntimeLogger.log(this.plugin, logContext, "provider_failure", {
+                  status: "failed",
+                  attempts,
+                  errorClass: classification.errorClass,
+                  retryable: classification.retryable,
+                  reason: error instanceof Error ? error.message : String(error)
+                });
+              }
+            }
+          );
+        }
+      } else {
+        if (routeDecision.sourceType === "uploaded") {
+          throw new Error(
+            "Uploaded audio must use backend cloud route. Direct provider route is disabled for uploads."
+          );
+        }
+        if (routeDecision.isLargeUpload && routeDecision.preferredRoute !== routeDecision.route) {
+          this.plugin.showProcessingStatus(
+            "Large upload detected. Backend route unavailable, using direct provider mode."
+          );
+        }
+        const audioBuffer = await audioResult.audioBlob.arrayBuffer();
+        result = await this.executeWithRetry(
+          () => this.transcriptionService.transcribeContent(audioBuffer, {
+            mimeType: audioResult.audioBlob.type
+          }),
+          0,
+          {
+            onRetry: async (attempt, error) => {
+              this.plugin.showProcessingStatus(
+                `Retrying transcription ${attempt}/${this.config.maxRetries + 1}`
+              );
+              const classified = classifyError(error);
+              await RuntimeLogger.log(this.plugin, logContext, "provider_retry", {
+                status: "retrying",
+                attempt,
+                maxAttempts: this.config.maxRetries + 1,
+                errorClass: classified.errorClass,
+                retryable: classified.retryable,
+                reason: error instanceof Error ? error.message : String(error)
+              });
+            },
+            onFailed: async (attempts, error, classification) => {
+              await RuntimeLogger.log(this.plugin, logContext, "provider_failure", {
+                status: "failed",
+                attempts,
+                errorClass: classification.errorClass,
+                retryable: classification.retryable,
+                reason: error instanceof Error ? error.message : String(error)
+              });
+            }
+          }
+        );
+      }
+      await RuntimeLogger.log(this.plugin, logContext, "provider_response", {
+        status: "success",
+        transcriptionChars: result.transcription.length
+      });
+      if (queueJobId && leaseToken) {
+        await this.queueBackend.heartbeat(queueJobId, workerId, leaseToken, leaseMs);
+      }
+      await this.jobStore.upsertCheckpoint({
+        jobId: logContext.jobId,
+        index: 1,
+        status: "committed",
+        stage: "transcription_ready",
+        transcript: result.transcription,
+        postProcessing: result.postProcessing,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      });
+      this.processingState.completeStep();
+      this.processingState.startStep("Content Insertion");
+      this.plugin.showProcessingStatus("Writing transcript note");
+      await RuntimeLogger.log(this.plugin, logContext, "note_render_start", { status: "started" });
+      await this.documentInserter.insertContent(
+        {
+          transcription: result.transcription,
+          postProcessing: result.postProcessing,
+          audioFilePath: audioResult.finalPath,
+          sourceSizeMb: (audioResult.audioBlob.size / (1024 * 1024)).toFixed(2),
+          entryTitle: this.buildDurationEntryTitle(
+            await this.resolveDurationSeconds(audioResult.audioBlob, result.transcription)
+          ) || void 0
+        },
+        activeFile,
+        cursorPosition
+      );
+      await RuntimeLogger.log(this.plugin, logContext, "note_render_commit", { status: "success" });
+      await this.jobStore.upsertCheckpoint({
+        jobId: logContext.jobId,
+        index: 2,
+        status: "committed",
+        stage: "note_written",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      });
+      this.processingState.completeStep();
+      await RuntimeLogger.log(this.plugin, logContext, "job_complete", { status: "completed" });
+      await this.jobStore.updateJobStatus(logContext.jobId, "completed");
+      if (queueJobId && leaseToken) {
+        await this.queueBackend.complete(queueJobId, workerId, leaseToken, activeFile.path);
+      }
+      this.plugin.setProcessingStatus("Idle");
+    } catch (error) {
+      const primaryError = error;
+      this.handleError("Processing failed", error);
+      this.processingState.setError(error);
+      this.plugin.setProcessingStatus("Failed");
+      await RuntimeLogger.log(this.plugin, logContext, "job_failed", {
+        status: "failed",
+        reason: error instanceof Error ? error.message : String(error)
+      });
+      await this.jobStore.updateJobStatus(
+        logContext.jobId,
+        "failed",
+        error instanceof Error ? error.message : String(error)
+      );
+      if (queueJobId && leaseToken) {
+        try {
+          await this.queueBackend.fail(
+            queueJobId,
+            workerId,
+            leaseToken,
+            error instanceof Error ? error.message : String(error)
+          );
+        } catch (queueFailError) {
+          await RuntimeLogger.log(this.plugin, logContext, "queue_fail_record_error", {
+            status: "failed",
+            reason: queueFailError instanceof Error ? queueFailError.message : String(queueFailError)
+          });
+        }
+      }
+      throw primaryError;
+    } finally {
+      this.processingState.setIsProcessing(false);
+      await RuntimeLogger.log(this.plugin, logContext, "record_stop", { status: "stopped" });
+    }
+  }
+  async getIncompleteJobs() {
+    return this.jobStore.getIncompleteJobs();
+  }
+  async runStartupMaintenance() {
+    await this.jobStore.demoteStaleFailedToCanceled(
+      _RecordingProcessor.STALE_FAILED_JOB_MAX_AGE_MS
+    );
+    await this.jobStore.prune();
+    await this.queueBackend.prune();
+    await this.reconcileQueueAndRecoveryStates();
+  }
+  async cancelJob(jobId) {
+    await this.jobStore.updateJobStatus(jobId, "canceled");
+  }
+  async resumeJob(jobId) {
+    var _a, _b;
+    const job = await this.jobStore.getJob(jobId);
+    if (!job || !job.targetFile)
+      return false;
+    const ready = await this.jobStore.getLatestCommittedCheckpoint(jobId, "transcription_ready");
+    const written = await this.jobStore.getLatestCommittedCheckpoint(jobId, "note_written");
+    if (!ready || written || !ready.transcript)
+      return false;
+    const target = this.plugin.app.vault.getAbstractFileByPath(job.targetFile);
+    if (!(target instanceof import_obsidian19.TFile))
+      return false;
+    let line = typeof job.insertionLine === "number" ? job.insertionLine : 0;
+    let ch = typeof job.insertionCh === "number" ? job.insertionCh : 0;
+    const anchorValid = await this.isResumeAnchorValid(target, job);
+    if (!anchorValid) {
+      const targetContent = await this.plugin.app.vault.read(target);
+      const lines = targetContent.split("\n");
+      line = Math.max(0, lines.length - 1);
+      ch = (_b = (_a = lines[line]) == null ? void 0 : _a.length) != null ? _b : 0;
+      new import_obsidian19.Notice("NeuroVox recovered transcript inserted at end of note because the original cursor anchor changed.");
+    }
+    await this.documentInserter.insertContent(
+      {
+        transcription: ready.transcript,
+        postProcessing: ready.postProcessing,
+        audioFilePath: job.sourceFile
+      },
+      target,
+      { line, ch }
+    );
+    await this.jobStore.upsertCheckpoint({
+      jobId,
+      index: 2,
+      status: "committed",
+      stage: "note_written",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    });
+    await this.jobStore.updateJobStatus(jobId, "completed");
+    return true;
+  }
+  /**
+   * Processes a streaming transcription result: inserts pre-transcribed content into the document
+   */
+  async processStreamingResult(transcriptionResult, activeFile, cursorPosition, options) {
+    const logContext = RuntimeLogger.createContext("stream");
+    const existingStreamJob = await this.jobStore.getLatestIncompleteJob("stream", activeFile.path);
+    const recoveryJobId = (existingStreamJob == null ? void 0 : existingStreamJob.jobId) || logContext.jobId;
+    const now = new Date().toISOString();
+    const resumeAnchor = await this.createResumeAnchor(activeFile, cursorPosition);
+    const baseJob = {
+      jobId: recoveryJobId,
+      kind: "stream",
+      status: "running",
+      targetFile: activeFile.path,
+      provider: this.plugin.settings.transcriptionProvider,
+      model: this.plugin.settings.transcriptionModel,
+      createdAt: now,
+      updatedAt: now,
+      insertionLine: cursorPosition.line,
+      insertionCh: cursorPosition.ch,
+      resumeAnchor
+    };
+    if (this.processingState.getIsProcessing()) {
+      throw new Error("Recording is already in progress.");
+    }
+    try {
+      this.processingState.reset();
+      this.processingState.setIsProcessing(true);
+      this.plugin.showProcessingStatus("Processing streaming transcript");
+      await this.jobStore.upsertJob(baseJob);
+      await RuntimeLogger.log(this.plugin, logContext, "record_start", { status: "started" });
+      this.processingState.startStep("Content Processing");
+      let postProcessing;
+      if (this.plugin.settings.generatePostProcessing) {
+        this.processingState.startStep("Post-processing");
+        postProcessing = await this.executeWithRetry(
+          () => this.generatePostProcessing(transcriptionResult)
+        );
+        this.processingState.completeStep();
+      }
+      let savedAudioPath = options == null ? void 0 : options.audioFilePath;
+      if (options == null ? void 0 : options.audioBlob) {
+        try {
+          const processedAudio = await this.audioProcessor.processAudio(
+            options.audioBlob,
+            options.audioFilePath
+          );
+          savedAudioPath = processedAudio.finalPath;
+        } catch (saveError) {
+          const reason = saveError instanceof Error ? saveError.message : String(saveError);
+          new import_obsidian19.Notice(`NeuroVox: transcript saved, but audio file save failed (${reason})`);
+          await RuntimeLogger.log(this.plugin, logContext, "provider_failure", {
+            status: "failed",
+            reason: `live_audio_save_failed:${reason}`
+          });
+        }
+      }
+      await this.jobStore.upsertCheckpoint({
+        jobId: recoveryJobId,
+        index: 1,
+        status: "committed",
+        stage: "transcription_ready",
+        transcript: transcriptionResult,
+        postProcessing,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      });
+      this.processingState.startStep("Content Insertion");
+      await this.documentInserter.removeAllLiveTranscriptionBlocks(activeFile);
+      await RuntimeLogger.log(this.plugin, logContext, "note_render_start", { status: "started" });
+      await this.documentInserter.insertContent(
+        {
+          transcription: transcriptionResult,
+          postProcessing,
+          audioFilePath: savedAudioPath,
+          sourceSizeMb: (options == null ? void 0 : options.audioBlob) ? (options.audioBlob.size / (1024 * 1024)).toFixed(2) : void 0,
+          entryTitle: this.buildDurationEntryTitle(
+            await this.resolveDurationSeconds(
+              options == null ? void 0 : options.audioBlob,
+              transcriptionResult,
+              options == null ? void 0 : options.durationSeconds
+            )
+          ) || void 0
+        },
+        activeFile,
+        cursorPosition
+      );
+      if (savedAudioPath) {
+        new import_obsidian19.Notice(`NeuroVox: recording saved to ${savedAudioPath}`);
+      }
+      await RuntimeLogger.log(this.plugin, logContext, "note_render_commit", { status: "success" });
+      await this.jobStore.upsertCheckpoint({
+        jobId: recoveryJobId,
+        index: 2,
+        status: "committed",
+        stage: "note_written",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      });
+      this.processingState.completeStep();
+      await RuntimeLogger.log(this.plugin, logContext, "job_complete", { status: "completed" });
+      await this.jobStore.updateJobStatus(recoveryJobId, "completed");
+      this.plugin.setProcessingStatus("Idle");
+    } catch (error) {
+      this.handleError("Processing failed", error);
+      this.processingState.setError(error);
+      this.plugin.setProcessingStatus("Failed");
+      await RuntimeLogger.log(this.plugin, logContext, "job_failed", {
+        status: "failed",
+        reason: error instanceof Error ? error.message : String(error)
+      });
+      await this.jobStore.updateJobStatus(
+        recoveryJobId,
+        "failed",
+        error instanceof Error ? error.message : String(error)
+      );
+      throw error;
+    } finally {
+      this.processingState.setIsProcessing(false);
+      await RuntimeLogger.log(this.plugin, logContext, "record_stop", { status: "stopped" });
+    }
+  }
+  /**
+   * Generates post-processing content using the configured AI adapter
+   */
+  async generatePostProcessing(transcription) {
+    const adapter = await this.getAdapter(
+      this.plugin.settings.postProcessingProvider,
+      "language"
+    );
+    const prompt = `${this.plugin.settings.postProcessingPrompt}
+
+${transcription}`;
+    return adapter.generateResponse(
+      prompt,
+      this.plugin.settings.postProcessingModel,
+      {
+        maxTokens: this.plugin.settings.postProcessingMaxTokens,
+        temperature: this.plugin.settings.postProcessingTemperature
+      }
+    );
+  }
+  /**
+   * Gets and validates the appropriate AI adapter
+   */
+  async getAdapter(provider, category) {
+    const adapter = this.plugin.aiAdapters.get(provider);
+    if (!adapter) {
+      throw new Error(`${provider} adapter not found`);
+    }
+    if (!adapter.isReady(category)) {
+      const apiKey = adapter.getApiKey();
+      if (!apiKey) {
+        throw new Error(`${provider} API key is not configured`);
+      }
+      const validated = await this.validateAdapterWithTimeout(adapter);
+      if (validated && adapter.isReady(category)) {
+        return adapter;
+      }
+      throw new Error(
+        `${provider} adapter is not ready for ${category}. Please check your settings and model availability.`
+      );
+    }
+    return adapter;
+  }
+  async validateAdapterWithTimeout(adapter) {
+    const timeoutMs = _RecordingProcessor.ADAPTER_VALIDATION_TIMEOUT_MS;
+    return await Promise.race([
+      adapter.validateApiKey().catch(() => false),
+      new Promise((resolve) => {
+        window.setTimeout(() => resolve(false), timeoutMs);
+      })
+    ]);
+  }
+  /**
+   * Executes an operation with retry logic
+   */
+  async executeWithRetry(operation, retryCount = 0, hooks) {
+    try {
+      return await operation();
+    } catch (error) {
+      const classification = classifyError(error);
+      const unknownRetryable = classification.errorClass === "unknown" && retryCount < 1;
+      const retryAllowed = (classification.retryable || unknownRetryable) && retryCount < this.config.maxRetries;
+      if (retryAllowed) {
+        const delay = this.getRetryDelayMs(classification.errorClass, retryCount + 1);
+        if (hooks == null ? void 0 : hooks.onRetry) {
+          await hooks.onRetry(retryCount + 1, error, classification, delay);
+        }
+        await new Promise((resolve) => setTimeout(resolve, delay));
+        return this.executeWithRetry(operation, retryCount + 1, hooks);
+      }
+      if (hooks == null ? void 0 : hooks.onFailed) {
+        await hooks.onFailed(retryCount + 1, error, classification);
+      }
+      throw error;
+    }
+  }
+  getRetryDelayMs(errorClass, attempt) {
+    const base = this.config.retryDelay;
+    const multiplier = errorClass === "rate_limit" ? 2.5 : errorClass === "timeout" ? 2 : errorClass === "server" ? 1.8 : errorClass === "network" ? 1.6 : 1.5;
+    const delay = Math.round(base * Math.pow(multiplier, Math.max(0, attempt - 1)));
+    return Math.min(delay, 3e4);
+  }
+  /**
+   * Handles error display
+   */
+  handleError(context, error) {
+    const message = error instanceof Error ? error.message : "Unknown error occurred";
+    new import_obsidian19.Notice(`${context}: ${message}`);
+  }
+  async resolveDurationSeconds(audioBlob, transcription, preferredSeconds) {
+    if (Number.isFinite(preferredSeconds) && Number(preferredSeconds) > 0) {
+      return Math.max(1, Math.round(Number(preferredSeconds)));
+    }
+    const decoded = await this.estimateAudioDurationFromBlob(audioBlob);
+    if (decoded !== null)
+      return decoded;
+    const tokenMax = this.estimateDurationFromTimestampTokens(transcription);
+    if (tokenMax !== null)
+      return tokenMax;
+    return null;
+  }
+  async estimateAudioDurationFromBlob(audioBlob) {
+    if (!audioBlob || audioBlob.size <= 0)
+      return null;
+    const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextCtor)
+      return null;
+    let audioContext = null;
+    try {
+      const ctx = new AudioContextCtor();
+      audioContext = ctx;
+      const source = await audioBlob.arrayBuffer();
+      const decoded = await ctx.decodeAudioData(source.slice(0));
+      const seconds = Number((decoded == null ? void 0 : decoded.duration) || 0);
+      if (!Number.isFinite(seconds) || seconds <= 0)
+        return null;
+      return Math.max(1, Math.round(seconds));
+    } catch (e) {
+      return null;
+    } finally {
+      if (audioContext) {
+        try {
+          await audioContext.close();
+        } catch (e) {
+        }
+      }
+    }
+  }
+  estimateDurationFromTimestampTokens(transcription) {
+    if (!transcription || typeof transcription !== "string")
+      return null;
+    const tokenRegex = /\[(\d{2}):(\d{2}):(\d{2})\]/g;
+    let max = -1;
+    let match = tokenRegex.exec(transcription);
+    while (match) {
+      const hh = Number(match[1]);
+      const mm = Number(match[2]);
+      const ss = Number(match[3]);
+      if (Number.isFinite(hh) && Number.isFinite(mm) && Number.isFinite(ss)) {
+        max = Math.max(max, hh * 3600 + mm * 60 + ss);
+      }
+      match = tokenRegex.exec(transcription);
+    }
+    return max >= 0 ? max : null;
+  }
+  buildDurationEntryTitle(durationSeconds) {
+    if (!Number.isFinite(durationSeconds) || Number(durationSeconds) <= 0)
+      return null;
+    const total = Math.max(1, Math.round(Number(durationSeconds)));
+    const hh = Math.floor(total / 3600);
+    const mm = Math.floor(total % 3600 / 60);
+    const ss = total % 60;
+    const timeLabel = hh > 0 ? `${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}:${String(ss).padStart(2, "0")}` : `${String(mm).padStart(2, "0")}:${String(ss).padStart(2, "0")}`;
+    return `Transcription - ${timeLabel}`;
+  }
+  async reconcileQueueAndRecoveryStates() {
+    const [jobs, queueSnapshot] = await Promise.all([
+      this.jobStore.getIncompleteJobs(),
+      this.queueBackend.getSnapshot()
+    ]);
+    const queueById = new Map(queueSnapshot.map((q) => [q.id, q]));
+    const queueByRecoveryId = new Map(
+      queueSnapshot.filter((q) => !!q.payload.recoveryJobId).map((q) => [q.payload.recoveryJobId, q])
+    );
+    for (const job of jobs) {
+      const queueJob = (job.queueJobId ? queueById.get(job.queueJobId) : void 0) || queueByRecoveryId.get(job.jobId);
+      if (!queueJob && job.kind === "batch" && job.status === "running") {
+        await this.jobStore.updateJobStatus(
+          job.jobId,
+          "failed",
+          "startup_reconcile_missing_queue_job"
+        );
+        continue;
+      }
+      if (!queueJob)
+        continue;
+      if ((queueJob.status === "failed" || queueJob.status === "canceled") && job.status === "running") {
+        await this.jobStore.updateJobStatus(
+          job.jobId,
+          "failed",
+          queueJob.reason || `queue_${queueJob.status}`
+        );
+      }
+    }
+  }
+  async createResumeAnchor(file, position) {
+    try {
+      const content = await this.plugin.app.vault.read(file);
+      return {
+        line: position.line,
+        ch: position.ch,
+        contextHash: this.computeAnchorHash(content, position.line)
+      };
+    } catch (e) {
+      return void 0;
+    }
+  }
+  async isResumeAnchorValid(file, job) {
+    if (!job.resumeAnchor)
+      return true;
+    try {
+      const content = await this.plugin.app.vault.read(file);
+      const currentHash = this.computeAnchorHash(content, job.resumeAnchor.line);
+      return currentHash === job.resumeAnchor.contextHash;
+    } catch (e) {
+      return false;
+    }
+  }
+  computeAnchorHash(content, line) {
+    const lines = content.split("\n");
+    const start = Math.max(0, line - 2);
+    const end = Math.min(lines.length - 1, line + 2);
+    const context = lines.slice(start, end + 1).join("\n");
+    let hash = 2166136261;
+    for (let i = 0; i < context.length; i++) {
+      hash ^= context.charCodeAt(i);
+      hash += (hash << 1) + (hash << 4) + (hash << 7) + (hash << 8) + (hash << 24);
+    }
+    return (hash >>> 0).toString(16);
+  }
+};
+var RecordingProcessor = _RecordingProcessor;
+RecordingProcessor.instance = null;
+RecordingProcessor.ADAPTER_VALIDATION_TIMEOUT_MS = 4e3;
+RecordingProcessor.STALE_FAILED_JOB_MAX_AGE_MS = 10 * 60 * 1e3;
+
+// src-rebuild/modals/RecoveryJobsModal.ts
+var import_obsidian20 = require("obsidian");
+var RecoveryJobsModal = class extends import_obsidian20.Modal {
+  constructor(app, jobs) {
+    super(app);
+    this.jobs = jobs;
+    this.resolvePromise = null;
+  }
+  async chooseAction() {
+    return new Promise((resolve) => {
+      this.resolvePromise = resolve;
+      this.open();
+    });
+  }
+  onOpen() {
+    const { contentEl } = this;
+    contentEl.empty();
+    contentEl.addClass("neurovox-recovery-modal");
+    contentEl.createEl("h3", { text: "NeuroVox Recovery" });
+    contentEl.createEl("p", { text: "Found incomplete transcription jobs. Choose an action:" });
+    const controls = contentEl.createDiv({ cls: "neurovox-recovery-controls" });
+    const resumeNewest = controls.createEl("button", { text: "Resume Newest" });
+    resumeNewest.onclick = () => this.finish({ type: "resume_newest" });
+    const cancelAll = controls.createEl("button", { text: "Cancel All" });
+    cancelAll.onclick = () => this.finish({ type: "cancel_all" });
+    const dismiss = controls.createEl("button", { text: "Dismiss" });
+    dismiss.onclick = () => this.finish({ type: "dismiss" });
+    const list = contentEl.createDiv({ cls: "neurovox-recovery-list" });
+    for (const job of this.jobs) {
+      const item = list.createDiv({ cls: "neurovox-recovery-item" });
+      const title = item.createDiv({ cls: "neurovox-recovery-title" });
+      title.setText(`${job.kind.toUpperCase()} \u2022 ${job.jobId.slice(0, 12)}... \u2022 ${job.status}`);
+      const meta = item.createDiv({ cls: "neurovox-recovery-meta" });
+      meta.setText(`File: ${job.targetFile} \u2022 Updated: ${new Date(job.updatedAt).toLocaleString()}`);
+      if (job.error) {
+        const errorEl = item.createDiv({ cls: "neurovox-recovery-error" });
+        errorEl.setText(`Error: ${job.error}`);
+      }
+      const row = item.createDiv({ cls: "neurovox-recovery-row" });
+      const resumeBtn = row.createEl("button", { text: "Resume" });
+      resumeBtn.onclick = () => this.finish({ type: "resume", jobId: job.jobId });
+      const cancelBtn = row.createEl("button", { text: "Cancel" });
+      cancelBtn.onclick = () => this.finish({ type: "cancel", jobId: job.jobId });
+    }
+  }
+  onClose() {
+    if (this.resolvePromise) {
+      const resolve = this.resolvePromise;
+      this.resolvePromise = null;
+      resolve({ type: "dismiss" });
+    }
+  }
+  finish(action) {
+    if (this.resolvePromise) {
+      const resolve = this.resolvePromise;
+      this.resolvePromise = null;
+      resolve(action);
+    }
+    this.close();
+  }
+};
+
+// src-rebuild/modals/TimerModal.ts
+var import_obsidian21 = require("obsidian");
+var _TimerModal = class extends import_obsidian21.Modal {
   constructor(plugin, targetFile, insertionPosition) {
     var _a;
     super(plugin.app);
@@ -13473,13 +13631,13 @@ var _TimerModal = class extends import_obsidian17.Modal {
    * Detects if current device is mobile using Obsidian's Platform API
    */
   isMobileDevice() {
-    return import_obsidian17.Platform.isMobile;
+    return import_obsidian21.Platform.isMobile;
   }
   /**
    * Detects if current device is iOS using Obsidian's Platform API
    */
   isIOSDevice() {
-    return import_obsidian17.Platform.isIosApp || import_obsidian17.Platform.isMobile && /iPhone|iPad|iPod/i.test(navigator.userAgent);
+    return import_obsidian21.Platform.isIosApp || import_obsidian21.Platform.isMobile && /iPhone|iPad|iPod/i.test(navigator.userAgent);
   }
   /**
    * Starts or resumes recording with progressive chunk processing
@@ -13502,7 +13660,7 @@ var _TimerModal = class extends import_obsidian17.Modal {
             this.plugin,
             {
               onMemoryWarning: (usage) => {
-                new import_obsidian17.Notice(`Memory usage high: ${Math.round(usage)}%`);
+                new import_obsidian21.Notice(`Memory usage high: ${Math.round(usage)}%`);
               },
               onChunkCommitted: async (_chunkText, _metadata, partialResult) => {
                 if (!this.plugin.settings.showLiveChunkPreviewInNote)
@@ -13536,9 +13694,9 @@ var _TimerModal = class extends import_obsidian17.Modal {
       this.pausedByBackpressure = false;
       if (this.interruptedByLifecycle) {
         this.interruptedByLifecycle = false;
-        new import_obsidian17.Notice("Recording resumed after app interruption");
+        new import_obsidian21.Notice("Recording resumed after app interruption");
       }
-      new import_obsidian17.Notice("Recording started");
+      new import_obsidian21.Notice("Recording started");
     } catch (error) {
       this.handleError("Failed to start recording", error);
     }
@@ -13569,7 +13727,7 @@ var _TimerModal = class extends import_obsidian17.Modal {
       this.pauseTimer();
       this.currentState = "paused";
       this.ui.updateState(this.currentState);
-      new import_obsidian17.Notice(reasonMessage || "Recording paused");
+      new import_obsidian21.Notice(reasonMessage || "Recording paused");
     } catch (error) {
       this.handleError("Failed to pause recording", error);
     }
@@ -13591,7 +13749,7 @@ var _TimerModal = class extends import_obsidian17.Modal {
       }
       let result;
       if (this.useStreaming && this.streamingService) {
-        new import_obsidian17.Notice("Finishing transcription...");
+        new import_obsidian21.Notice("Finishing transcription...");
         result = await this.streamingService.finishProcessing();
         this.streamingService = null;
         if (!result || result.trim().length === 0) {
@@ -13651,7 +13809,7 @@ var _TimerModal = class extends import_obsidian17.Modal {
       this.updateTimerDisplay();
       if (Number.isFinite(this.CONFIG.maxDuration) && this.seconds >= this.CONFIG.maxDuration) {
         void this.handleStop();
-        new import_obsidian17.Notice("Maximum recording duration reached");
+        new import_obsidian21.Notice("Maximum recording duration reached");
       }
     }, this.CONFIG.updateInterval);
   }
@@ -13684,7 +13842,7 @@ var _TimerModal = class extends import_obsidian17.Modal {
         this.updateTimerDisplay();
         if (Number.isFinite(this.CONFIG.maxDuration) && this.seconds >= this.CONFIG.maxDuration) {
           void this.handleStop();
-          new import_obsidian17.Notice("Maximum recording duration reached");
+          new import_obsidian21.Notice("Maximum recording duration reached");
         }
       }, this.CONFIG.updateInterval);
     }
@@ -13786,7 +13944,7 @@ var _TimerModal = class extends import_obsidian17.Modal {
       return;
     this.interruptedByLifecycle = true;
     this.pauseRecording();
-    new import_obsidian17.Notice("Recording paused due to app interruption. Resume when back.");
+    new import_obsidian21.Notice("Recording paused due to app interruption. Resume when back.");
   }
   startBackpressureMonitor() {
     if (this.backpressureMonitorId !== null)
@@ -13813,7 +13971,7 @@ var _TimerModal = class extends import_obsidian17.Modal {
    */
   handleError(message, error) {
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
-    new import_obsidian17.Notice(`${message}: ${errorMessage}`);
+    new import_obsidian21.Notice(`${message}: ${errorMessage}`);
     this.cleanup();
     void this.requestClose();
   }
@@ -13821,465 +13979,541 @@ var _TimerModal = class extends import_obsidian17.Modal {
 var TimerModal = _TimerModal;
 TimerModal.RECORDER_STOP_TIMEOUT_MS = 12e3;
 
+// src-rebuild/utils/VideoProcessor.ts
+var import_obsidian22 = require("obsidian");
 
-// src/modals/RecoveryJobsModal.ts
-var import_obsidian19 = require("obsidian");
-var RecoveryJobsModal = class extends import_obsidian19.Modal {
-  constructor(app, jobs) {
-    super(app);
-    this.jobs = jobs;
-    this.resolvePromise = null;
+// node_modules/@ffmpeg/ffmpeg/dist/esm/const.js
+var CORE_VERSION = "0.12.9";
+var CORE_URL = `https://unpkg.com/@ffmpeg/core@${CORE_VERSION}/dist/umd/ffmpeg-core.js`;
+var FFMessageType;
+(function(FFMessageType2) {
+  FFMessageType2["LOAD"] = "LOAD";
+  FFMessageType2["EXEC"] = "EXEC";
+  FFMessageType2["FFPROBE"] = "FFPROBE";
+  FFMessageType2["WRITE_FILE"] = "WRITE_FILE";
+  FFMessageType2["READ_FILE"] = "READ_FILE";
+  FFMessageType2["DELETE_FILE"] = "DELETE_FILE";
+  FFMessageType2["RENAME"] = "RENAME";
+  FFMessageType2["CREATE_DIR"] = "CREATE_DIR";
+  FFMessageType2["LIST_DIR"] = "LIST_DIR";
+  FFMessageType2["DELETE_DIR"] = "DELETE_DIR";
+  FFMessageType2["ERROR"] = "ERROR";
+  FFMessageType2["DOWNLOAD"] = "DOWNLOAD";
+  FFMessageType2["PROGRESS"] = "PROGRESS";
+  FFMessageType2["LOG"] = "LOG";
+  FFMessageType2["MOUNT"] = "MOUNT";
+  FFMessageType2["UNMOUNT"] = "UNMOUNT";
+})(FFMessageType || (FFMessageType = {}));
+
+// node_modules/@ffmpeg/ffmpeg/dist/esm/utils.js
+var getMessageID = (() => {
+  let messageID = 0;
+  return () => messageID++;
+})();
+
+// node_modules/@ffmpeg/ffmpeg/dist/esm/errors.js
+var ERROR_UNKNOWN_MESSAGE_TYPE = new Error("unknown message type");
+var ERROR_NOT_LOADED = new Error("ffmpeg is not loaded, call `await ffmpeg.load()` first");
+var ERROR_TERMINATED = new Error("called FFmpeg.terminate()");
+var ERROR_IMPORT_FAILURE = new Error("failed to import ffmpeg-core.js");
+
+// node_modules/@ffmpeg/ffmpeg/dist/esm/classes.js
+var import_meta = {};
+var _worker, _resolves, _rejects, _logEventCallbacks, _progressEventCallbacks, _registerHandlers, _send;
+var FFmpeg = class {
+  constructor() {
+    __privateAdd(this, _worker, null);
+    /**
+     * #resolves and #rejects tracks Promise resolves and rejects to
+     * be called when we receive message from web worker.
+     */
+    __privateAdd(this, _resolves, {});
+    __privateAdd(this, _rejects, {});
+    __privateAdd(this, _logEventCallbacks, []);
+    __privateAdd(this, _progressEventCallbacks, []);
+    __publicField(this, "loaded", false);
+    /**
+     * register worker message event handlers.
+     */
+    __privateAdd(this, _registerHandlers, () => {
+      if (__privateGet(this, _worker)) {
+        __privateGet(this, _worker).onmessage = ({ data: { id, type, data } }) => {
+          switch (type) {
+            case FFMessageType.LOAD:
+              this.loaded = true;
+              __privateGet(this, _resolves)[id](data);
+              break;
+            case FFMessageType.MOUNT:
+            case FFMessageType.UNMOUNT:
+            case FFMessageType.EXEC:
+            case FFMessageType.FFPROBE:
+            case FFMessageType.WRITE_FILE:
+            case FFMessageType.READ_FILE:
+            case FFMessageType.DELETE_FILE:
+            case FFMessageType.RENAME:
+            case FFMessageType.CREATE_DIR:
+            case FFMessageType.LIST_DIR:
+            case FFMessageType.DELETE_DIR:
+              __privateGet(this, _resolves)[id](data);
+              break;
+            case FFMessageType.LOG:
+              __privateGet(this, _logEventCallbacks).forEach((f) => f(data));
+              break;
+            case FFMessageType.PROGRESS:
+              __privateGet(this, _progressEventCallbacks).forEach((f) => f(data));
+              break;
+            case FFMessageType.ERROR:
+              __privateGet(this, _rejects)[id](data);
+              break;
+          }
+          delete __privateGet(this, _resolves)[id];
+          delete __privateGet(this, _rejects)[id];
+        };
+      }
+    });
+    /**
+     * Generic function to send messages to web worker.
+     */
+    __privateAdd(this, _send, ({ type, data }, trans = [], signal) => {
+      if (!__privateGet(this, _worker)) {
+        return Promise.reject(ERROR_NOT_LOADED);
+      }
+      return new Promise((resolve, reject) => {
+        const id = getMessageID();
+        __privateGet(this, _worker) && __privateGet(this, _worker).postMessage({ id, type, data }, trans);
+        __privateGet(this, _resolves)[id] = resolve;
+        __privateGet(this, _rejects)[id] = reject;
+        signal?.addEventListener("abort", () => {
+          reject(new DOMException(`Message # ${id} was aborted`, "AbortError"));
+        }, { once: true });
+      });
+    });
+    /**
+     * Loads ffmpeg-core inside web worker. It is required to call this method first
+     * as it initializes WebAssembly and other essential variables.
+     *
+     * @category FFmpeg
+     * @returns `true` if ffmpeg core is loaded for the first time.
+     */
+    __publicField(this, "load", ({ classWorkerURL, ...config } = {}, { signal } = {}) => {
+      if (!__privateGet(this, _worker)) {
+        __privateSet(this, _worker, classWorkerURL ? new Worker(new URL(classWorkerURL, import_meta.url), {
+          type: "module"
+        }) : (
+          // We need to duplicated the code here to enable webpack
+          // to bundle worekr.js here.
+          new Worker(new URL("./worker.js", import_meta.url), {
+            type: "module"
+          })
+        ));
+        __privateGet(this, _registerHandlers).call(this);
+      }
+      return __privateGet(this, _send).call(this, {
+        type: FFMessageType.LOAD,
+        data: config
+      }, void 0, signal);
+    });
+    /**
+     * Execute ffmpeg command.
+     *
+     * @remarks
+     * To avoid common I/O issues, ["-nostdin", "-y"] are prepended to the args
+     * by default.
+     *
+     * @example
+     * ```ts
+     * const ffmpeg = new FFmpeg();
+     * await ffmpeg.load();
+     * await ffmpeg.writeFile("video.avi", ...);
+     * // ffmpeg -i video.avi video.mp4
+     * await ffmpeg.exec(["-i", "video.avi", "video.mp4"]);
+     * const data = ffmpeg.readFile("video.mp4");
+     * ```
+     *
+     * @returns `0` if no error, `!= 0` if timeout (1) or error.
+     * @category FFmpeg
+     */
+    __publicField(this, "exec", (args, timeout = -1, { signal } = {}) => __privateGet(this, _send).call(this, {
+      type: FFMessageType.EXEC,
+      data: { args, timeout }
+    }, void 0, signal));
+    /**
+     * Execute ffprobe command.
+     *
+     * @example
+     * ```ts
+     * const ffmpeg = new FFmpeg();
+     * await ffmpeg.load();
+     * await ffmpeg.writeFile("video.avi", ...);
+     * // Getting duration of a video in seconds: ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 video.avi -o output.txt
+     * await ffmpeg.ffprobe(["-v", "error", "-show_entries", "format=duration", "-of", "default=noprint_wrappers=1:nokey=1", "video.avi", "-o", "output.txt"]);
+     * const data = ffmpeg.readFile("output.txt");
+     * ```
+     *
+     * @returns `0` if no error, `!= 0` if timeout (1) or error.
+     * @category FFmpeg
+     */
+    __publicField(this, "ffprobe", (args, timeout = -1, { signal } = {}) => __privateGet(this, _send).call(this, {
+      type: FFMessageType.FFPROBE,
+      data: { args, timeout }
+    }, void 0, signal));
+    /**
+     * Terminate all ongoing API calls and terminate web worker.
+     * `FFmpeg.load()` must be called again before calling any other APIs.
+     *
+     * @category FFmpeg
+     */
+    __publicField(this, "terminate", () => {
+      const ids = Object.keys(__privateGet(this, _rejects));
+      for (const id of ids) {
+        __privateGet(this, _rejects)[id](ERROR_TERMINATED);
+        delete __privateGet(this, _rejects)[id];
+        delete __privateGet(this, _resolves)[id];
+      }
+      if (__privateGet(this, _worker)) {
+        __privateGet(this, _worker).terminate();
+        __privateSet(this, _worker, null);
+        this.loaded = false;
+      }
+    });
+    /**
+     * Write data to ffmpeg.wasm.
+     *
+     * @example
+     * ```ts
+     * const ffmpeg = new FFmpeg();
+     * await ffmpeg.load();
+     * await ffmpeg.writeFile("video.avi", await fetchFile("../video.avi"));
+     * await ffmpeg.writeFile("text.txt", "hello world");
+     * ```
+     *
+     * @category File System
+     */
+    __publicField(this, "writeFile", (path, data, { signal } = {}) => {
+      const trans = [];
+      if (data instanceof Uint8Array) {
+        trans.push(data.buffer);
+      }
+      return __privateGet(this, _send).call(this, {
+        type: FFMessageType.WRITE_FILE,
+        data: { path, data }
+      }, trans, signal);
+    });
+    __publicField(this, "mount", (fsType, options, mountPoint) => {
+      const trans = [];
+      return __privateGet(this, _send).call(this, {
+        type: FFMessageType.MOUNT,
+        data: { fsType, options, mountPoint }
+      }, trans);
+    });
+    __publicField(this, "unmount", (mountPoint) => {
+      const trans = [];
+      return __privateGet(this, _send).call(this, {
+        type: FFMessageType.UNMOUNT,
+        data: { mountPoint }
+      }, trans);
+    });
+    /**
+     * Read data from ffmpeg.wasm.
+     *
+     * @example
+     * ```ts
+     * const ffmpeg = new FFmpeg();
+     * await ffmpeg.load();
+     * const data = await ffmpeg.readFile("video.mp4");
+     * ```
+     *
+     * @category File System
+     */
+    __publicField(this, "readFile", (path, encoding = "binary", { signal } = {}) => __privateGet(this, _send).call(this, {
+      type: FFMessageType.READ_FILE,
+      data: { path, encoding }
+    }, void 0, signal));
+    /**
+     * Delete a file.
+     *
+     * @category File System
+     */
+    __publicField(this, "deleteFile", (path, { signal } = {}) => __privateGet(this, _send).call(this, {
+      type: FFMessageType.DELETE_FILE,
+      data: { path }
+    }, void 0, signal));
+    /**
+     * Rename a file or directory.
+     *
+     * @category File System
+     */
+    __publicField(this, "rename", (oldPath, newPath, { signal } = {}) => __privateGet(this, _send).call(this, {
+      type: FFMessageType.RENAME,
+      data: { oldPath, newPath }
+    }, void 0, signal));
+    /**
+     * Create a directory.
+     *
+     * @category File System
+     */
+    __publicField(this, "createDir", (path, { signal } = {}) => __privateGet(this, _send).call(this, {
+      type: FFMessageType.CREATE_DIR,
+      data: { path }
+    }, void 0, signal));
+    /**
+     * List directory contents.
+     *
+     * @category File System
+     */
+    __publicField(this, "listDir", (path, { signal } = {}) => __privateGet(this, _send).call(this, {
+      type: FFMessageType.LIST_DIR,
+      data: { path }
+    }, void 0, signal));
+    /**
+     * Delete an empty directory.
+     *
+     * @category File System
+     */
+    __publicField(this, "deleteDir", (path, { signal } = {}) => __privateGet(this, _send).call(this, {
+      type: FFMessageType.DELETE_DIR,
+      data: { path }
+    }, void 0, signal));
   }
-  async chooseAction() {
-    return new Promise((resolve) => {
-      this.resolvePromise = resolve;
-      this.open();
+  on(event, callback) {
+    if (event === "log") {
+      __privateGet(this, _logEventCallbacks).push(callback);
+    } else if (event === "progress") {
+      __privateGet(this, _progressEventCallbacks).push(callback);
+    }
+  }
+  off(event, callback) {
+    if (event === "log") {
+      __privateSet(this, _logEventCallbacks, __privateGet(this, _logEventCallbacks).filter((f) => f !== callback));
+    } else if (event === "progress") {
+      __privateSet(this, _progressEventCallbacks, __privateGet(this, _progressEventCallbacks).filter((f) => f !== callback));
+    }
+  }
+};
+_worker = new WeakMap();
+_resolves = new WeakMap();
+_rejects = new WeakMap();
+_logEventCallbacks = new WeakMap();
+_progressEventCallbacks = new WeakMap();
+_registerHandlers = new WeakMap();
+_send = new WeakMap();
+
+// node_modules/@ffmpeg/ffmpeg/dist/esm/types.js
+var FFFSType;
+(function(FFFSType2) {
+  FFFSType2["MEMFS"] = "MEMFS";
+  FFFSType2["NODEFS"] = "NODEFS";
+  FFFSType2["NODERAWFS"] = "NODERAWFS";
+  FFFSType2["IDBFS"] = "IDBFS";
+  FFFSType2["WORKERFS"] = "WORKERFS";
+  FFFSType2["PROXYFS"] = "PROXYFS";
+})(FFFSType || (FFFSType = {}));
+
+// node_modules/@ffmpeg/util/dist/esm/errors.js
+var ERROR_RESPONSE_BODY_READER = new Error("failed to get response body reader");
+var ERROR_INCOMPLETED_DOWNLOAD = new Error("failed to complete download");
+
+// node_modules/@ffmpeg/util/dist/esm/const.js
+var HeaderContentLength = "Content-Length";
+
+// node_modules/@ffmpeg/util/dist/esm/index.js
+var readFromBlobOrFile = (blob) => new Promise((resolve, reject) => {
+  const fileReader = new FileReader();
+  fileReader.onload = () => {
+    const { result } = fileReader;
+    if (result instanceof ArrayBuffer) {
+      resolve(new Uint8Array(result));
+    } else {
+      resolve(new Uint8Array());
+    }
+  };
+  fileReader.onerror = (event) => {
+    reject(Error(`File could not be read! Code=${event?.target?.error?.code || -1}`));
+  };
+  fileReader.readAsArrayBuffer(blob);
+});
+var fetchFile = async (file) => {
+  let data;
+  if (typeof file === "string") {
+    if (/data:_data\/([a-zA-Z]*);base64,([^"]*)/.test(file)) {
+      data = atob(file.split(",")[1]).split("").map((c) => c.charCodeAt(0));
+    } else {
+      data = await (await fetch(file)).arrayBuffer();
+    }
+  } else if (file instanceof URL) {
+    data = await (await fetch(file)).arrayBuffer();
+  } else if (file instanceof File || file instanceof Blob) {
+    data = await readFromBlobOrFile(file);
+  } else {
+    return new Uint8Array();
+  }
+  return new Uint8Array(data);
+};
+var downloadWithProgress = async (url, cb) => {
+  const resp = await fetch(url);
+  let buf;
+  try {
+    const total = parseInt(resp.headers.get(HeaderContentLength) || "-1");
+    const reader = resp.body?.getReader();
+    if (!reader)
+      throw ERROR_RESPONSE_BODY_READER;
+    const chunks = [];
+    let received = 0;
+    for (; ; ) {
+      const { done, value } = await reader.read();
+      const delta = value ? value.length : 0;
+      if (done) {
+        if (total != -1 && total !== received)
+          throw ERROR_INCOMPLETED_DOWNLOAD;
+        cb && cb({ url, total, received, delta, done });
+        break;
+      }
+      chunks.push(value);
+      received += delta;
+      cb && cb({ url, total, received, delta, done });
+    }
+    const data = new Uint8Array(received);
+    let position = 0;
+    for (const chunk of chunks) {
+      data.set(chunk, position);
+      position += chunk.length;
+    }
+    buf = data.buffer;
+  } catch (e) {
+    console.log(`failed to send download progress event: `, e);
+    buf = await resp.arrayBuffer();
+    cb && cb({
+      url,
+      total: buf.byteLength,
+      received: buf.byteLength,
+      delta: 0,
+      done: true
     });
   }
-  onOpen() {
-    const { contentEl } = this;
-    contentEl.empty();
-    contentEl.addClass("neurovox-recovery-modal");
-    contentEl.createEl("h3", { text: "NeuroVox Recovery" });
-    contentEl.createEl("p", { text: "Found incomplete transcription jobs. Choose an action:" });
-    const controls = contentEl.createDiv({ cls: "neurovox-recovery-controls" });
-    const resumeNewest = controls.createEl("button", { text: "Resume Newest" });
-    resumeNewest.onclick = () => this.finish({ type: "resume_newest" });
-    const cancelAll = controls.createEl("button", { text: "Cancel All" });
-    cancelAll.onclick = () => this.finish({ type: "cancel_all" });
-    const dismiss = controls.createEl("button", { text: "Dismiss" });
-    dismiss.onclick = () => this.finish({ type: "dismiss" });
-    const list = contentEl.createDiv({ cls: "neurovox-recovery-list" });
-    for (const job of this.jobs) {
-      const item = list.createDiv({ cls: "neurovox-recovery-item" });
-      const title = item.createDiv({ cls: "neurovox-recovery-title" });
-      title.setText(`${job.kind.toUpperCase()} \u2022 ${job.jobId.slice(0, 12)}... \u2022 ${job.status}`);
-      const meta = item.createDiv({ cls: "neurovox-recovery-meta" });
-      meta.setText(`File: ${job.targetFile} \u2022 Updated: ${new Date(job.updatedAt).toLocaleString()}`);
-      if (job.error) {
-        const errorEl = item.createDiv({ cls: "neurovox-recovery-error" });
-        errorEl.setText(`Error: ${job.error}`);
-      }
-      const row = item.createDiv({ cls: "neurovox-recovery-row" });
-      const resumeBtn = row.createEl("button", { text: "Resume" });
-      resumeBtn.onclick = () => this.finish({ type: "resume", jobId: job.jobId });
-      const cancelBtn = row.createEl("button", { text: "Cancel" });
-      cancelBtn.onclick = () => this.finish({ type: "cancel", jobId: job.jobId });
-    }
-  }
-  onClose() {
-    if (this.resolvePromise) {
-      const resolve = this.resolvePromise;
-      this.resolvePromise = null;
-      resolve({ type: "dismiss" });
-    }
-  }
-  finish(action) {
-    if (this.resolvePromise) {
-      const resolve = this.resolvePromise;
-      this.resolvePromise = null;
-      resolve(action);
-    }
-    this.close();
-  }
+  return buf;
+};
+var toBlobURL = async (url, mimeType, progress = false, cb) => {
+  const buf = progress ? await downloadWithProgress(url, cb) : await (await fetch(url)).arrayBuffer();
+  const blob = new Blob([buf], { type: mimeType });
+  return URL.createObjectURL(blob);
 };
 
-// src/adapters/OpenAIAdapter.ts
-var OpenAIAdapter = class extends AIAdapter {
-  constructor(settings) {
-    super(settings, "openai" /* OpenAI */);
-    this.apiKey = "";
+// src-rebuild/utils/VideoProcessor.ts
+var _VideoProcessor = class {
+  constructor(plugin) {
+    this.plugin = plugin;
+    this.isProcessing = false;
   }
-  getApiKey() {
-    return this.apiKey;
-  }
-  setApiKeyInternal(key) {
-    this.apiKey = key;
-  }
-  getApiBaseUrl() {
-    return "https://api.openai.com/v1";
-  }
-  getTextGenerationEndpoint() {
-    return "/chat/completions";
-  }
-  getTranscriptionEndpoint() {
-    return "/audio/transcriptions";
-  }
-  async validateApiKeyImpl() {
-    if (!this.apiKey) {
-      return false;
+  static async getInstance(plugin) {
+    if (!this.instance) {
+      this.instance = new _VideoProcessor(plugin);
+      await this.instance.initializeFFmpeg();
     }
-    try {
-      await this.makeAPIRequest(
-        `${this.getApiBaseUrl()}/chat/completions`,
-        "POST",
-        {
-          "Content-Type": "application/json"
-        },
-        JSON.stringify({
-          model: "gpt-4o-mini",
-          messages: [{ role: "user", content: "test" }],
-          max_tokens: 1
-        })
-      );
-      return true;
-    } catch (error) {
-      return false;
-    }
+    return this.instance;
   }
-  parseTextGenerationResponse(response) {
-    var _a, _b, _c;
-    if ((_c = (_b = (_a = response == null ? void 0 : response.choices) == null ? void 0 : _a[0]) == null ? void 0 : _b.message) == null ? void 0 : _c.content) {
-      return response.choices[0].message.content;
-    }
-    throw new Error("Invalid response format from OpenAI");
-  }
-  parseTranscriptionResponse(response) {
-    if (response == null ? void 0 : response.text) {
-      return response.text;
-    }
-    throw new Error("Invalid transcription response format from OpenAI");
-  }
-};
-
-// src/adapters/GroqAdapter.ts
-var GroqAdapter = class extends AIAdapter {
-  constructor(settings) {
-    super(settings, "groq" /* Groq */);
-    this.apiKey = "";
-  }
-  getApiKey() {
-    return this.apiKey;
-  }
-  setApiKeyInternal(key) {
-    this.apiKey = key;
-  }
-  getApiBaseUrl() {
-    return "https://api.groq.com/openai/v1";
-  }
-  getTextGenerationEndpoint() {
-    return "/chat/completions";
-  }
-  getTranscriptionEndpoint() {
-    return "/audio/transcriptions";
-  }
-  async validateApiKeyImpl() {
-    if (!this.apiKey) {
-      return false;
-    }
-    try {
-      await this.makeAPIRequest(
-        `${this.getApiBaseUrl()}/chat/completions`,
-        "POST",
-        {
-          "Content-Type": "application/json"
-        },
-        JSON.stringify({
-          model: "llama-3.1-8b-instant",
-          messages: [{ role: "user", content: "test" }],
-          max_tokens: 1
-        })
-      );
-      return true;
-    } catch (error) {
-      return false;
-    }
-  }
-  parseTextGenerationResponse(response) {
-    var _a, _b, _c;
-    if ((_c = (_b = (_a = response == null ? void 0 : response.choices) == null ? void 0 : _a[0]) == null ? void 0 : _b.message) == null ? void 0 : _c.content) {
-      return response.choices[0].message.content;
-    }
-    throw new Error("Invalid response format from Groq");
-  }
-  parseTranscriptionResponse(response) {
-    if (response == null ? void 0 : response.text) {
-      return response.text;
-    }
-    throw new Error("Invalid transcription response format from Groq");
-  }
-};
-
-// src/adapters/DeepgramAdapter.ts
-var import_obsidian20 = require("obsidian");
-var _DeepgramAdapter = class extends AIAdapter {
-  constructor(settings) {
-    super(settings, "deepgram" /* Deepgram */);
-    this.apiKey = "";
-  }
-  getApiKey() {
-    return this.apiKey;
-  }
-  setApiKeyInternal(key) {
-    this.apiKey = key;
-  }
-  getApiBaseUrl() {
-    return "https://api.deepgram.com";
-  }
-  getTextGenerationEndpoint() {
-    return "";
-  }
-  getTranscriptionEndpoint() {
-    return "/v1/listen";
-  }
-  async validateApiKeyImpl() {
-    if (!this.apiKey) {
-      return false;
-    }
-    try {
-      const response = await this.makeAPIRequest(
-        `${this.getApiBaseUrl()}/v1/projects`,
-        "GET",
-        {},
-        null
-      );
-      return response && Array.isArray(response.projects);
-    } catch (error) {
-      return false;
-    }
-  }
-  parseTextGenerationResponse(response) {
-    throw new Error("Text generation not supported by Deepgram");
-  }
-  parseTranscriptionResponse(response) {
-    return this.parseTranscriptionResponseWithOptions(response, false);
-  }
-  parseTranscriptionResponseWithOptions(response, allowEmptyTranscription) {
-    var _a, _b, _c, _d, _e, _f;
-    let transcript = "";
-    if (this.settings.enableSpeakerDiarization) {
-      const utterances = (_a = response == null ? void 0 : response.results) == null ? void 0 : _a.utterances;
-      if (Array.isArray(utterances) && utterances.length > 0) {
-        transcript = this.formatDiarizedTranscript(utterances);
-      }
-    }
-    if (!transcript && ((_f = (_e = (_d = (_c = (_b = response == null ? void 0 : response.results) == null ? void 0 : _b.channels) == null ? void 0 : _c[0]) == null ? void 0 : _d.alternatives) == null ? void 0 : _e[0]) == null ? void 0 : _f.transcript)) {
-      transcript = response.results.channels[0].alternatives[0].transcript;
-    }
-    if (!transcript) {
-      if (allowEmptyTranscription) {
-        return "";
-      }
-      throw new Error("Invalid transcription response format from Deepgram");
-    }
-    transcript = this.normalizeSpeakerFormatting(transcript);
-    if (this.settings.forceRomanizedOutput) {
-      transcript = toRomanIfNeeded(transcript, true);
-    }
-    return transcript;
-  }
-  // Override the transcribeAudio method since Deepgram has a different API structure
-  async transcribeAudio(audioArrayBuffer, model, options) {
-    var _a;
-    try {
-      const query = new URLSearchParams({
-        model,
-        punctuate: "true",
-        smart_format: "true"
-      });
-      this.applyLanguageSettings(query, model);
-      if (this.settings.enableSpeakerDiarization) {
-        query.set("diarize", "true");
-        query.set("utterances", "true");
-      }
-      const endpoint = `${this.getApiBaseUrl()}${this.getTranscriptionEndpoint()}?${query.toString()}`;
-      const contentType = ((_a = options == null ? void 0 : options.mimeType) == null ? void 0 : _a.trim()) || "application/octet-stream";
-      const timeoutMs = this.calculateTimeoutMs(audioArrayBuffer.byteLength);
-      const response = await this.requestWithTimeout(
-        endpoint,
-        {
-          "Content-Type": contentType
-        },
-        audioArrayBuffer,
-        timeoutMs
-      );
-      const transcript = this.parseTranscriptionResponseWithOptions(
-        response,
-        (options == null ? void 0 : options.allowEmptyTranscription) === true
-      );
-      if (!(options == null ? void 0 : options.allowEmptyTranscription) && (!transcript || !transcript.trim())) {
-        throw new Error("Deepgram returned an empty transcript");
-      }
-      return transcript;
-    } catch (error) {
-      const message = this.getDeepgramErrorMessage(error);
-      throw new Error(`Failed to transcribe audio with Deepgram: ${message}`);
-    }
-  }
-  async diagnoseAudio(audioArrayBuffer, model, options) {
-    var _a, _b, _c, _d, _e, _f;
-    const query = new URLSearchParams({
-      model,
-      punctuate: "true",
-      smart_format: "true"
+  async initializeFFmpeg() {
+    this.ffmpeg = new FFmpeg();
+    const baseURL = "https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd";
+    await this.ffmpeg.load({
+      coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, "text/javascript"),
+      wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, "application/wasm")
     });
-    this.applyLanguageSettings(query, model);
-    if (this.settings.enableSpeakerDiarization) {
-      query.set("diarize", "true");
-      query.set("utterances", "true");
-    }
-    const endpoint = `${this.getApiBaseUrl()}${this.getTranscriptionEndpoint()}?${query.toString()}`;
-    const contentType = ((_a = options == null ? void 0 : options.mimeType) == null ? void 0 : _a.trim()) || "application/octet-stream";
-    const timeoutMs = this.calculateTimeoutMs(audioArrayBuffer.byteLength);
-    const response = await this.requestWithTimeout(
-      endpoint,
-      { "Content-Type": contentType },
-      audioArrayBuffer,
-      timeoutMs
-    );
-    const utterances = Array.isArray((_b = response == null ? void 0 : response.results) == null ? void 0 : _b.utterances) ? response.results.utterances : [];
-    const channel = (_d = (_c = response == null ? void 0 : response.results) == null ? void 0 : _c.channels) == null ? void 0 : _d[0];
-    const alternatives = Array.isArray(channel == null ? void 0 : channel.alternatives) ? channel.alternatives : [];
-    const transcript = (typeof ((_e = alternatives == null ? void 0 : alternatives[0]) == null ? void 0 : _e.transcript) === "string" ? alternatives[0].transcript : "") || "";
-    const speakerTagCount = (transcript.match(/Speaker\s+\d+:/g) || []).length;
-    const diarizeRequested = this.settings.enableSpeakerDiarization;
-    const fallbackPathUsed = diarizeRequested && utterances.length === 0 && transcript.length > 0;
-    return {
-      endpoint,
-      requestParams: Object.fromEntries(query.entries()),
-      utterancesPresent: utterances.length > 0,
-      utterancesCount: utterances.length,
-      channelsCount: Array.isArray((_f = response == null ? void 0 : response.results) == null ? void 0 : _f.channels) ? response.results.channels.length : 0,
-      alternativesCount: alternatives.length,
-      transcriptLength: transcript.length,
-      speakerTagCountInTranscript: speakerTagCount,
-      diarizeRequested,
-      fallbackPathUsed,
-      detectedLanguage: (channel == null ? void 0 : channel.detected_language) || null
-    };
   }
-  calculateTimeoutMs(sizeBytes) {
-    const sizeMb = Math.max(1, Math.ceil(sizeBytes / (1024 * 1024)));
-    const computed = sizeMb * _DeepgramAdapter.TIMEOUT_PER_MB_MS;
-    return Math.min(
-      _DeepgramAdapter.MAX_TIMEOUT_MS,
-      Math.max(_DeepgramAdapter.MIN_TIMEOUT_MS, computed)
-    );
-  }
-  applyLanguageSettings(query, model) {
-    const languageHints = (this.settings.deepgramLanguageHints || "").split(",").map((s) => s.trim()).filter(Boolean);
-    const hintSet = new Set(languageHints.map((hint) => hint.toLowerCase()));
-    const supportsMulti = /^nova-(2|3)/i.test(model);
-    const shouldUseMulti = supportsMulti && (hintSet.has("multi") || languageHints.length > 1);
-    if (shouldUseMulti) {
-      query.set("language", "multi");
-      return;
+  async processVideo(file) {
+    if (this.isProcessing) {
+      throw new Error("Video processing is already in progress.");
     }
-    if (this.settings.deepgramDetectLanguage) {
-      query.set("detect_language", "true");
-      if (languageHints.length > 0) {
-        query.set("languages", languageHints.join(","));
-      }
-      return;
-    }
-    if (languageHints.length > 0) {
-      query.set("language", languageHints[0]);
-    }
-  }
-  async requestWithTimeout(endpoint, headers, body, timeoutMs) {
-    let timeoutHandle = null;
     try {
-      return await Promise.race([
-        this.makeAPIRequest(endpoint, "POST", headers, body),
-        new Promise((_, reject) => {
-          timeoutHandle = setTimeout(() => {
-            reject(
-              new Error(
-                `Deepgram request timed out after ${Math.round(timeoutMs / 1e3)}s`
-              )
-            );
-          }, timeoutMs);
-        })
-      ]);
-    } finally {
-      if (timeoutHandle) {
-        clearTimeout(timeoutHandle);
-      }
-    }
-  }
-  formatDiarizedTranscript(utterances) {
-    let currentSpeaker = null;
-    const lines = [];
-    for (const utt of utterances) {
-      const text = typeof (utt == null ? void 0 : utt.transcript) === "string" ? utt.transcript.trim() : "";
-      if (!text)
-        continue;
-      const speakerId = typeof (utt == null ? void 0 : utt.speaker) === "number" ? utt.speaker + 1 : 0;
-      const speakerLabel = speakerId > 0 ? `Speaker ${speakerId}` : "Speaker";
-      const timestamp = this.formatTimestampToken(utt == null ? void 0 : utt.start);
-      if (speakerLabel !== currentSpeaker) {
-        if (lines.length > 0) {
-          lines.push("");
-        }
-        lines.push(`${timestamp} ${speakerLabel}: ${text}`);
-        currentSpeaker = speakerLabel;
-      } else {
-        const lastIndex = lines.length - 1;
-        lines[lastIndex] = `${lines[lastIndex]} ${text}`;
-      }
-    }
-    return lines.join("\n").trim();
-  }
-  normalizeSpeakerFormatting(transcript) {
-    const speakerMatches = transcript.match(/Speaker\s+\d+:/g);
-    if (!speakerMatches || speakerMatches.length < 2) {
-      return transcript;
-    }
-    let normalized = transcript.replace(/\s*(Speaker\s+\d+:)/g, "\n$1").trim();
-    normalized = normalized.replace(/\n{3,}/g, "\n\n");
-    return normalized;
-  }
-  formatTimestampToken(startSeconds) {
-    const raw = typeof startSeconds === "number" && Number.isFinite(startSeconds) ? startSeconds : 0;
-    const total = Math.max(0, Math.floor(raw));
-    const hours = Math.floor(total / 3600).toString().padStart(2, "0");
-    const minutes = Math.floor(total % 3600 / 60).toString().padStart(2, "0");
-    const seconds = (total % 60).toString().padStart(2, "0");
-    return `[${hours}:${minutes}:${seconds}]`;
-  }
-  // Override the makeAPIRequest method to handle Deepgram's authorization header format
-  async makeAPIRequest(endpoint, method, headers, body) {
-    try {
-      const requestHeaders = {
-        "Authorization": `Token ${this.getApiKey()}`,
-        // Deepgram uses "Token" instead of "Bearer"
-        ...headers
-      };
-      const response = await (0, import_obsidian20.requestUrl)({
-        url: endpoint,
-        method,
-        headers: requestHeaders,
-        body: body || void 0,
-        throw: true
-      });
-      if (!response.json) {
-        throw new Error("Invalid response format");
-      }
-      return response.json;
+      this.isProcessing = true;
+      new import_obsidian22.Notice("\u{1F3A5} Starting video processing...");
+      const transcriptFile = await this.createTranscriptFile(file);
+      const audioBuffer = await this.extractAudioFromVideo(file);
+      const recordingProcessor = RecordingProcessor.getInstance(this.plugin);
+      const audioBlob = new Blob([audioBuffer], { type: "audio/wav" });
+      await recordingProcessor.processRecording(
+        audioBlob,
+        transcriptFile,
+        { line: 0, ch: 0 },
+        file.path
+      );
+      new import_obsidian22.Notice("\u2728 Video transcription completed");
+      await this.plugin.app.workspace.getLeaf().openFile(transcriptFile);
     } catch (error) {
+      const message = error instanceof Error ? error.message : "Unknown error occurred";
+      new import_obsidian22.Notice("\u274C Video processing failed: " + message);
       throw error;
+    } finally {
+      this.isProcessing = false;
     }
   }
-  getDeepgramErrorMessage(error) {
-    if (!(error instanceof Error)) {
-      return this.getErrorMessage(error);
+  async createTranscriptFile(videoFile) {
+    const baseName = videoFile.basename.replace(/[\\/:*?"<>|]/g, "");
+    const fileName = `${baseName} - Video Transcript.md`;
+    const folderPath = this.plugin.settings.transcriptFolderPath;
+    if (folderPath) {
+      const parts = folderPath.split("/").filter(Boolean);
+      let currentPath = "";
+      for (const part of parts) {
+        currentPath = currentPath ? `${currentPath}/${part}` : part;
+        const folder = this.plugin.app.vault.getAbstractFileByPath(currentPath);
+        if (!folder) {
+          await this.plugin.app.vault.createFolder(currentPath);
+        }
+      }
     }
-    const raw = error.message || "Unknown error";
-    const statusMatch = raw.match(/\bstatus\s+(\d{3})\b/i);
-    const status = statusMatch ? statusMatch[1] : "";
-    let compact = raw.replace(/\s+/g, " ").trim();
-    if (compact.length > 280) {
-      compact = `${compact.slice(0, 280)}...`;
+    const filePath = folderPath ? `${folderPath}/${fileName}` : fileName;
+    return this.plugin.app.vault.create(filePath, "");
+  }
+  async extractAudioFromVideo(file) {
+    new import_obsidian22.Notice("\u{1F3B5} Extracting audio from video...");
+    try {
+      const videoData = await this.plugin.app.vault.readBinary(file);
+      const videoBlob = new Blob([videoData], { type: this.getVideoMimeType(file.extension) });
+      const videoURL = URL.createObjectURL(videoBlob);
+      await this.ffmpeg.writeFile("input." + file.extension, await fetchFile(videoURL));
+      await this.ffmpeg.exec([
+        "-i",
+        "input." + file.extension,
+        "-vn",
+        // No video
+        "-acodec",
+        "libmp3lame",
+        // MP3 codec
+        "-ab",
+        "320k",
+        // Bitrate
+        "-ar",
+        "44100",
+        // Sample rate
+        "-ac",
+        "2",
+        // Stereo
+        "output.mp3"
+        // Output file
+      ]);
+      const data = await this.ffmpeg.readFile("output.mp3");
+      URL.revokeObjectURL(videoURL);
+      await this.ffmpeg.deleteFile("input." + file.extension);
+      await this.ffmpeg.deleteFile("output.mp3");
+      return data.buffer;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unknown error occurred";
+      throw new Error("Failed to extract audio: " + message);
     }
-    return status ? `status ${status} - ${compact}` : compact;
+  }
+  getVideoMimeType(extension) {
+    const mimeTypes = {
+      "mp4": "video/mp4",
+      "webm": "video/webm",
+      "mov": "video/quicktime"
+    };
+    return mimeTypes[extension.toLowerCase()] || "video/mp4";
   }
 };
-var DeepgramAdapter = _DeepgramAdapter;
-DeepgramAdapter.MIN_TIMEOUT_MS = 18e4;
-DeepgramAdapter.MAX_TIMEOUT_MS = 18e5;
-DeepgramAdapter.TIMEOUT_PER_MB_MS = 8e3;
+var VideoProcessor = _VideoProcessor;
+VideoProcessor.instance = null;
 
-// src/settings/migrations.ts
+// src-rebuild/settings/migrations.ts
 function migrateAndNormalizeSettings(data) {
   const raw = isRecord(data) ? data : {};
   const sourceVersion = getSourceVersion(raw);
@@ -14509,15 +14743,14 @@ function isRecord(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-// src/main.ts
-var _NeuroVoxPlugin = class extends import_obsidian21.Plugin {
-  constructor() {
-    super(...arguments);
+// src-rebuild/main.ts
+var _NeuroVoxPlugin = class extends import_obsidian23.Plugin {
+  constructor(...args) {
+    super(...args);
     this.buttonMap = /* @__PURE__ */ new Map();
     this.activeLeaf = null;
     this.settingTab = null;
-    // Custom events emitter
-    this.events = new import_obsidian21.Events();
+    this.events = new import_obsidian23.Events();
     this.processingStatusEl = null;
     this.processingInterval = null;
     this.statusReconcileInterval = null;
@@ -14548,7 +14781,7 @@ var _NeuroVoxPlugin = class extends import_obsidian21.Plugin {
       console.debug(`[NeuroVox][Startup] critical startup complete in ${elapsed}ms`);
       this.startDeferredStartupTasks();
     } catch (error) {
-      new import_obsidian21.Notice("Failed to initialize NeuroVox plugin");
+      new import_obsidian23.Notice("Failed to initialize NeuroVox plugin");
     }
   }
   /**
@@ -14558,8 +14791,8 @@ var _NeuroVoxPlugin = class extends import_obsidian21.Plugin {
     this.events.on("floating-button-setting-changed", (isEnabled) => {
       this.cleanupUI();
       if (isEnabled) {
-        const activeView = this.app.workspace.getActiveViewOfType(import_obsidian21.MarkdownView);
-        if (activeView == null ? void 0 : activeView.file) {
+        const activeView = this.app.workspace.getActiveViewOfType(import_obsidian23.MarkdownView);
+        if (activeView && activeView.file) {
           this.createButtonForFile(activeView.file);
         }
       }
@@ -14576,16 +14809,16 @@ var _NeuroVoxPlugin = class extends import_obsidian21.Plugin {
       if (migration.migrated) {
         await this.persistSettingsBackup(migration.backupSource);
         await this.saveData(this.settings);
-        new import_obsidian21.Notice(
+        new import_obsidian23.Notice(
           `NeuroVox settings migrated to v${CURRENT_SETTINGS_VERSION} from v${migration.sourceVersion}.`
         );
       }
       if (migration.warnings.length > 0) {
-        new import_obsidian21.Notice("NeuroVox normalized invalid settings values.");
+        new import_obsidian23.Notice("NeuroVox normalized invalid settings values.");
       }
     } catch (error) {
       this.settings = { ...DEFAULT_SETTINGS };
-      new import_obsidian21.Notice("Failed to load NeuroVox settings. Using defaults.");
+      new import_obsidian23.Notice("Failed to load NeuroVox settings. Using defaults.");
     }
   }
   /**
@@ -14605,14 +14838,23 @@ var _NeuroVoxPlugin = class extends import_obsidian21.Plugin {
         this.events.trigger("floating-button-setting-changed", this.settings.showFloatingButton);
       }
     } catch (error) {
-      new import_obsidian21.Notice("Failed to save NeuroVox settings");
+      new import_obsidian23.Notice("Failed to save NeuroVox settings");
     }
   }
   async validateApiKeys(showInvalidNotices = true) {
     try {
-      const openaiAdapter = this.aiAdapters.get("openai" /* OpenAI */);
-      const groqAdapter = this.aiAdapters.get("groq" /* Groq */);
-      const deepgramAdapter = this.aiAdapters.get("deepgram" /* Deepgram */);
+      const openaiAdapter = this.aiAdapters.get(
+        "openai"
+        /* OpenAI */
+      );
+      const groqAdapter = this.aiAdapters.get(
+        "groq"
+        /* Groq */
+      );
+      const deepgramAdapter = this.aiAdapters.get(
+        "deepgram"
+        /* Deepgram */
+      );
       if (openaiAdapter) {
         openaiAdapter.setApiKey(this.settings.openaiApiKey);
         await this.validateAdapterWithTimeout(openaiAdapter);
@@ -14626,13 +14868,13 @@ var _NeuroVoxPlugin = class extends import_obsidian21.Plugin {
         await this.validateAdapterWithTimeout(deepgramAdapter);
       }
       if (showInvalidNotices && openaiAdapter && !openaiAdapter.isReady() && this.settings.openaiApiKey) {
-        new import_obsidian21.Notice("\u274C OpenAI API key validation failed");
+        new import_obsidian23.Notice("\u274C OpenAI API key validation failed");
       }
       if (showInvalidNotices && groqAdapter && !groqAdapter.isReady() && this.settings.groqApiKey) {
-        new import_obsidian21.Notice("\u274C Groq API key validation failed");
+        new import_obsidian23.Notice("\u274C Groq API key validation failed");
       }
       if (showInvalidNotices && deepgramAdapter && !deepgramAdapter.isReady() && this.settings.deepgramApiKey) {
-        new import_obsidian21.Notice("\u274C Deepgram API key validation failed");
+        new import_obsidian23.Notice("\u274C Deepgram API key validation failed");
       }
     } catch (error) {
     }
@@ -14640,9 +14882,9 @@ var _NeuroVoxPlugin = class extends import_obsidian21.Plugin {
   initializeAIAdapters() {
     try {
       const adapters = [
-        ["openai" /* OpenAI */, new OpenAIAdapter(this.settings)],
-        ["groq" /* Groq */, new GroqAdapter(this.settings)],
-        ["deepgram" /* Deepgram */, new DeepgramAdapter(this.settings)]
+        ["openai", new OpenAIAdapter(this.settings)],
+        ["groq", new GroqAdapter(this.settings)],
+        ["deepgram", new DeepgramAdapter(this.settings)]
       ];
       this.aiAdapters = new Map(adapters);
     } catch (error) {
@@ -14657,8 +14899,8 @@ var _NeuroVoxPlugin = class extends import_obsidian21.Plugin {
       id: "start-recording",
       name: "Start recording",
       checkCallback: (checking) => {
-        const activeView = this.app.workspace.getActiveViewOfType(import_obsidian21.MarkdownView);
-        if (!(activeView == null ? void 0 : activeView.file))
+        const activeView = this.app.workspace.getActiveViewOfType(import_obsidian23.MarkdownView);
+        if (!(activeView && activeView.file))
           return false;
         if (checking)
           return true;
@@ -14672,10 +14914,10 @@ var _NeuroVoxPlugin = class extends import_obsidian21.Plugin {
       callback: async () => {
         const activeFile = this.app.workspace.getActiveFile();
         if (!activeFile || !this.isValidAudioFile(activeFile)) {
-          new import_obsidian21.Notice("\u274C Active file is not a valid audio file");
+          new import_obsidian23.Notice("\u274C Active file is not a valid audio file");
           return;
         }
-        new import_obsidian21.Notice(`\u{1F3B5} Transcribing: ${activeFile.path}`);
+        new import_obsidian23.Notice(`\u{1F3B5} Transcribing: ${activeFile.path}`);
         await this.processExistingAudioFile(activeFile);
       }
     });
@@ -14708,7 +14950,7 @@ var _NeuroVoxPlugin = class extends import_obsidian21.Plugin {
           const queue = new LocalQueueBackend(this);
           const jobs = await queue.getSnapshot();
           if (jobs.length === 0) {
-            new import_obsidian21.Notice("NeuroVox queue is empty.");
+            new import_obsidian23.Notice("NeuroVox queue is empty.");
             return;
           }
           const counts = jobs.reduce((acc, j) => {
@@ -14725,14 +14967,14 @@ var _NeuroVoxPlugin = class extends import_obsidian21.Plugin {
             `completed=${counts.completed || 0}`,
             `canceled=${counts.canceled || 0}`
           ].join(" | ");
-          new import_obsidian21.Notice(`NeuroVox queue: ${summary}`, 12e3);
+          new import_obsidian23.Notice(`NeuroVox queue: ${summary}`, 12e3);
           const top = jobs.slice(0, 3).map((j) => `${j.id} ${j.status} attempts=${j.attemptCount}`);
           if (top.length > 0) {
-            new import_obsidian21.Notice(`Recent jobs:
+            new import_obsidian23.Notice(`Recent jobs:
 ${top.join("\n")}`, 12e3);
           }
         } catch (error) {
-          new import_obsidian21.Notice("Failed to inspect NeuroVox queue.");
+          new import_obsidian23.Notice("Failed to inspect NeuroVox queue.");
         }
       }
     });
@@ -14743,14 +14985,14 @@ ${top.join("\n")}`, 12e3);
         try {
           const pending = await this.recordingProcessor.getIncompleteJobs();
           if (pending.length === 0) {
-            new import_obsidian21.Notice("NeuroVox has no incomplete jobs to cancel.");
+            new import_obsidian23.Notice("NeuroVox has no incomplete jobs to cancel.");
             return;
           }
           await Promise.all(pending.map((job) => this.recordingProcessor.cancelJob(job.jobId)));
           await this.reconcileProcessingStatusFromJobs();
-          new import_obsidian21.Notice(`NeuroVox canceled ${pending.length} incomplete job(s).`);
+          new import_obsidian23.Notice(`NeuroVox canceled ${pending.length} incomplete job(s).`);
         } catch (error) {
-          new import_obsidian21.Notice("Failed to cancel incomplete NeuroVox jobs.");
+          new import_obsidian23.Notice("Failed to cancel incomplete NeuroVox jobs.");
         }
       }
     });
@@ -14761,7 +15003,7 @@ ${top.join("\n")}`, 12e3);
         try {
           await this.openRecoveryJobsModal();
         } catch (e) {
-          new import_obsidian21.Notice("NeuroVox recovery review failed.");
+          new import_obsidian23.Notice("NeuroVox recovery review failed.");
         }
       }
     });
@@ -14770,35 +15012,38 @@ ${top.join("\n")}`, 12e3);
       name: "Diagnose Deepgram diarization (active note source)",
       callback: async () => {
         try {
-          if (this.settings.transcriptionProvider !== "deepgram" /* Deepgram */) {
-            new import_obsidian21.Notice("Set transcription provider to Deepgram before running diagnosis.");
+          if (this.settings.transcriptionProvider !== "deepgram") {
+            new import_obsidian23.Notice("Set transcription provider to Deepgram before running diagnosis.");
             return;
           }
-          const deepgram = this.aiAdapters.get("deepgram" /* Deepgram */);
+          const deepgram = this.aiAdapters.get(
+            "deepgram"
+            /* Deepgram */
+          );
           if (!(deepgram instanceof DeepgramAdapter)) {
-            new import_obsidian21.Notice("Deepgram adapter is not available.");
+            new import_obsidian23.Notice("Deepgram adapter is not available.");
             return;
           }
           if (!deepgram.getApiKey()) {
-            new import_obsidian21.Notice("Deepgram API key is not configured.");
+            new import_obsidian23.Notice("Deepgram API key is not configured.");
             return;
           }
-          const activeView = this.app.workspace.getActiveViewOfType(import_obsidian21.MarkdownView);
-          const activeFile = activeView == null ? void 0 : activeView.file;
+          const activeView = this.app.workspace.getActiveViewOfType(import_obsidian23.MarkdownView);
+          const activeFile = activeView && activeView.file;
           if (!activeFile) {
-            new import_obsidian21.Notice("Open a transcript note with source metadata first.");
+            new import_obsidian23.Notice("Open a transcript note with source metadata first.");
             return;
           }
           const content = await this.app.vault.read(activeFile);
           const sourcePath = this.resolveSourcePathFromNote(content);
           if (!sourcePath) {
-            new import_obsidian21.Notice("No source path found in this note.");
+            new import_obsidian23.Notice("No source path found in this note.");
             return;
           }
           const adapter = this.app.vault.adapter;
-          const normalizedSource = (0, import_obsidian21.normalizePath)(sourcePath);
+          const normalizedSource = (0, import_obsidian23.normalizePath)(sourcePath);
           if (!await adapter.exists(normalizedSource)) {
-            new import_obsidian21.Notice(`Source audio file not found: ${normalizedSource}`);
+            new import_obsidian23.Notice(`Source audio file not found: ${normalizedSource}`);
             return;
           }
           const binary = await adapter.readBinary(normalizedSource);
@@ -14812,10 +15057,10 @@ ${top.join("\n")}`, 12e3);
             diagnosis,
             normalizedSource
           );
-          new import_obsidian21.Notice(`Deepgram diagnosis saved: ${reportPath}`, 1e4);
+          new import_obsidian23.Notice(`Deepgram diagnosis saved: ${reportPath}`, 1e4);
         } catch (error) {
           const message = error instanceof Error ? error.message : String(error);
-          new import_obsidian21.Notice(`Deepgram diagnosis failed: ${message}`, 1e4);
+          new import_obsidian23.Notice(`Deepgram diagnosis failed: ${message}`, 1e4);
         }
       }
     });
@@ -14852,35 +15097,35 @@ ${top.join("\n")}`, 12e3);
     return validExtensions.includes(file.extension.toLowerCase());
   }
   isFileWithinFolder(filePath, folderPath) {
-    const normalizedFilePath = (0, import_obsidian21.normalizePath)(filePath);
-    const normalizedFolder = (0, import_obsidian21.normalizePath)(folderPath).replace(/\/+$/, "");
+    const normalizedFilePath = (0, import_obsidian23.normalizePath)(filePath);
+    const normalizedFolder = (0, import_obsidian23.normalizePath)(folderPath).replace(/\/+$/, "");
     if (!normalizedFolder)
       return false;
     return normalizedFilePath.startsWith(`${normalizedFolder}/`);
   }
   async transcribeLatestIphoneInboxRecording() {
     try {
-      const inboxFolder = (0, import_obsidian21.normalizePath)(
+      const inboxFolder = (0, import_obsidian23.normalizePath)(
         (this.settings.iphoneInboxFolderPath || "Recordings/Inbox").trim()
       );
       const adapter = this.app.vault.adapter;
       if (!await adapter.exists(inboxFolder)) {
-        new import_obsidian21.Notice(`iPhone inbox folder not found: ${inboxFolder}`);
+        new import_obsidian23.Notice(`iPhone inbox folder not found: ${inboxFolder}`);
         return;
       }
       const candidates = this.app.vault.getFiles().filter(
         (file) => this.isSupportedInboxAudioFile(file) && this.isFileWithinFolder(file.path, inboxFolder)
       ).sort((a, b) => b.stat.mtime - a.stat.mtime);
       if (candidates.length === 0) {
-        new import_obsidian21.Notice(`No audio files found in iPhone inbox: ${inboxFolder}`);
+        new import_obsidian23.Notice(`No audio files found in iPhone inbox: ${inboxFolder}`);
         return;
       }
       const latestFile = candidates[0];
-      new import_obsidian21.Notice(`\u{1F3B5} Transcribing latest inbox file: ${latestFile.name}`);
+      new import_obsidian23.Notice(`\u{1F3B5} Transcribing latest inbox file: ${latestFile.name}`);
       await this.processExistingAudioFile(latestFile);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      new import_obsidian21.Notice(`Failed to transcribe latest iPhone inbox recording: ${message}`);
+      new import_obsidian23.Notice(`Failed to transcribe latest iPhone inbox recording: ${message}`);
     }
   }
   isValidVideoFile(file) {
@@ -14921,7 +15166,7 @@ ${top.join("\n")}`, 12e3);
       const baseFileName = `${transcriptsFolder}/${timestamp}-${sanitizedName}.md`;
       let newFileName = baseFileName;
       let count = 1;
-      const normalizedPath = (0, import_obsidian21.normalizePath)(transcriptsFolder);
+      const normalizedPath = (0, import_obsidian23.normalizePath)(transcriptsFolder);
       if (!await this.app.vault.adapter.exists(normalizedPath)) {
         await this.app.vault.createFolder(normalizedPath);
       }
@@ -14940,17 +15185,17 @@ ${top.join("\n")}`, 12e3);
       const blob = new Blob([audioBuffer], {
         type: this.getAudioMimeType(file.extension)
       });
-      new import_obsidian21.Notice("\u{1F399}\uFE0F Processing audio file...");
+      new import_obsidian23.Notice("\u{1F399}\uFE0F Processing audio file...");
       await this.recordingProcessor.processRecording(
         blob,
         newFile,
         { line: initialContent.split("\n").length, ch: 0 },
         file.path
       );
-      new import_obsidian21.Notice("\u2728 Transcription completed successfully!");
+      new import_obsidian23.Notice("\u2728 Transcription completed successfully!");
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
-      new import_obsidian21.Notice(`\u274C ${errorMessage}`);
+      new import_obsidian23.Notice(`\u274C ${errorMessage}`);
       return;
     }
   }
@@ -14959,7 +15204,7 @@ ${top.join("\n")}`, 12e3);
       const videoProcessor = await VideoProcessor.getInstance(this);
       await videoProcessor.processVideo(file);
     } catch (error) {
-      new import_obsidian21.Notice("\u274C Failed to process video file");
+      new import_obsidian23.Notice("\u274C Failed to process video file");
       throw error;
     }
   }
@@ -15140,7 +15385,7 @@ ${top.join("\n")}`, 12e3);
   seekNearestAudioFromToken(tokenEl, targetSeconds) {
     const audio = this.findNearestAudioElement(tokenEl);
     if (!audio) {
-      new import_obsidian21.Notice("No audio player found in this note.");
+      new import_obsidian23.Notice("No audio player found in this note.");
       return;
     }
     try {
@@ -15151,7 +15396,7 @@ ${top.join("\n")}`, 12e3);
         });
       }
     } catch (e) {
-      new import_obsidian21.Notice("Could not seek audio for this timestamp.");
+      new import_obsidian23.Notice("Could not seek audio for this timestamp.");
     }
   }
   findNearestAudioElement(tokenEl) {
@@ -15186,14 +15431,14 @@ ${top.join("\n")}`, 12e3);
       button.remove();
     }
     this.buttonMap.clear();
-    if (this.settings.showFloatingButton && (leaf == null ? void 0 : leaf.view) instanceof import_obsidian21.MarkdownView && leaf.view.file) {
+    if (this.settings.showFloatingButton && (leaf == null ? void 0 : leaf.view) instanceof import_obsidian23.MarkdownView && leaf.view.file) {
       this.createButtonForFile(leaf.view.file);
     }
   }
   handleLayoutChange() {
     if (this.settings.showFloatingButton) {
-      const activeView = this.app.workspace.getActiveViewOfType(import_obsidian21.MarkdownView);
-      if (activeView == null ? void 0 : activeView.file) {
+      const activeView = this.app.workspace.getActiveViewOfType(import_obsidian23.MarkdownView);
+      if (activeView && activeView.file) {
         const button = this.buttonMap.get(activeView.file.path);
         if (button) {
           button.show();
@@ -15204,7 +15449,7 @@ ${top.join("\n")}`, 12e3);
     }
   }
   handleFileDelete(file) {
-    if (file instanceof import_obsidian21.TFile) {
+    if (file instanceof import_obsidian23.TFile) {
       const button = this.buttonMap.get(file.path);
       if (button) {
         button.remove();
@@ -15234,14 +15479,14 @@ ${top.join("\n")}`, 12e3);
   }
   handleRecordingStart() {
     var _a;
-    const activeView = this.app.workspace.getActiveViewOfType(import_obsidian21.MarkdownView);
+    const activeView = this.app.workspace.getActiveViewOfType(import_obsidian23.MarkdownView);
     if (!activeView) {
-      new import_obsidian21.Notice("\u274C No active note found to insert transcription.");
+      new import_obsidian23.Notice("\u274C No active note found to insert transcription.");
       return;
     }
     const activeFile = activeView.file;
     if (!activeFile) {
-      new import_obsidian21.Notice("\u274C No active file found.");
+      new import_obsidian23.Notice("\u274C No active file found.");
       return;
     }
     const insertionPosition = activeView.editor.getCursor();
@@ -15273,7 +15518,7 @@ ${top.join("\n")}`, 12e3);
           }
         } catch (error) {
           const errorMessage = error instanceof Error ? error.message : "Unknown error";
-          new import_obsidian21.Notice(`\u274C Failed to process recording: ${errorMessage}`);
+          new import_obsidian23.Notice(`\u274C Failed to process recording: ${errorMessage}`);
         }
       };
       const originalOnClose = (_a = this.modalInstance.onClose) == null ? void 0 : _a.bind(this.modalInstance);
@@ -15349,19 +15594,19 @@ ${top.join("\n")}`, 12e3);
       await RuntimeLogger.prune(this);
       await this.cleanupStaleLivePreviewInVault();
     } catch (e) {
-      new import_obsidian21.Notice("NeuroVox startup maintenance skipped due to storage error.");
+      new import_obsidian23.Notice("NeuroVox startup maintenance skipped due to storage error.");
     }
     try {
       const pending = await this.recordingProcessor.getIncompleteJobs();
       if (pending.length > 0) {
-        new import_obsidian21.Notice(
+        new import_obsidian23.Notice(
           `NeuroVox found ${pending.length} incomplete job(s). Use command: Review recovery jobs.`,
           12e3
         );
       }
       await this.reconcileProcessingStatusFromJobs();
     } catch (e) {
-      new import_obsidian21.Notice("NeuroVox recovery scan failed at startup.");
+      new import_obsidian23.Notice("NeuroVox recovery scan failed at startup.");
     } finally {
       const elapsed = Math.round(performance.now() - startedAt);
       console.debug(`[NeuroVox][Startup] deferred maintenance+recovery finished in ${elapsed}ms`);
@@ -15385,7 +15630,7 @@ ${top.join("\n")}`, 12e3);
       }
     }
     if (removedBlocks > 0) {
-      new import_obsidian21.Notice(
+      new import_obsidian23.Notice(
         `NeuroVox cleaned ${removedBlocks} stale live preview block(s) across ${cleanedNotes} note(s).`,
         8e3
       );
@@ -15395,7 +15640,7 @@ ${top.join("\n")}`, 12e3);
     try {
       const pending = await this.recordingProcessor.getIncompleteJobs();
       if (pending.length === 0) {
-        new import_obsidian21.Notice("NeuroVox has no incomplete jobs.");
+        new import_obsidian23.Notice("NeuroVox has no incomplete jobs.");
         return;
       }
       const ordered = [...pending].sort((a, b) => a.updatedAt < b.updatedAt ? 1 : -1);
@@ -15403,7 +15648,7 @@ ${top.join("\n")}`, 12e3);
       const action = await modal.chooseAction();
       await this.executeRecoveryAction(action, ordered);
     } catch (error) {
-      new import_obsidian21.Notice("NeuroVox recovery scan failed at startup.");
+      new import_obsidian23.Notice("NeuroVox recovery scan failed at startup.");
     }
   }
   async executeRecoveryAction(action, ordered) {
@@ -15412,7 +15657,7 @@ ${top.join("\n")}`, 12e3);
       if (!newest)
         return;
       const resumed = await this.recordingProcessor.resumeJob(newest.jobId);
-      new import_obsidian21.Notice(
+      new import_obsidian23.Notice(
         resumed ? "NeuroVox resumed the newest incomplete transcript from checkpoint." : "NeuroVox could not resume the newest job automatically."
       );
       return;
@@ -15420,12 +15665,12 @@ ${top.join("\n")}`, 12e3);
     if (action.type === "cancel_all") {
       await Promise.all(ordered.map((job) => this.recordingProcessor.cancelJob(job.jobId)));
       await this.reconcileProcessingStatusFromJobs();
-      new import_obsidian21.Notice("NeuroVox canceled all incomplete transcription jobs.");
+      new import_obsidian23.Notice("NeuroVox canceled all incomplete transcription jobs.");
       return;
     }
     if (action.type === "resume") {
       const resumed = await this.recordingProcessor.resumeJob(action.jobId);
-      new import_obsidian21.Notice(
+      new import_obsidian23.Notice(
         resumed ? "NeuroVox resumed the selected incomplete transcript from checkpoint." : "NeuroVox could not resume this job automatically."
       );
       return;
@@ -15433,7 +15678,7 @@ ${top.join("\n")}`, 12e3);
     if (action.type === "cancel") {
       await this.recordingProcessor.cancelJob(action.jobId);
       await this.reconcileProcessingStatusFromJobs();
-      new import_obsidian21.Notice("NeuroVox canceled the selected incomplete transcription job.");
+      new import_obsidian23.Notice("NeuroVox canceled the selected incomplete transcription job.");
     }
   }
   async validateAdapterWithTimeout(adapter) {
@@ -15472,7 +15717,7 @@ ${top.join("\n")}`, 12e3);
       const backupPath = `${baseDir}/settings-backup-${stamp}.json`;
       await adapter.write(backupPath, JSON.stringify(source, null, 2));
     } catch (error) {
-      new import_obsidian21.Notice("NeuroVox could not write settings backup before migration.");
+      new import_obsidian23.Notice("NeuroVox could not write settings backup before migration.");
     }
   }
   setProcessingStatus(message) {
@@ -15512,7 +15757,7 @@ ${top.join("\n")}`, 12e3);
   }
   extractSourcePathFromCalloutMetadata(content) {
     const sourceMatch = /^\s*(?:>\s*)*Source:\s*(.+)\s*$/im.exec(content);
-    if (!(sourceMatch == null ? void 0 : sourceMatch[1]))
+    if (!sourceMatch || !sourceMatch[1])
       return null;
     return sourceMatch[1].trim();
   }
@@ -15538,36 +15783,36 @@ ${top.join("\n")}`, 12e3);
   }
   async applySpeakerNamesFromMappingInActiveNote() {
     var _a;
-    const activeView = this.app.workspace.getActiveViewOfType(import_obsidian21.MarkdownView);
-    const activeFile = activeView == null ? void 0 : activeView.file;
-    if (!(activeFile instanceof import_obsidian21.TFile) || !activeView || activeFile.extension.toLowerCase() !== "md") {
-      new import_obsidian21.Notice("Open a transcript markdown note first.");
+    const activeView = this.app.workspace.getActiveViewOfType(import_obsidian23.MarkdownView);
+    const activeFile = activeView && activeView.file;
+    if (!(activeFile instanceof import_obsidian23.TFile) || !activeView || activeFile.extension.toLowerCase() !== "md") {
+      new import_obsidian23.Notice("Open a transcript markdown note first.");
       return;
     }
     try {
       const content = await this.app.vault.read(activeFile);
       const region = findEntryRegionAtPosition(content, activeView.editor.getCursor());
       if (!region || !((_a = region.meta) == null ? void 0 : _a.id)) {
-        new import_obsidian21.Notice("No scoped transcription entry mapping found at cursor.");
+        new import_obsidian23.Notice("No scoped transcription entry mapping found at cursor.");
         return;
       }
       const result = applySpeakerMappingToEntry(content, region.meta.id, region.start, region.end);
       if (result.mappedSpeakers === 0) {
-        new import_obsidian21.Notice("No speaker names found in the Speaker Mapping section.");
+        new import_obsidian23.Notice("No speaker names found in the Speaker Mapping section.");
         return;
       }
       if (result.replacedCount === 0) {
-        new import_obsidian21.Notice("No matching speaker labels found in this entry body. Ensure lines use speaker labels (e.g., Speaker 1:).");
+        new import_obsidian23.Notice("No matching speaker labels found in this entry body. Ensure lines use speaker labels (e.g., Speaker 1:).");
         return;
       }
       await this.app.vault.modify(activeFile, result.updatedContent);
-      new import_obsidian21.Notice(`Applied ${result.replacedCount} speaker label replacement(s).`);
+      new import_obsidian23.Notice(`Applied ${result.replacedCount} speaker label replacement(s).`);
     } catch (e) {
-      new import_obsidian21.Notice("Failed to apply speaker names from mapping.");
+      new import_obsidian23.Notice("Failed to apply speaker names from mapping.");
     }
   }
   handleNoteModifyForSpeakerAutoApply(file) {
-    if (!(file instanceof import_obsidian21.TFile) || file.extension.toLowerCase() !== "md") {
+    if (!(file instanceof import_obsidian23.TFile) || file.extension.toLowerCase() !== "md") {
       return;
     }
     if (this.speakerAutoApplyInFlight.has(file.path)) {
@@ -15588,7 +15833,7 @@ ${top.join("\n")}`, 12e3);
     if (this.speakerAutoApplyInFlight.has(path))
       return;
     const abstract = this.app.vault.getAbstractFileByPath(path);
-    if (!(abstract instanceof import_obsidian21.TFile) || abstract.extension.toLowerCase() !== "md")
+    if (!(abstract instanceof import_obsidian23.TFile) || abstract.extension.toLowerCase() !== "md")
       return;
     this.speakerAutoApplyInFlight.add(path);
     try {
@@ -15631,27 +15876,27 @@ ${top.join("\n")}`, 12e3);
   }
   async generateSpeakerMappingForActiveNote() {
     var _a;
-    const activeView = this.app.workspace.getActiveViewOfType(import_obsidian21.MarkdownView);
-    const activeFile = activeView == null ? void 0 : activeView.file;
-    if (!(activeFile instanceof import_obsidian21.TFile) || !activeView || activeFile.extension.toLowerCase() !== "md") {
-      new import_obsidian21.Notice("Open a transcript markdown note first.");
+    const activeView = this.app.workspace.getActiveViewOfType(import_obsidian23.MarkdownView);
+    const activeFile = activeView && activeView.file;
+    if (!(activeFile instanceof import_obsidian23.TFile) || !activeView || activeFile.extension.toLowerCase() !== "md") {
+      new import_obsidian23.Notice("Open a transcript markdown note first.");
       return;
     }
     try {
       const content = await this.app.vault.read(activeFile);
       const region = findEntryRegionAtPosition(content, activeView.editor.getCursor());
       if (!region || !((_a = region.meta) == null ? void 0 : _a.id)) {
-        new import_obsidian21.Notice("No transcription entry found at cursor.");
+        new import_obsidian23.Notice("No transcription entry found at cursor.");
         return;
       }
       const entryContent = content.slice(region.start, region.end);
       if (hasEntrySpeakerMappingSection(entryContent, region.meta.id)) {
-        new import_obsidian21.Notice("Speaker Mapping section already exists in this transcription.");
+        new import_obsidian23.Notice("Speaker Mapping section already exists in this transcription.");
         return;
       }
       const labels = extractSpeakerLabels(entryContent);
       if (labels.length === 0) {
-        new import_obsidian21.Notice("No diarized speaker labels found in this transcription.");
+        new import_obsidian23.Notice("No diarized speaker labels found in this transcription.");
         return;
       }
       const section = buildEntrySpeakerMappingSection(labels, region.meta.id).trimEnd();
@@ -15661,23 +15906,23 @@ ${top.join("\n")}`, 12e3);
 `;
       const calloutHeaderMatch = /(>\[![^\]]+\][^\n]*)(\n|$)/.exec(entryContent);
       if (!calloutHeaderMatch || calloutHeaderMatch.index === void 0) {
-        new import_obsidian21.Notice("Could not find transcription callout in this entry.");
+        new import_obsidian23.Notice("Could not find transcription callout in this entry.");
         return;
       }
       const insertOffsetInEntry = calloutHeaderMatch.index + calloutHeaderMatch[0].length;
       const insertOffset = region.start + insertOffsetInEntry;
       const updated = `${content.slice(0, insertOffset)}${injection}${content.slice(insertOffset)}`;
       await this.app.vault.modify(activeFile, updated);
-      new import_obsidian21.Notice(`Speaker Mapping created for ${labels.length} speaker(s).`);
+      new import_obsidian23.Notice(`Speaker Mapping created for ${labels.length} speaker(s).`);
     } catch (e) {
-      new import_obsidian21.Notice("Failed to generate Speaker Mapping for this note.");
+      new import_obsidian23.Notice("Failed to generate Speaker Mapping for this note.");
     }
   }
   async renameCurrentTranscriptionEntry() {
-    const activeView = this.app.workspace.getActiveViewOfType(import_obsidian21.MarkdownView);
-    const activeFile = activeView == null ? void 0 : activeView.file;
-    if (!(activeFile instanceof import_obsidian21.TFile) || !activeView || activeFile.extension.toLowerCase() !== "md") {
-      new import_obsidian21.Notice("Open a transcript markdown note first.");
+    const activeView = this.app.workspace.getActiveViewOfType(import_obsidian23.MarkdownView);
+    const activeFile = activeView && activeView.file;
+    if (!(activeFile instanceof import_obsidian23.TFile) || !activeView || activeFile.extension.toLowerCase() !== "md") {
+      new import_obsidian23.Notice("Open a transcript markdown note first.");
       return;
     }
     const newTitleRaw = window.prompt("Enter transcription title");
@@ -15685,27 +15930,27 @@ ${top.join("\n")}`, 12e3);
       return;
     const newTitle = newTitleRaw.trim();
     if (!newTitle) {
-      new import_obsidian21.Notice("Title cannot be empty.");
+      new import_obsidian23.Notice("Title cannot be empty.");
       return;
     }
     try {
       const content = await this.app.vault.read(activeFile);
       const region = findEntryRegionAtPosition(content, activeView.editor.getCursor());
       if (!region) {
-        new import_obsidian21.Notice("No transcription entry found at cursor.");
+        new import_obsidian23.Notice("No transcription entry found at cursor.");
         return;
       }
       const entry = content.slice(region.start, region.end);
       const updatedEntry = this.updateEntryTitle(entry, newTitle);
       if (updatedEntry === entry) {
-        new import_obsidian21.Notice("Could not update this transcription entry title.");
+        new import_obsidian23.Notice("Could not update this transcription entry title.");
         return;
       }
       const updated = `${content.slice(0, region.start)}${updatedEntry}${content.slice(region.end)}`;
       await this.app.vault.modify(activeFile, updated);
-      new import_obsidian21.Notice("Transcription entry title updated.");
+      new import_obsidian23.Notice("Transcription entry title updated.");
     } catch (e) {
-      new import_obsidian21.Notice("Failed to rename transcription entry.");
+      new import_obsidian23.Notice("Failed to rename transcription entry.");
     }
   }
   updateEntryTitle(entryContent, title) {
@@ -15759,12 +16004,12 @@ ${top.join("\n")}`, 12e3);
   }
   async writeDeepgramDiagnosticReport(diagnosis, sourcePath) {
     const adapter = this.app.vault.adapter;
-    const baseDir = (0, import_obsidian21.normalizePath)("neurovox/diagnostics");
+    const baseDir = (0, import_obsidian23.normalizePath)("neurovox/diagnostics");
     if (!await adapter.exists(baseDir)) {
       await adapter.mkdir(baseDir);
     }
     const stamp = new Date().toISOString().replace(/[:.]/g, "-");
-    const filePath = (0, import_obsidian21.normalizePath)(`${baseDir}/deepgram-diagnosis-${stamp}.md`);
+    const filePath = (0, import_obsidian23.normalizePath)(`${baseDir}/deepgram-diagnosis-${stamp}.md`);
     const body = [
       "---",
       `date: ${new Date().toISOString()}`,
@@ -15818,6 +16063,7 @@ ${top.join("\n")}`, 12e3);
 var NeuroVoxPlugin = _NeuroVoxPlugin;
 NeuroVoxPlugin.STARTUP_VALIDATION_TIMEOUT_MS = 4e3;
 NeuroVoxPlugin.SPEAKER_AUTO_APPLY_DEBOUNCE_MS = 600;
+var main_default = NeuroVoxPlugin;
 /*! Bundled license information:
 
 recordrtc/RecordRTC.js:

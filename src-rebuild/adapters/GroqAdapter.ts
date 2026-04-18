@@ -1,14 +1,15 @@
 import { AIAdapter } from './AIAdapter';
 
 export class GroqAdapter extends AIAdapter {
-  constructor(settings) {
+  apiKey: any;
+  constructor(settings: any) {
     super(settings, "groq" /* Groq */);
     this.apiKey = "";
   }
   getApiKey() {
     return this.apiKey;
   }
-  setApiKeyInternal(key) {
+  setApiKeyInternal(key: any) {
     this.apiKey = key;
   }
   getApiBaseUrl() {
@@ -42,14 +43,14 @@ export class GroqAdapter extends AIAdapter {
       return false;
     }
   }
-  parseTextGenerationResponse(response) {
+  parseTextGenerationResponse(response: any) {
     var _a, _b, _c;
     if ((_c = (_b = (_a = response == null ? void 0 : response.choices) == null ? void 0 : _a[0]) == null ? void 0 : _b.message) == null ? void 0 : _c.content) {
       return response.choices[0].message.content;
     }
     throw new Error("Invalid response format from Groq");
   }
-  parseTranscriptionResponse(response) {
+  parseTranscriptionResponse(response: any) {
     if (response == null ? void 0 : response.text) {
       return response.text;
     }

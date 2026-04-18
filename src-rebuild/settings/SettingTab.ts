@@ -4,7 +4,10 @@ import { PostProcessingAccordion } from './accordions/PostProcessingAccordion';
 import { RecordingAccordion } from './accordions/RecordingAccordion';
 
 export class NeuroVoxSettingTab extends PluginSettingTab {
-  constructor(app, plugin) {
+  recordingAccordion: any;
+  postProcessingAccordion: any;
+  plugin: any;
+  constructor(app: any, plugin: any) {
     super(app, plugin);
     this.recordingAccordion = null;
     this.postProcessingAccordion = null;
@@ -19,19 +22,19 @@ export class NeuroVoxSettingTab extends PluginSettingTab {
     this.recordingAccordion = new RecordingAccordion(
       recordingContainer,
       this.plugin.settings,
-      (provider) => this.plugin.aiAdapters.get(provider),
+      (provider: any) => this.plugin.aiAdapters.get(provider),
       this.plugin
     );
     this.postProcessingAccordion = new PostProcessingAccordion(
       postProcessingContainer,
       this.plugin.settings,
-      (provider) => this.plugin.aiAdapters.get(provider),
+      (provider: any) => this.plugin.aiAdapters.get(provider),
       this.plugin
     );
     const modelHookupAccordion = new ModelHookupAccordion(
       modelHookupContainer,
       this.plugin.settings,
-      (provider) => this.plugin.aiAdapters.get(provider),
+      (provider: any) => this.plugin.aiAdapters.get(provider),
       this.plugin
     );
     modelHookupAccordion.setAccordions(this.recordingAccordion, this.postProcessingAccordion);

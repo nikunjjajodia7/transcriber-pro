@@ -1,7 +1,13 @@
 import { Setting, setIcon } from 'obsidian';
 
 export class BaseAccordion {
-  constructor(containerEl, title, description = "") {
+  isOpen: any;
+  containerEl: any;
+  accordionEl: any;
+  headerEl: any;
+  toggleIcon: any;
+  contentEl: any;
+  constructor(containerEl: any, title: any, description = "") {
     this.isOpen = false;
     this.containerEl = containerEl;
     this.accordionEl = this.containerEl.createDiv({ cls: "neurovox-accordion" });
@@ -26,10 +32,10 @@ export class BaseAccordion {
   }
   updateToggleIcon() {
     this.toggleIcon.empty();
-    (0, setIcon)(this.toggleIcon, "chevron-right");
+    setIcon(this.toggleIcon, "chevron-right");
     this.toggleIcon.classList.toggle("neurovox-accordion-icon-open", this.isOpen);
   }
-  createSettingItem(name, desc) {
+  createSettingItem(name: any, desc: any) {
     const setting = new Setting(this.contentEl);
     setting.setName(name).setDesc(desc);
     return setting;

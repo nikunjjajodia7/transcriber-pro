@@ -1,10 +1,11 @@
 import { flattenTranscriptText } from './TranscriptSchema';
 
 export class TranscriptRenderer {
-  constructor(config) {
+  config: any;
+  constructor(config: any) {
     this.config = config;
   }
-  render(input) {
+  render(input: any) {
     const transcriptionText = flattenTranscriptText(input.transcript, this.config.includeTimestamps);
     let format = this.config.transcriptionTemplate;
     if (!input.audioFilePath) {
@@ -27,11 +28,11 @@ ${postContent}
     return `${result}
 `;
   }
-  isCalloutFormat(format) {
+  isCalloutFormat(format: any) {
     return format.includes(">[!");
   }
-  formatLines(content, useCallout) {
-    return content.split("\n").map((line) => {
+  formatLines(content: any, useCallout: any) {
+    return content.split("\n").map((line: any) => {
       if (!useCallout)
         return line;
       if (!line.trim())

@@ -2,7 +2,14 @@ import { setIcon } from 'obsidian';
 import { TouchableButton } from './TouchableButton';
 
 export class RecordingUI {
-  constructor(container, handlers) {
+  container: any;
+  handlers: any;
+  currentState: any;
+  timerText: any;
+  pauseButton: any;
+  stopButton: any;
+  waveContainer: any;
+  constructor(container: any, handlers: any) {
     this.container = container;
     this.handlers = handlers;
     this.currentState = "inactive";
@@ -20,14 +27,14 @@ export class RecordingUI {
    * 📱 Prevents unwanted gestures and ensures smooth interaction
    */
   setupTouchHandlers() {
-    this.container.addEventListener("gesturestart", (e) => {
+    this.container.addEventListener("gesturestart", (e: any) => {
       e.preventDefault();
     }, { passive: false });
-    this.container.addEventListener("touchmove", (e) => {
+    this.container.addEventListener("touchmove", (e: any) => {
       e.preventDefault();
     }, { passive: false });
     let lastTap = 0;
-    this.container.addEventListener("touchend", (e) => {
+    this.container.addEventListener("touchend", (e: any) => {
       const currentTime = new Date().getTime();
       const tapLength = currentTime - lastTap;
       if (tapLength < 300 && tapLength > 0) {
@@ -73,7 +80,7 @@ export class RecordingUI {
       });
     }
   }
-  updateTimer(seconds, maxDuration, warningThreshold) {
+  updateTimer(seconds: any, maxDuration: any, warningThreshold: any) {
     const minutes = Math.floor(seconds / 60).toString().padStart(2, "0");
     const remainingSeconds = (seconds % 60).toString().padStart(2, "0");
     this.timerText.setText(`${minutes}:${remainingSeconds}`);
@@ -85,7 +92,7 @@ export class RecordingUI {
     const timeLeft = maxDuration - seconds;
     this.timerText.toggleClass("is-warning", timeLeft <= warningThreshold);
   }
-  updateState(state) {
+  updateState(state: any) {
     this.currentState = state;
     const states = ["is-recording", "is-paused", "is-stopped", "is-inactive"];
     states.forEach((cls) => this.waveContainer.removeClass(cls));
@@ -94,7 +101,7 @@ export class RecordingUI {
     const iconName = isPaused ? "play" : "pause";
     const label = isPaused ? "Resume recording" : "Pause Recording";
     this.pauseButton.buttonEl.empty();
-    (0, setIcon)(this.pauseButton.buttonEl, iconName);
+    setIcon(this.pauseButton.buttonEl, iconName);
     this.pauseButton.buttonEl.setAttribute("aria-label", label);
     this.pauseButton.buttonEl.toggleClass("is-paused", isPaused);
   }

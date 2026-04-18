@@ -1,4 +1,4 @@
-var UI_RANK = {
+var UI_RANK: Record<string, number> = {
   creating: 0,
   uploading: 1,
   queued: 2,
@@ -6,7 +6,7 @@ var UI_RANK = {
   completed: 4,
   failed: 4
 };
-export function mapBackendToUiState(statusRaw, stageRaw) {
+export function mapBackendToUiState(statusRaw: any, stageRaw: any) {
   const status = (statusRaw || "").trim().toLowerCase();
   const stage = (stageRaw || "").trim().toLowerCase();
   const probe = `${status} ${stage}`;
@@ -28,7 +28,7 @@ export function mapBackendToUiState(statusRaw, stageRaw) {
     return "uploading";
   return "processing";
 }
-export function clampMonotonicUiState(previous, next) {
+export function clampMonotonicUiState(previous: any, next: any) {
   if (!previous)
     return next;
   if (previous === "failed" || previous === "completed")
@@ -37,7 +37,7 @@ export function clampMonotonicUiState(previous, next) {
     return next;
   return UI_RANK[next] >= UI_RANK[previous] ? next : previous;
 }
-export function formatUiStateLabel(state) {
+export function formatUiStateLabel(state: any) {
   switch (state) {
     case "creating":
       return "Creating job";

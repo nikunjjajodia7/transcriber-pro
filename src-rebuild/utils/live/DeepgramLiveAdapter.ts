@@ -1,8 +1,14 @@
 export class DeepgramLiveAdapter {
+  options: any;
+  ws: any;
+  listener: any;
+  pendingFrames: any;
+  opened: any;
+  stopped: any;
   static OPEN_TIMEOUT_MS = 12e3;
   static STOP_TIMEOUT_MS = 1e4;
 
-  constructor(options) {
+  constructor(options: any) {
     this.options = options;
     this.ws = null;
     this.listener = null;
@@ -10,7 +16,7 @@ export class DeepgramLiveAdapter {
     this.opened = false;
     this.stopped = false;
   }
-  onEvent(listener) {
+  onEvent(listener: any) {
     this.listener = listener;
   }
   isOpen() {
@@ -30,7 +36,7 @@ export class DeepgramLiveAdapter {
     const ws = new WebSocket(url, ["token", apiKey]);
     ws.binaryType = "arraybuffer";
     this.ws = ws;
-    await new Promise((resolve, reject) => {
+    await new Promise<void>((resolve, reject) => {
       const timeout = window.setTimeout(() => {
         reject(new Error("Deepgram live WebSocket open timed out"));
       }, DeepgramLiveAdapter.OPEN_TIMEOUT_MS);
@@ -60,7 +66,7 @@ export class DeepgramLiveAdapter {
       };
     });
   }
-  async sendAudio(chunk) {
+  async sendAudio(chunk: any) {
     var _a;
     if (this.stopped)
       return;
@@ -78,7 +84,7 @@ export class DeepgramLiveAdapter {
     if (this.ws.readyState === WebSocket.OPEN) {
       this.ws.send(JSON.stringify({ type: "CloseStream" }));
     }
-    await new Promise((resolve) => {
+    await new Promise<void>((resolve) => {
       var _a;
       const done = () => resolve();
       const timeout = window.setTimeout(() => {
@@ -90,7 +96,7 @@ export class DeepgramLiveAdapter {
         done();
       }, DeepgramLiveAdapter.STOP_TIMEOUT_MS);
       if (this.ws) {
-        this.ws.onclose = (event) => {
+        this.ws.onclose = (event: any) => {
           var _a2;
           window.clearTimeout(timeout);
           this.opened = false;
@@ -146,9 +152,9 @@ export class DeepgramLiveAdapter {
     }
     return `wss://api.deepgram.com/v1/listen?${query.toString()}`;
   }
-  applyLanguageSettings(query, model) {
-    const languageHints = (this.options.settings.deepgramLanguageHints || "").split(",").map((s) => s.trim()).filter(Boolean);
-    const hintSet = new Set(languageHints.map((hint) => hint.toLowerCase()));
+  applyLanguageSettings(query: any, model: any) {
+    const languageHints = (this.options.settings.deepgramLanguageHints || "").split(",").map((s: any) => s.trim()).filter(Boolean);
+    const hintSet = new Set(languageHints.map((hint: any) => hint.toLowerCase()));
     const supportsMulti = /^nova-(2|3)/i.test(model);
     const shouldUseMulti = supportsMulti && (hintSet.has("multi") || languageHints.length > 1);
     if (shouldUseMulti) {
@@ -166,7 +172,7 @@ export class DeepgramLiveAdapter {
       query.set("language", languageHints[0]);
     }
   }
-  handleMessage(rawData) {
+  handleMessage(rawData: any) {
     var _a, _b, _c, _d, _e;
     try {
       if (typeof rawData !== "string")
@@ -193,14 +199,14 @@ export class DeepgramLiveAdapter {
       });
     }
   }
-  extractSpeakerTurns(alternative) {
+  extractSpeakerTurns(alternative: any) {
     const words = Array.isArray(alternative == null ? void 0 : alternative.words) ? alternative.words : [];
     if (words.length === 0)
       return void 0;
-    const turns = [];
-    let currentSpeaker;
-    let currentWords = [];
-    let currentStart;
+    const turns: any[] = [];
+    let currentSpeaker: any;
+    let currentWords: any[] = [];
+    let currentStart: any;
     const flush = () => {
       if (currentWords.length === 0)
         return;

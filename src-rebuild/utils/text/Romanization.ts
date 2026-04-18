@@ -1,12 +1,12 @@
-export function toRomanIfNeeded(text, enabled) {
+export function toRomanIfNeeded(text: any, enabled: any) {
   if (!enabled)
     return text;
   if (!/[\u0900-\u097F]/.test(text))
     return text;
   return transliterateDevanagariToRoman(text);
 }
-function transliterateDevanagariToRoman(input) {
-  const independentVowels = {
+function transliterateDevanagariToRoman(input: any) {
+  const independentVowels: Record<string, string> = {
     "\u0905": "a",
     "\u0906": "aa",
     "\u0907": "i",
@@ -19,7 +19,7 @@ function transliterateDevanagariToRoman(input) {
     "\u0913": "o",
     "\u0914": "au"
   };
-  const consonants = {
+  const consonants: Record<string, string> = {
     "\u0915": "k",
     "\u0916": "kh",
     "\u0917": "g",
@@ -57,7 +57,7 @@ function transliterateDevanagariToRoman(input) {
     "\u0915\u094D\u0937": "ksh",
     "\u091C\u094D\u091E": "gy"
   };
-  const matras = {
+  const matras: Record<string, string> = {
     "\u093E": "aa",
     "\u093F": "i",
     "\u0940": "ii",
@@ -69,13 +69,13 @@ function transliterateDevanagariToRoman(input) {
     "\u094B": "o",
     "\u094C": "au"
   };
-  const specials = {
+  const specials: Record<string, string> = {
     "\u0902": "n",
     "\u0901": "n",
     "\u0903": "h"
   };
   const virama = "\u094D";
-  const chars = Array.from(input);
+  const chars: string[] = Array.from(input);
   let out = "";
   for (let i = 0; i < chars.length; i++) {
     const ch = chars[i];

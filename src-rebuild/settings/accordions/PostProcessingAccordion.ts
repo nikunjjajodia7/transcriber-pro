@@ -3,7 +3,15 @@ import { AIModels, getModelInfo } from '../../adapters/AIAdapter';
 import { BaseAccordion } from './BaseAccordion';
 
 export class PostProcessingAccordion extends BaseAccordion {
-  constructor(containerEl, settings, getAdapter, plugin) {
+  settings: any;
+  getAdapter: any;
+  plugin: any;
+  modelDropdown: any;
+  modelSetting: any;
+  promptArea: any;
+  maxTokensSlider: any;
+  temperatureSlider: any;
+  constructor(containerEl: any, settings: any, getAdapter: any, plugin: any) {
     super(
       containerEl,
       "\u{1F4DD} Post-Processing",
@@ -65,18 +73,18 @@ export class PostProcessingAccordion extends BaseAccordion {
       });
     });
   }
-  async setupModelDropdown(dropdown) {
+  async setupModelDropdown(dropdown: any) {
     dropdown.selectEl.empty();
     let hasValidProvider = false;
     for (const provider of ["openai" /* OpenAI */, "groq" /* Groq */]) {
       const apiKey = this.settings[`${provider}ApiKey`];
       if (apiKey) {
-        const models = AIModels[provider].filter((model) => model.category === "language");
+        const models = AIModels[provider].filter((model: any) => model.category === "language");
         if (models.length > 0) {
           hasValidProvider = true;
           const group = document.createElement("optgroup");
           group.label = `${provider.toUpperCase()} Models`;
-          models.forEach((model) => {
+          models.forEach((model: any) => {
             const option = document.createElement("option");
             option.value = model.id;
             option.text = model.name;
@@ -148,7 +156,7 @@ export class PostProcessingAccordion extends BaseAccordion {
       });
     });
   }
-  getProviderFromModel(modelId) {
+  getProviderFromModel(modelId: any) {
     for (const [provider, models] of Object.entries(AIModels)) {
       if (models.some((model) => model.id === modelId)) {
         return provider;
@@ -156,7 +164,7 @@ export class PostProcessingAccordion extends BaseAccordion {
     }
     return null;
   }
-  async updateMaxTokensLimit(modelId) {
+  async updateMaxTokensLimit(modelId: any) {
     const model = getModelInfo(modelId);
     const maxTokens = (model == null ? void 0 : model.maxTokens) || 1e3;
     if (this.maxTokensSlider) {

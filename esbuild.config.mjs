@@ -15,7 +15,9 @@ const context = await esbuild.context({
 	banner: {
 		js: banner,
 	},
-	entryPoints: ["src/main.ts"],
+	// TEMPORARY (Unit 4): entry points at src-rebuild/main.ts during the rebuild;
+	// Unit 6 cutover renames src-rebuild/ -> src/ and reverts this to src/main.ts.
+	entryPoints: ["src-rebuild/main.ts"],
 	bundle: true,
 	external: [
 		"obsidian",

@@ -1,5 +1,11 @@
 export class AudioChunker {
-  constructor(sampleRate, bitRate, mimeType = "audio/webm; codecs=opus") {
+  sampleRate: any;
+  bitRate: any;
+  mimeType: any;
+  MAX_AUDIO_SIZE_MB: any;
+  MAX_AUDIO_SIZE_BYTES: any;
+  CHUNK_OVERLAP_SECONDS: any;
+  constructor(sampleRate: any, bitRate: any, mimeType = "audio/webm; codecs=opus") {
     this.sampleRate = sampleRate;
     this.bitRate = bitRate;
     this.mimeType = mimeType;
@@ -12,18 +18,18 @@ export class AudioChunker {
    * @param audioBlob The audio blob to potentially split
    * @returns Array of audio blobs (single item if no split needed)
    */
-  async splitAudioBlob(audioBlob) {
+  async splitAudioBlob(audioBlob: any) {
     if (audioBlob.size <= this.MAX_AUDIO_SIZE_BYTES) {
       return [audioBlob];
     }
     try {
-      const chunks = [];
+      const chunks: any[] = [];
       const chunkSize = this.MAX_AUDIO_SIZE_BYTES;
       let offset = 0;
       while (offset < audioBlob.size) {
         const end = Math.min(offset + chunkSize, audioBlob.size);
         const chunk = audioBlob.slice(offset, end);
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)({
+        const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)({
           sampleRate: this.sampleRate
         });
         const arrayBuffer = await chunk.arrayBuffer();
@@ -43,10 +49,10 @@ export class AudioChunker {
    * @param chunks Array of audio blobs to combine
    * @returns Single concatenated audio blob
    */
-  async concatenateAudioChunks(chunks) {
+  async concatenateAudioChunks(chunks: any) {
     try {
       const firstChunk = chunks[0];
-      const audioContext = new (window.AudioContext || window.webkitAudioContext)({
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)({
         sampleRate: this.sampleRate
       });
       const processedChunks = [];
@@ -63,7 +69,7 @@ export class AudioChunker {
   /**
    * Creates a chunk from the audio buffer
    */
-  async createChunk(audioContext, audioBuffer, startTime, endTime, mimeType) {
+  async createChunk(audioContext: any, audioBuffer: any, startTime: any, endTime: any, mimeType: any) {
     const chunkBuffer = audioContext.createBuffer(
       audioBuffer.numberOfChannels,
       Math.ceil((endTime - startTime) * audioBuffer.sampleRate),
@@ -81,7 +87,7 @@ export class AudioChunker {
   /**
    * Processes a single chunk for concatenation
    */
-  async processChunk(chunk, mimeType, audioContext) {
+  async processChunk(chunk: any, mimeType: any, audioContext: any) {
     try {
       const arrayBuffer = await chunk.arrayBuffer();
       const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
@@ -93,7 +99,7 @@ export class AudioChunker {
   /**
    * Converts an AudioBuffer to a Blob using MediaRecorder
    */
-  async bufferToBlob(audioContext, buffer, mimeType) {
+  async bufferToBlob(audioContext: any, buffer: any, mimeType: any) {
     if (!buffer.duration || !Number.isFinite(buffer.duration) || buffer.duration <= 0) {
       throw new Error("bufferToBlob: invalid buffer duration");
     }
@@ -106,7 +112,7 @@ export class AudioChunker {
         mimeType: this.mimeType,
         bitsPerSecond: this.bitRate
       });
-      const chunks = [];
+      const chunks: any[] = [];
       let settled = false;
       const safetyTimeout = setTimeout(() => {
         if (!settled) {

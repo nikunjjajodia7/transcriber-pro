@@ -1,7 +1,8 @@
 export class TranscriptionService {
+  plugin: any;
   static ADAPTER_VALIDATION_TIMEOUT_MS = 4e3;
 
-  constructor(plugin) {
+  constructor(plugin: any) {
     this.plugin = plugin;
   }
   /**
@@ -9,7 +10,7 @@ export class TranscriptionService {
    * @param audioBuffer The audio data to transcribe
    * @returns The transcription result
    */
-  async transcribeContent(audioBuffer, options) {
+  async transcribeContent(audioBuffer: any, options: any) {
     try {
       const transcription = await this.transcribeAudioOnly(audioBuffer, options);
       const postProcessing = await this.generatePostProcessingFromTranscript(transcription);
@@ -22,10 +23,10 @@ export class TranscriptionService {
       throw new Error(`Transcription failed: ${message}`);
     }
   }
-  async transcribeAudioOnly(audioBuffer, options) {
+  async transcribeAudioOnly(audioBuffer: any, options: any) {
     return this.transcribeAudio(audioBuffer, options);
   }
-  async generatePostProcessingFromTranscript(transcription) {
+  async generatePostProcessingFromTranscript(transcription: any) {
     if (!this.plugin.settings.generatePostProcessing) {
       return void 0;
     }
@@ -34,7 +35,7 @@ export class TranscriptionService {
   /**
    * Transcribes audio using the configured AI adapter
    */
-  async transcribeAudio(audioBuffer, options) {
+  async transcribeAudio(audioBuffer: any, options: any) {
     const adapter = await this.getAdapter(
       this.plugin.settings.transcriptionProvider,
       "transcription"
@@ -52,7 +53,7 @@ export class TranscriptionService {
   /**
    * Generates post-processing content using the configured AI adapter
    */
-  async generatePostProcessing(transcription) {
+  async generatePostProcessing(transcription: any) {
     const adapter = await this.getAdapter(
       this.plugin.settings.postProcessingProvider,
       "language"
@@ -72,7 +73,7 @@ ${transcription}`;
   /**
    * Gets and validates the appropriate AI adapter
    */
-  async getAdapter(provider, category) {
+  async getAdapter(provider: any, category: any) {
     const adapter = this.plugin.aiAdapters.get(provider);
     if (!adapter) {
       throw new Error(`${provider} adapter not found`);
@@ -92,7 +93,7 @@ ${transcription}`;
     }
     return adapter;
   }
-  async validateAdapterWithTimeout(adapter) {
+  async validateAdapterWithTimeout(adapter: any) {
     const timeoutMs = TranscriptionService.ADAPTER_VALIDATION_TIMEOUT_MS;
     return await Promise.race([
       adapter.validateApiKey().catch(() => false),

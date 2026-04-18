@@ -7,9 +7,34 @@ import { InlineRecorderPanel } from './InlineRecorderPanel';
 import { MobileDockPill } from './MobileDockPill';
 
 export class FloatingButton {
-  static instance = null;
-
-  constructor(plugin, pluginData, onClickCallback) {
+  plugin: any;
+  pluginData: any;
+  onClickCallback: any;
+  activeLeafContainer: any;
+  resizeObserver: any;
+  positionManager: any;
+  resizeTimeout: any;
+  audioManager: any;
+  isRecording: any;
+  isProcessing: any;
+  inlineRecorderPanel: any;
+  onPageDragOverBound: any;
+  onPageDropBound: any;
+  onMicDragOverBound: any;
+  onMicDropBound: any;
+  mobilePill: any;
+  desktopPill: any;
+  deviceDetection: any;
+  isMobileDevice: any;
+  mobileDefaultsEnsured: any;
+  isDisposed: any;
+  activeLeafRef: any;
+  layoutChangeRef: any;
+  resizeRef: any;
+  buttonEl: any;
+  containerEl: any;
+  static instance: any = null;
+  constructor(plugin: any, pluginData: any, onClickCallback: any) {
     this.plugin = plugin;
     this.pluginData = pluginData;
     this.onClickCallback = onClickCallback;
@@ -41,7 +66,7 @@ export class FloatingButton {
     this.containerEl = null;
     this.initializeComponents();
   }
-  static getInstance(plugin, pluginData, onClickCallback) {
+  static getInstance(plugin: any, pluginData: any, onClickCallback: any) {
     if (!FloatingButton.instance || FloatingButton.instance.isInvalid()) {
       if (FloatingButton.instance) {
         FloatingButton.instance.remove();
@@ -96,18 +121,18 @@ export class FloatingButton {
   createElements() {
     if (this.isMobileDevice) {
       this.mobilePill = new MobileDockPill(this.plugin);
-      this.mobilePill.onStateChange = (state) => {
+      this.mobilePill.onStateChange = (state: any) => {
         this.isRecording = state === "recording" || state === "paused" || state === "finalizing";
       };
       return;
     }
     this.desktopPill = new DesktopDockPill(this.plugin);
-    this.desktopPill.onStateChange = (state) => {
+    this.desktopPill.onStateChange = (state: any) => {
       this.isRecording = state === "recording" || state === "paused" || state === "finalizing";
     };
     this.containerEl = this.desktopPill.getContainerEl();
     this.buttonEl = this.desktopPill.getButtonEl();
-    this.buttonEl.addEventListener("click", (event) => {
+    this.buttonEl.addEventListener("click", (event: any) => {
       var _a, _b;
       if (((_a = this.positionManager) == null ? void 0 : _a.isDragging) || ((_b = this.positionManager) == null ? void 0 : _b.hasMoved)) {
         event.preventDefault();
@@ -141,8 +166,8 @@ export class FloatingButton {
     } else {
       this.buttonEl.setAttribute("aria-label", "Start recording (drag to move)");
     }
-    (0, setIcon)(this.buttonEl, "mic");
-    this.buttonEl.addEventListener("click", (event) => {
+    setIcon(this.buttonEl, "mic");
+    this.buttonEl.addEventListener("click", (event: any) => {
       var _a, _b;
       if (((_a = this.positionManager) == null ? void 0 : _a.isDragging) || ((_b = this.positionManager) == null ? void 0 : _b.hasMoved)) {
         event.preventDefault();
@@ -166,14 +191,14 @@ export class FloatingButton {
     if (this.onMicDropBound) {
       this.buttonEl.removeEventListener("drop", this.onMicDropBound);
     }
-    this.onMicDragOverBound = (event) => {
+    this.onMicDragOverBound = (event: any) => {
       var _a;
       if (!this.hasAudioFile(event.dataTransfer))
         return;
       event.preventDefault();
       (_a = this.buttonEl) == null ? void 0 : _a.addClass("drag-over");
     };
-    this.onMicDropBound = (event) => {
+    this.onMicDropBound = (event: any) => {
       var _a;
       if (!this.hasAudioFile(event.dataTransfer))
         return;
@@ -207,7 +232,7 @@ export class FloatingButton {
       await this.setInitialPosition();
     }, 0);
   }
-  handlePositionChange(x, y) {
+  handlePositionChange(x: any, y: any) {
     if (!this.containerEl)
       return;
     requestAnimationFrame(() => {
@@ -218,7 +243,7 @@ export class FloatingButton {
       (_a = this.inlineRecorderPanel) == null ? void 0 : _a.updateAnchor({ x, y });
     });
   }
-  async handleDragEnd(position) {
+  async handleDragEnd(position: any) {
     this.pluginData.buttonPosition = position;
     await this.plugin.saveSettings({ refreshUi: false, triggerFloatingRefresh: false });
   }
@@ -387,14 +412,14 @@ export class FloatingButton {
     if (this.onPageDropBound) {
       this.activeLeafContainer.removeEventListener("drop", this.onPageDropBound);
     }
-    this.onPageDragOverBound = (event) => {
+    this.onPageDragOverBound = (event: any) => {
       var _a;
       if (!this.hasAudioFile(event.dataTransfer))
         return;
       event.preventDefault();
       (_a = this.activeLeafContainer) == null ? void 0 : _a.addClass("neurovox-drop-target-active");
     };
-    this.onPageDropBound = (event) => {
+    this.onPageDropBound = (event: any) => {
       var _a;
       if (!this.hasAudioFile(event.dataTransfer))
         return;
@@ -412,7 +437,7 @@ export class FloatingButton {
   /**
    * Handles updating the active container when switching notes
    */
-  updateActiveContainer(newContainer) {
+  updateActiveContainer(newContainer: any) {
     var _a, _b;
     if (this.activeLeafContainer) {
       (_a = this.resizeObserver) == null ? void 0 : _a.unobserve(this.activeLeafContainer);
@@ -631,7 +656,7 @@ export class FloatingButton {
   /**
    * Updates the visual state for recording
    */
-  updateRecordingState(isRecording) {
+  updateRecordingState(isRecording: any) {
     if (!this.buttonEl)
       return;
     if (isRecording) {
@@ -644,7 +669,7 @@ export class FloatingButton {
       isRecording ? "Stop recording" : "Start recording"
     );
   }
-  updateProcessingState(isProcessing) {
+  updateProcessingState(isProcessing: any) {
     if (!this.buttonEl)
       return;
     this.buttonEl.toggleClass("processing", isProcessing);
@@ -659,18 +684,18 @@ export class FloatingButton {
       this.audioManager = null;
     }
   }
-  hasAudioFile(dataTransfer) {
+  hasAudioFile(dataTransfer: any) {
     var _a;
     if (!((_a = dataTransfer == null ? void 0 : dataTransfer.files) == null ? void 0 : _a.length))
       return false;
     const valid = ["mp3", "wav", "webm", "m4a", "ogg", "mp4"];
-    return Array.from(dataTransfer.files).some((file) => {
+    return Array.from(dataTransfer.files).some((file: any) => {
       var _a2;
       const ext = ((_a2 = file.name.split(".").pop()) == null ? void 0 : _a2.toLowerCase()) || "";
       return valid.includes(ext) || file.type.startsWith("audio/");
     });
   }
-  async handleDroppedAudio(dataTransfer, source) {
+  async handleDroppedAudio(dataTransfer: any, source: any) {
     var _a, _b;
     const file = (_a = dataTransfer == null ? void 0 : dataTransfer.files) == null ? void 0 : _a[0];
     if (!file)
@@ -710,9 +735,9 @@ export class FloatingButton {
       this.updateProcessingState(false);
     }
   }
-  async openDropReviewModal(file, targetFile, source) {
+  async openDropReviewModal(file: any, targetFile: any, source: any) {
     return new Promise((resolve) => {
-      const modal = new DropReviewModal(this.plugin, file, targetFile, source, (ok) => {
+      const modal = new DropReviewModal(this.plugin, file, targetFile, source, (ok: any) => {
         resolve(ok);
       });
       modal.open();
@@ -751,7 +776,7 @@ export class FloatingButton {
         this.isProcessing = false;
         this.updateProcessingState(false);
       },
-      onStateChange: (state) => {
+      onStateChange: (state: any) => {
         this.isRecording = state === "recording" || state === "paused" || state === "finalizing";
         this.updateRecordingState(this.isRecording);
       }
@@ -776,7 +801,12 @@ export class FloatingButton {
   }
 }
 class DropReviewModal extends Modal {
-  constructor(appPlugin, file, targetFile, source, onResolve) {
+  file: any;
+  targetFile: any;
+  source: any;
+  onResolve: any;
+  resolved: any;
+  constructor(appPlugin: any, file: any, targetFile: any, source: any, onResolve: any) {
     super(appPlugin.app);
     this.file = file;
     this.targetFile = targetFile;

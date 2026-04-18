@@ -6,9 +6,37 @@ import { RecordingUI } from '../ui/RecordingUI';
 import { StreamingTranscriptionService } from '../utils/transcription/StreamingTranscriptionService';
 
 export class TimerModal extends Modal {
+  onStop: any;
+  plugin: any;
+  targetFile: any;
+  insertionPosition: any;
+  intervalId: any;
+  seconds: any;
+  isClosing: any;
+  currentState: any;
+  streamingService: any;
+  useStreaming: any;
+  chunkIndex: any;
+  recordingStartTime: any;
+  interruptedByLifecycle: any;
+  pausedByBackpressure: any;
+  backpressureMonitorId: any;
+  onVisibilityChangeBound: any;
+  onPageHideBound: any;
+  onPopStateBound: any;
+  onOutsideInteractionBound: any;
+  onModalTouchEndBound: any;
+  livePreviewMarkerId: any;
+  livePreviewWriteChain: any;
+  liveAudioCaptureActive: any;
+  recordingManager: any;
+  deviceDetection: any;
+  documentInserter: any;
+  CONFIG: any;
+  ui: any;
   static RECORDER_STOP_TIMEOUT_MS = 12e3;
 
-  constructor(plugin, targetFile, insertionPosition) {
+  constructor(plugin: any, targetFile: any, insertionPosition: any) {
     var _a;
     super(plugin.app);
     this.plugin = plugin;
@@ -55,7 +83,7 @@ export class TimerModal extends Modal {
     this.contentEl.addEventListener("touchstart", (e) => {
       e.stopPropagation();
     }, { passive: true });
-    this.onOutsideInteractionBound = (event) => {
+    this.onOutsideInteractionBound = (event: any) => {
       const target = event.target;
       if (target === this.modalEl) {
         event.preventDefault();
@@ -65,7 +93,7 @@ export class TimerModal extends Modal {
     };
     this.modalEl.addEventListener("click", this.onOutsideInteractionBound);
     this.modalEl.addEventListener("touchstart", this.onOutsideInteractionBound, { passive: false });
-    this.onModalTouchEndBound = (e) => e.preventDefault();
+    this.onModalTouchEndBound = (e: any) => e.preventDefault();
     this.modalEl.addEventListener("touchend", this.onModalTouchEndBound, { passive: false });
     this.scope.register([], "Escape", () => {
       void this.requestClose();
@@ -178,10 +206,10 @@ export class TimerModal extends Modal {
           this.streamingService = new StreamingTranscriptionService(
             this.plugin,
             {
-              onMemoryWarning: (usage) => {
+              onMemoryWarning: (usage: any) => {
                 new Notice(`Memory usage high: ${Math.round(usage)}%`);
               },
-              onChunkCommitted: async (_chunkText, _metadata, partialResult) => {
+              onChunkCommitted: async (_chunkText: any, _metadata: any, partialResult: any) => {
                 if (!this.plugin.settings.showLiveChunkPreviewInNote)
                   return;
                 await this.enqueueLivePreviewUpdate(partialResult);
@@ -233,7 +261,7 @@ export class TimerModal extends Modal {
   /**
    * Pauses the current recording
    */
-  pauseRecording(reasonMessage) {
+  pauseRecording(reasonMessage?: any) {
     try {
       if (this.useStreaming && this.streamingService) {
         this.streamingService.pauseLive();
@@ -408,7 +436,7 @@ export class TimerModal extends Modal {
       this.liveAudioCaptureActive = false;
     }
   }
-  async enqueueLivePreviewUpdate(partialResult) {
+  async enqueueLivePreviewUpdate(partialResult: any) {
     const markerId = this.livePreviewMarkerId;
     if (!markerId)
       return;
@@ -423,7 +451,7 @@ export class TimerModal extends Modal {
     });
     await this.livePreviewWriteChain;
   }
-  async clearLivePreviewBlock(markerIdOverride) {
+  async clearLivePreviewBlock(markerIdOverride: any) {
     const markerId = markerIdOverride != null ? markerIdOverride : this.livePreviewMarkerId;
     if (!markerId)
       return;
@@ -458,7 +486,7 @@ export class TimerModal extends Modal {
       this.onPageHideBound = null;
     }
   }
-  handleLifecycleInterruption(_reason) {
+  handleLifecycleInterruption(_reason: any) {
     if (this.currentState !== "recording")
       return;
     this.interruptedByLifecycle = true;
@@ -488,7 +516,7 @@ export class TimerModal extends Modal {
   /**
    * Handles errors with user feedback
    */
-  handleError(message, error) {
+  handleError(message: any, error: any) {
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
     new Notice(`${message}: ${errorMessage}`);
     this.cleanup();

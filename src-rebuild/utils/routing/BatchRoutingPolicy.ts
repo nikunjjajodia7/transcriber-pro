@@ -1,8 +1,9 @@
 export class BatchRoutingPolicy {
-  constructor(settings) {
+  settings: any;
+  constructor(settings: any) {
     this.settings = settings;
   }
-  decide(sourcePath, sizeBytes) {
+  decide(sourcePath: any, sizeBytes: any) {
     const sourceType = this.detectSourceType(sourcePath);
     const thresholdBytes = this.settings.batchChunkThresholdMB * 1024 * 1024;
     const isLargeUpload = sourceType === "uploaded" && sizeBytes > thresholdBytes;
@@ -27,7 +28,7 @@ export class BatchRoutingPolicy {
       backendEnabled
     };
   }
-  detectSourceType(sourcePath) {
+  detectSourceType(sourcePath: any) {
     if (!sourcePath)
       return "unknown";
     const normalized = sourcePath.toLowerCase();

@@ -1,4 +1,7 @@
 export class DeviceDetection {
+  availableMemory: any;
+  isMobileDevice: any;
+  static instance: any;
   constructor() {
     this.availableMemory = null;
     this.isMobileDevice = this.detectMobile();
@@ -21,8 +24,8 @@ export class DeviceDetection {
     return mobileCount >= 2;
   }
   updateMemoryInfo() {
-    if ("memory" in performance && performance.memory) {
-      const memoryInfo = performance.memory;
+    if ("memory" in performance && (performance as any).memory) {
+      const memoryInfo = (performance as any).memory;
       this.availableMemory = memoryInfo.jsHeapSizeLimit - memoryInfo.usedJSHeapSize;
     } else {
       this.availableMemory = this.isMobileDevice ? 512 * 1024 * 1024 : (

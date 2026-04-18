@@ -1,14 +1,16 @@
 export class JobStore {
+  plugin: any;
+  writeChain: any;
   static BASE_DIR = ".obsidian/plugins/neurovox/recovery";
   static FILE = ".obsidian/plugins/neurovox/recovery/jobs.json";
 
-  constructor(plugin) {
+  constructor(plugin: any) {
     this.plugin = plugin;
     this.writeChain = Promise.resolve();
   }
-  async upsertJob(job) {
-    await this.withState(async (state) => {
-      const idx = state.jobs.findIndex((j) => j.jobId === job.jobId);
+  async upsertJob(job: any) {
+    await this.withState(async (state: any) => {
+      const idx = state.jobs.findIndex((j: any) => j.jobId === job.jobId);
       if (idx >= 0) {
         state.jobs[idx] = { ...state.jobs[idx], ...job, updatedAt: new Date().toISOString() };
       } else {
@@ -16,9 +18,9 @@ export class JobStore {
       }
     });
   }
-  async updateJobStatus(jobId, status, error) {
-    await this.withState(async (state) => {
-      const idx = state.jobs.findIndex((j) => j.jobId === jobId);
+  async updateJobStatus(jobId: any, status: any, error: any) {
+    await this.withState(async (state: any) => {
+      const idx = state.jobs.findIndex((j: any) => j.jobId === jobId);
       if (idx < 0)
         return;
       state.jobs[idx] = {
@@ -29,10 +31,10 @@ export class JobStore {
       };
     });
   }
-  async upsertCheckpoint(checkpoint) {
-    await this.withState(async (state) => {
+  async upsertCheckpoint(checkpoint: any) {
+    await this.withState(async (state: any) => {
       const idx = state.checkpoints.findIndex(
-        (c) => c.jobId === checkpoint.jobId && c.index === checkpoint.index
+        (c: any) => c.jobId === checkpoint.jobId && c.index === checkpoint.index
       );
       if (idx >= 0) {
         state.checkpoints[idx] = {
@@ -47,48 +49,48 @@ export class JobStore {
   }
   async getIncompleteJobs() {
     const state = await this.readState();
-    return state.jobs.filter((j) => j.status === "queued" || j.status === "running" || j.status === "failed");
+    return state.jobs.filter((j: any) => j.status === "queued" || j.status === "running" || j.status === "failed");
   }
-  async getLatestIncompleteJob(kind, targetFile) {
+  async getLatestIncompleteJob(kind: any, targetFile: any) {
     const jobs = await this.getIncompleteJobs();
-    return jobs.filter((j) => kind ? j.kind === kind : true).filter((j) => targetFile ? j.targetFile === targetFile : true).sort((a, b) => a.updatedAt < b.updatedAt ? 1 : -1)[0];
+    return jobs.filter((j: any) => kind ? j.kind === kind : true).filter((j: any) => targetFile ? j.targetFile === targetFile : true).sort((a: any, b: any) => a.updatedAt < b.updatedAt ? 1 : -1)[0];
   }
-  async getJob(jobId) {
+  async getJob(jobId: any) {
     const state = await this.readState();
-    return state.jobs.find((j) => j.jobId === jobId);
+    return state.jobs.find((j: any) => j.jobId === jobId);
   }
-  async getCheckpoints(jobId) {
+  async getCheckpoints(jobId: any) {
     const state = await this.readState();
-    return state.checkpoints.filter((c) => c.jobId === jobId).sort((a, b) => a.index - b.index);
+    return state.checkpoints.filter((c: any) => c.jobId === jobId).sort((a: any, b: any) => a.index - b.index);
   }
-  async getLatestCommittedCheckpoint(jobId, stage) {
+  async getLatestCommittedCheckpoint(jobId: any, stage: any) {
     const checkpoints = await this.getCheckpoints(jobId);
-    return checkpoints.filter((c) => c.stage === stage && c.status === "committed").sort((a, b) => {
+    return checkpoints.filter((c: any) => c.stage === stage && c.status === "committed").sort((a: any, b: any) => {
       if (a.index !== b.index)
         return b.index - a.index;
       return a.updatedAt < b.updatedAt ? 1 : -1;
     })[0];
   }
-  async prune(options) {
+  async prune(options: any) {
     var _a, _b, _c;
     const maxJobs = (_a = options == null ? void 0 : options.maxJobs) != null ? _a : 500;
     const maxCheckpoints = (_b = options == null ? void 0 : options.maxCheckpoints) != null ? _b : 2e3;
     const maxAgeMs = (_c = options == null ? void 0 : options.maxAgeMs) != null ? _c : 14 * 24 * 60 * 60 * 1e3;
     const cutoff = Date.now() - maxAgeMs;
-    await this.withState(async (state) => {
-      state.jobs = state.jobs.filter((job) => {
+    await this.withState(async (state: any) => {
+      state.jobs = state.jobs.filter((job: any) => {
         if (job.status === "queued" || job.status === "running")
           return true;
         return new Date(job.updatedAt).getTime() >= cutoff;
-      }).sort((a, b) => a.updatedAt < b.updatedAt ? 1 : -1).slice(0, maxJobs);
-      const keepJobIds = new Set(state.jobs.map((j) => j.jobId));
-      state.checkpoints = state.checkpoints.filter((cp) => keepJobIds.has(cp.jobId)).sort((a, b) => a.updatedAt < b.updatedAt ? 1 : -1).slice(0, maxCheckpoints);
+      }).sort((a: any, b: any) => a.updatedAt < b.updatedAt ? 1 : -1).slice(0, maxJobs);
+      const keepJobIds = new Set(state.jobs.map((j: any) => j.jobId));
+      state.checkpoints = state.checkpoints.filter((cp: any) => keepJobIds.has(cp.jobId)).sort((a: any, b: any) => a.updatedAt < b.updatedAt ? 1 : -1).slice(0, maxCheckpoints);
     });
   }
-  async demoteStaleFailedToCanceled(maxAgeMs) {
+  async demoteStaleFailedToCanceled(maxAgeMs: any) {
     let changed = 0;
     const cutoff = Date.now() - Math.max(0, maxAgeMs);
-    await this.withState(async (state) => {
+    await this.withState(async (state: any) => {
       const nowIso = new Date().toISOString();
       for (const job of state.jobs) {
         if (job.status !== "failed")
@@ -103,13 +105,13 @@ export class JobStore {
     });
     return changed;
   }
-  async withState(mutator) {
+  async withState(mutator: any) {
     const run = this.writeChain.then(async () => {
       const state = await this.readState();
       await mutator(state);
       await this.writeState(state);
     });
-    this.writeChain = run.catch((err) => {
+    this.writeChain = run.catch((err: any) => {
       console.error("[NeuroVox][JobStore] State write failed:", err);
     });
     await run;
@@ -137,17 +139,17 @@ export class JobStore {
       return { jobs: [], checkpoints: [] };
     }
   }
-  async writeState(state) {
+  async writeState(state: any) {
     const adapter = this.plugin.app.vault.adapter;
     await this.ensureDir(adapter);
     await adapter.write(JobStore.FILE, JSON.stringify(state, null, 2));
   }
-  async ensureDir(adapter) {
+  async ensureDir(adapter: any) {
     if (!await adapter.exists(JobStore.BASE_DIR)) {
       await adapter.mkdir(JobStore.BASE_DIR);
     }
   }
-  async quarantineCorruptFile(adapter, path, raw) {
+  async quarantineCorruptFile(adapter: any, path: any, raw: any) {
     try {
       const quarantinePath = `${path}.corrupt.${Date.now()}.json`;
       await adapter.write(quarantinePath, raw);

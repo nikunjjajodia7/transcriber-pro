@@ -1,4 +1,14 @@
 export class ProcessingState {
+  isProcessing: any;
+  currentStep: any;
+  steps: any;
+  startTime: any;
+  processedChunks: any;
+  totalChunks: any;
+  error: any;
+  audioBlob: any;
+  transcription: any;
+  postProcessing: any;
   constructor() {
     this.isProcessing = false;
     this.currentStep = null;
@@ -8,7 +18,7 @@ export class ProcessingState {
   /**
    * Records the start of a processing step
    */
-  startStep(name) {
+  startStep(name: any) {
     this.currentStep = { name, startTime: performance.now() };
     this.steps.push(this.currentStep);
   }
@@ -25,7 +35,7 @@ export class ProcessingState {
    */
   getTimings() {
     return Object.fromEntries(
-      this.steps.filter((step) => step.endTime).map((step) => [
+      this.steps.filter((step: any) => step.endTime).map((step: any) => [
         step.name,
         step.endTime - step.startTime
       ])
@@ -34,14 +44,14 @@ export class ProcessingState {
   /**
    * Updates chunk processing progress
    */
-  updateProgress(processed, total) {
+  updateProgress(processed: any, total: any) {
     this.processedChunks = processed;
     this.totalChunks = total;
   }
   /**
    * Records an error that occurred during processing
    */
-  setError(error) {
+  setError(error: any) {
     this.error = error instanceof Error ? error.message : error;
   }
   /**
@@ -62,7 +72,7 @@ export class ProcessingState {
   /**
    * Sets the processing state
    */
-  setIsProcessing(value) {
+  setIsProcessing(value: any) {
     this.isProcessing = value;
   }
   /**
@@ -117,7 +127,7 @@ export class ProcessingState {
   /**
    * Restores state from a saved JSON object
    */
-  fromJSON(data) {
+  fromJSON(data: any) {
     var _a, _b, _c;
     this.isProcessing = (_a = data.isProcessing) != null ? _a : false;
     this.currentStep = (_b = data.currentStep) != null ? _b : null;

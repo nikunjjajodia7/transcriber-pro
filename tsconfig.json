@@ -20,7 +20,8 @@
       "ES7"
     ]
   },
+  "// TEMPORARY (Unit 4)": "include points at src-rebuild/ during the rebuild; Unit 6 cutover renames src-rebuild/ -> src/ and reverts this to src/**/*.ts",
   "include": [
-    "src/**/*.ts"
+    "src-rebuild/**/*.ts"
   ]
 }

@@ -1,4 +1,4 @@
-export function classifyError(error) {
+export function classifyError(error: any) {
   const message = toMessage(error);
   if (includesAny(message, [
     "unauthorized",
@@ -44,16 +44,16 @@ export function classifyError(error) {
   }
   return { errorClass: "unknown", retryable: false };
 }
-function toMessage(error) {
+function toMessage(error: any) {
   if (error instanceof Error)
     return error.message.toLowerCase();
   if (typeof error === "string")
     return error.toLowerCase();
   return "unknown error";
 }
-function includesAny(value, patterns) {
-  return patterns.some((p) => value.includes(p));
+function includesAny(value: any, patterns: any) {
+  return patterns.some((p: any) => value.includes(p));
 }
-function matchesStatusCode(message, codes) {
-  return codes.some((code) => new RegExp(`(?:^|\\b|status\\s*)${code}(?:\\b|$)`).test(message));
+function matchesStatusCode(message: any, codes: any) {
+  return codes.some((code: any) => new RegExp(`(?:^|\\b|status\\s*)${code}(?:\\b|$)`).test(message));
 }

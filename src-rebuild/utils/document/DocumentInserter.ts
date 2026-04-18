@@ -5,14 +5,15 @@ import { buildEntrySpeakerMappingSection, extractSpeakerLabels } from './Speaker
 import { fromPlainTranscription } from './TranscriptSchema';
 
 export class DocumentInserter {
+  plugin: any;
   static LIVE_MARKER_START_PREFIX = "<!-- neurovox:live:start:";
   static LIVE_MARKER_END_PREFIX = "<!-- neurovox:live:end:";
   static liveCalloutCollapsedState = /* @__PURE__ */ new Map();
 
-  constructor(plugin) {
+  constructor(plugin: any) {
     this.plugin = plugin;
   }
-  static setLiveCalloutCollapsedState(filePath, collapsed) {
+  static setLiveCalloutCollapsedState(filePath: any, collapsed: any) {
     const key = DocumentInserter.buildLiveStateKey(filePath);
     if (!key)
       return;
@@ -24,7 +25,7 @@ export class DocumentInserter {
    * @param file The target file
    * @param position The cursor position for insertion
    */
-  async insertContent(content, file, position) {
+  async insertContent(content: any, file: any, position: any) {
     var _a;
     try {
       this.validateTemplates();
@@ -71,18 +72,18 @@ ${baseText}`.trim();
   /**
    * Inserts content at the specified position in a file
    */
-  async insertAtPositionWithIdempotency(entryMarker, content, file, position) {
+  async insertAtPositionWithIdempotency(entryMarker: any, content: any, file: any, position: any) {
     const fileContent = await this.plugin.app.vault.read(file);
     if (fileContent.includes(entryMarker)) {
       return;
     }
     const lines = fileContent.split("\n");
-    const offset = lines.slice(0, position.line).reduce((acc, line) => acc + line.length + 1, 0) + position.ch;
+    const offset = lines.slice(0, position.line).reduce((acc: any, line: any) => acc + line.length + 1, 0) + position.ch;
     const entry = content;
     const updatedContent = fileContent.slice(0, offset) + entry + fileContent.slice(offset);
     await this.plugin.app.vault.modify(file, updatedContent);
   }
-  async upsertLiveTranscriptionBlock(file, position, markerId, transcription) {
+  async upsertLiveTranscriptionBlock(file: any, position: any, markerId: any, transcription: any) {
     var _a;
     const fileContent = await this.plugin.app.vault.read(file);
     const { startMarker, endMarker } = this.getLiveMarkers(markerId);
@@ -100,11 +101,11 @@ ${baseText}`.trim();
       return;
     }
     const lines = fileContent.split("\n");
-    const offset = lines.slice(0, position.line).reduce((acc, line) => acc + line.length + 1, 0) + position.ch;
+    const offset = lines.slice(0, position.line).reduce((acc: any, line: any) => acc + line.length + 1, 0) + position.ch;
     const updated = `${fileContent.slice(0, offset)}${block}${fileContent.slice(offset)}`;
     await this.plugin.app.vault.modify(file, updated);
   }
-  async removeLiveTranscriptionBlock(file, markerId) {
+  async removeLiveTranscriptionBlock(file: any, markerId: any) {
     const fileContent = await this.plugin.app.vault.read(file);
     const { startMarker, endMarker } = this.getLiveMarkers(markerId);
     const region = this.findLiveRegion(fileContent, startMarker, endMarker);
@@ -116,7 +117,7 @@ ${baseText}`.trim();
     await this.plugin.app.vault.modify(file, updated);
     this.clearLiveCalloutCollapsedState(file.path);
   }
-  async removeAllLiveTranscriptionBlocks(file) {
+  async removeAllLiveTranscriptionBlocks(file: any) {
     const fileContent = await this.plugin.app.vault.read(file);
     const cleaned = this.stripAllLegacyLiveBlocks(fileContent);
     if (cleaned.removedCount === 0)
@@ -125,7 +126,7 @@ ${baseText}`.trim();
     this.clearLiveCalloutCollapsedState(file.path);
     return cleaned.removedCount;
   }
-  async replaceLiveTranscriptionBlockWithFinalContent(file, markerId, finalContent, fallbackPosition) {
+  async replaceLiveTranscriptionBlockWithFinalContent(file: any, markerId: any, finalContent: any, fallbackPosition: any) {
     const fileContent = await this.plugin.app.vault.read(file);
     const { startMarker, endMarker } = this.getLiveMarkers(markerId);
     const region = this.findLiveRegion(fileContent, startMarker, endMarker);
@@ -146,15 +147,15 @@ ${baseText}`.trim();
     await this.plugin.app.vault.modify(file, updated);
     this.clearLiveCalloutCollapsedState(file.path);
   }
-  getLiveMarkers(markerId) {
+  getLiveMarkers(markerId: any) {
     return {
       startMarker: `${DocumentInserter.LIVE_MARKER_START_PREFIX}${markerId} -->`,
       endMarker: `${DocumentInserter.LIVE_MARKER_END_PREFIX}${markerId} -->`
     };
   }
-  buildLiveTranscriptionBlock(startMarker, endMarker, transcription, collapsed) {
+  buildLiveTranscriptionBlock(startMarker: any, endMarker: any, transcription: any, collapsed: any) {
     const body = transcription.trim().length > 0 ? transcription.trim() : "(listening...)";
-    const quoted = body.split("\n").map((line) => `> ${line}`).join("\n");
+    const quoted = body.split("\n").map((line: any) => `> ${line}`).join("\n");
     const foldMarker = collapsed ? "-" : "+";
     return `>[!info]${foldMarker} Live Transcription (In Progress)
 > Type: live-transcription
@@ -165,25 +166,25 @@ ${quoted}
 > ${endMarker}
 `;
   }
-  getLiveCalloutCollapsedState(filePath) {
+  getLiveCalloutCollapsedState(filePath: any) {
     const key = DocumentInserter.buildLiveStateKey(filePath);
     if (!key)
       return void 0;
     return DocumentInserter.liveCalloutCollapsedState.get(key);
   }
-  clearLiveCalloutCollapsedState(filePath) {
+  clearLiveCalloutCollapsedState(filePath: any) {
     const key = DocumentInserter.buildLiveStateKey(filePath);
     if (!key)
       return;
     DocumentInserter.liveCalloutCollapsedState.delete(key);
   }
-  static buildLiveStateKey(filePath) {
+  static buildLiveStateKey(filePath: any) {
     const note = (filePath || "").trim();
     if (!note)
       return null;
     return note;
   }
-  findLiveRegion(fileContent, startMarker, endMarker) {
+  findLiveRegion(fileContent: any, startMarker: any, endMarker: any) {
     const startMarkerIndex = fileContent.indexOf(startMarker);
     if (startMarkerIndex === -1)
       return null;
@@ -208,7 +209,7 @@ ${quoted}
     }
     return { start, end };
   }
-  stripAllLegacyLiveBlocks(fileContent) {
+  stripAllLegacyLiveBlocks(fileContent: any) {
     var _a;
     const startRegex = /<!--\s*neurovox:live:start:([a-zA-Z0-9_\-]+)\s*-->/g;
     let removedCount = 0;
@@ -265,7 +266,7 @@ ${quoted}
     });
     return `Transcription - ${timeLabel}`;
   }
-  applyEntryTitle(content, title) {
+  applyEntryTitle(content: any, title: any) {
     if (!title)
       return content;
     const calloutTitleRegex = /(^|\n)(>\[![^\]]+\][^\n]*)/;
@@ -283,7 +284,7 @@ ${content}`;
     }
     return content.replace(existingLine, replacedLine);
   }
-  buildEntryMarker(hash, meta) {
+  buildEntryMarker(hash: any, meta?: any) {
     if (meta) {
       return buildEntryMarkerComment(meta, hash);
     }
@@ -294,7 +295,7 @@ ${content}`;
     };
     return buildEntryMarkerComment(fallbackMeta, hash);
   }
-  injectEntryMarkerIntoCallout(content, entryMarker) {
+  injectEntryMarkerIntoCallout(content: any, entryMarker: any) {
     if (!entryMarker.trim() || content.includes(entryMarker))
       return content;
     const headerMatch = /(>\[![^\]]+\][^\n]*)(\n|$)/.exec(content);
@@ -304,7 +305,7 @@ ${content}`;
     return `${content.slice(0, insertAt)}> ${entryMarker}
 ${content.slice(insertAt)}`;
   }
-  injectCalloutMetadata(content, metadata) {
+  injectCalloutMetadata(content: any, metadata: any) {
     const headerMatch = /(>\[![^\]]+\][^\n]*)(\n|$)/.exec(content);
     if (!headerMatch || headerMatch.index === void 0)
       return content;
@@ -328,7 +329,7 @@ ${content.slice(insertAt)}`;
 >
 ${content.slice(insertAt)}`;
   }
-  computeContentHash(content) {
+  computeContentHash(content: any) {
     let hash = 5381;
     for (let i = 0; i < content.length; i++) {
       hash = (hash << 5) + hash ^ content.charCodeAt(i);

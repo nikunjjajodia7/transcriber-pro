@@ -1,7 +1,7 @@
 import { AIProvider } from '../adapters/AIAdapter';
 import { AudioQuality, CURRENT_SETTINGS_VERSION, DEFAULT_SETTINGS } from './Settings';
 
-export function migrateAndNormalizeSettings(data) {
+export function migrateAndNormalizeSettings(data: any) {
   const raw = isRecord(data) ? data : {};
   const sourceVersion = getSourceVersion(raw);
   const warnings = [];
@@ -199,33 +199,33 @@ export function migrateAndNormalizeSettings(data) {
     backupSource: migrated ? data : void 0
   };
 }
-function getSourceVersion(raw) {
+function getSourceVersion(raw: any) {
   const version = raw.settingsVersion;
   if (typeof version === "number" && Number.isFinite(version) && version >= 1) {
     return Math.floor(version);
   }
   return 1;
 }
-function asBoolean(value, fallback) {
+function asBoolean(value: any, fallback: any) {
   return typeof value === "boolean" ? value : fallback;
 }
-function asString(value, fallback) {
+function asString(value: any, fallback: any) {
   return typeof value === "string" ? value : fallback;
 }
-function asPath(value, fallback) {
+function asPath(value: any, fallback: any) {
   if (typeof value !== "string")
     return fallback;
   return value.trim().replace(/^\/+|\/+$/g, "");
 }
-function asBoundedNumber(value, fallback, min, max) {
+function asBoundedNumber(value: any, fallback: any, min: any, max: any) {
   if (typeof value !== "number" || !Number.isFinite(value))
     return fallback;
   return Math.min(max, Math.max(min, value));
 }
-function asEnum(value, enumObj, fallback) {
+function asEnum(value: any, enumObj: any, fallback: any) {
   const allowed = Object.values(enumObj);
   return typeof value === "string" && allowed.includes(value) ? value : fallback;
 }
-function isRecord(value) {
+function isRecord(value: any) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }

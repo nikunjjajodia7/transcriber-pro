@@ -1,12 +1,12 @@
 import { requestUrl } from 'obsidian';
 
-export var AIProvider = /* @__PURE__ */ ((AIProvider2) => {
+export var AIProvider: any = /* @__PURE__ */ ((AIProvider2: any) => {
   AIProvider2["OpenAI"] = "openai";
   AIProvider2["Groq"] = "groq";
   AIProvider2["Deepgram"] = "deepgram";
   return AIProvider2;
 })(AIProvider || {});
-export var AIModels = {
+export var AIModels: Record<string, Array<{ id: string; name: string; category: string; maxTokens?: number }>> = {
   ["openai" /* OpenAI */]: [
     { id: "whisper-1", name: "Whisper", category: "transcription" },
     { id: "gpt-4o-mini-transcribe", name: "GPT-4o Mini Transcribe", category: "transcription" },
@@ -34,7 +34,7 @@ export var AIModels = {
     { id: "nova-3", name: "Nova-3", category: "transcription" }
   ]
 };
-export function getModelInfo(modelId) {
+export function getModelInfo(modelId: any) {
   for (const models of Object.values(AIModels)) {
     const model = models.find((m) => m.id === modelId);
     if (model)
@@ -43,16 +43,22 @@ export function getModelInfo(modelId) {
   return void 0;
 }
 export class AIAdapter {
+  [key: string]: any;
+  settings: any;
+  provider: any;
+  keyValidated: any;
+  lastValidatedKey: any;
+  models: any;
   static DEFAULT_REQUEST_TIMEOUT_MS = 3e4;
 
-  constructor(settings, provider) {
+  constructor(settings: any, provider: any) {
     this.settings = settings;
     this.provider = provider;
     this.keyValidated = false;
     this.lastValidatedKey = "";
     this.models = AIModels[provider];
   }
-  setApiKey(key) {
+  setApiKey(key: any) {
     const currentKey = this.getApiKey();
     if (key !== currentKey) {
       this.keyValidated = false;
@@ -60,7 +66,7 @@ export class AIAdapter {
     }
     this.setApiKeyInternal(key);
   }
-  async generateResponse(prompt, model, options) {
+  async generateResponse(prompt: any, model: any, options: any) {
     try {
       const endpoint = `${this.getApiBaseUrl()}${this.getTextGenerationEndpoint()}`;
       const body = {
@@ -81,7 +87,7 @@ export class AIAdapter {
       throw new Error(`Failed to generate response: ${message}`);
     }
   }
-  async transcribeAudio(audioArrayBuffer, model, _options) {
+  async transcribeAudio(audioArrayBuffer: any, model: any, _options: any) {
     var _a, _b, _c, _d, _e, _f;
     try {
       const { headers, body } = await this.prepareTranscriptionRequest(audioArrayBuffer, model);
@@ -135,8 +141,8 @@ export class AIAdapter {
       return false;
     }
   }
-  getAvailableModels(category) {
-    return this.models.filter((model) => model.category === category);
+  getAvailableModels(category: any) {
+    return this.models.filter((model: any) => model.category === category);
   }
   isReady(category = "transcription") {
     const currentKey = this.getApiKey();
@@ -144,13 +150,13 @@ export class AIAdapter {
       return false;
     return this.keyValidated && this.lastValidatedKey === currentKey;
   }
-  async makeAPIRequest(endpoint, method, headers, body, timeoutMs = AIAdapter.DEFAULT_REQUEST_TIMEOUT_MS) {
+  async makeAPIRequest(endpoint: any, method: any, headers: any, body: any, timeoutMs = AIAdapter.DEFAULT_REQUEST_TIMEOUT_MS) {
     try {
       const requestHeaders = {
         "Authorization": `Bearer ${this.getApiKey()}`,
         ...headers
       };
-      const requestPromise = (0, requestUrl)({
+      const requestPromise = requestUrl({
         url: endpoint,
         method,
         headers: requestHeaders,
@@ -165,7 +171,7 @@ export class AIAdapter {
             timeoutMs
           );
         })
-      ]) : await requestPromise;
+      ]) as any : await requestPromise;
       if (!response.json) {
         throw new Error("Invalid response format");
       }
@@ -174,7 +180,7 @@ export class AIAdapter {
       throw error;
     }
   }
-  async prepareTranscriptionRequest(audioArrayBuffer, model) {
+  async prepareTranscriptionRequest(audioArrayBuffer: any, model: any) {
     const boundary = "----NVBoundary" + Math.random().toString(36).slice(2) + Date.now().toString(36);
     const encoder = new TextEncoder();
     const parts = [];
@@ -204,7 +210,7 @@ export class AIAdapter {
       body: finalBuffer.buffer
     };
   }
-  getErrorMessage(error) {
+  getErrorMessage(error: any) {
     if (error instanceof Error)
       return error.message;
     if (typeof error === "string")

@@ -1,4 +1,4 @@
-export var AudioQuality = /* @__PURE__ */ ((AudioQuality2) => {
+export var AudioQuality: any = /* @__PURE__ */ ((AudioQuality2: any) => {
   AudioQuality2["Low"] = "low";
   AudioQuality2["Medium"] = "medium";
   AudioQuality2["High"] = "high";

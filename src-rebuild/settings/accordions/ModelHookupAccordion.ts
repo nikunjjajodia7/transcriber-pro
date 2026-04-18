@@ -2,7 +2,12 @@ import { Setting } from 'obsidian';
 import { BaseAccordion } from './BaseAccordion';
 
 export class ModelHookupAccordion extends BaseAccordion {
-  constructor(containerEl, settings, getAdapter, plugin) {
+  settings: any;
+  getAdapter: any;
+  plugin: any;
+  recordingAccordion: any;
+  postProcessingAccordion: any;
+  constructor(containerEl: any, settings: any, getAdapter: any, plugin: any) {
     super(
       containerEl,
       "\u{1F511} API Keys",
@@ -12,7 +17,7 @@ export class ModelHookupAccordion extends BaseAccordion {
     this.getAdapter = getAdapter;
     this.plugin = plugin;
   }
-  setAccordions(recording, postProcessing) {
+  setAccordions(recording: any, postProcessing: any) {
     this.recordingAccordion = recording;
     this.postProcessingAccordion = postProcessing;
   }

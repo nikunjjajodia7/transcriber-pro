@@ -1,4 +1,4 @@
-export function fromPlainTranscription(transcription) {
+export function fromPlainTranscription(transcription: any) {
   return {
     segments: [
       {
@@ -9,8 +9,8 @@ export function fromPlainTranscription(transcription) {
     ]
   };
 }
-export function flattenTranscriptText(transcript, includeTimestamps = false) {
-  const lines = transcript.segments.map((segment) => {
+export function flattenTranscriptText(transcript: any, includeTimestamps = false) {
+  const lines = transcript.segments.map((segment: any) => {
     const text = segment.text.trim();
     if (!text)
       return "";
@@ -23,7 +23,7 @@ export function flattenTranscriptText(transcript, includeTimestamps = false) {
   }).filter(Boolean);
   return lines.join("\n");
 }
-function formatTimestamp(ms) {
+function formatTimestamp(ms: any) {
   const total = Math.max(0, Math.floor(ms / 1e3));
   const m = Math.floor(total / 60).toString().padStart(2, "0");
   const s = (total % 60).toString().padStart(2, "0");

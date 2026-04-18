@@ -3,7 +3,12 @@ import { AIModels } from '../../adapters/AIAdapter';
 import { BaseAccordion } from './BaseAccordion';
 
 export class RecordingAccordion extends BaseAccordion {
-  constructor(containerEl, settings, getAdapter, plugin) {
+  settings: any;
+  getAdapter: any;
+  plugin: any;
+  modelDropdown: any;
+  modelSetting: any;
+  constructor(containerEl: any, settings: any, getAdapter: any, plugin: any) {
     super(containerEl, "\u{1F399} Recording", "Configure recording preferences and select a transcription model.");
     this.settings = settings;
     this.getAdapter = getAdapter;
@@ -105,7 +110,7 @@ export class RecordingAccordion extends BaseAccordion {
       });
     });
   }
-  async setupModelDropdown(dropdown) {
+  async setupModelDropdown(dropdown: any) {
     dropdown.selectEl.empty();
     let hasValidProvider = false;
     for (const provider of ["openai" /* OpenAI */, "groq" /* Groq */, "deepgram" /* Deepgram */]) {
@@ -118,7 +123,7 @@ export class RecordingAccordion extends BaseAccordion {
             hasValidProvider = true;
             const group = document.createElement("optgroup");
             group.label = `${provider.toUpperCase()} Models`;
-            models.forEach((model) => {
+            models.forEach((model: any) => {
               const option = document.createElement("option");
               option.value = model.id;
               option.text = `${model.name}`;
@@ -298,7 +303,7 @@ export class RecordingAccordion extends BaseAccordion {
       });
     });
   }
-  getProviderFromModel(modelId) {
+  getProviderFromModel(modelId: any) {
     for (const [provider, models] of Object.entries(AIModels)) {
       if (models.some((model) => model.id === modelId)) {
         return provider;

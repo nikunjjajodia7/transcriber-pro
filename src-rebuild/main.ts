@@ -17,11 +17,28 @@ import { findEntryRegionAtPosition, findEntryRegions } from './utils/document/Tr
 import { migrateAndNormalizeSettings } from './settings/migrations';
 
 class NeuroVoxPlugin extends Plugin {
+  buttonMap: any;
+  activeLeaf: any;
+  settingTab: any;
+  events: any;
+  processingStatusEl: any;
+  processingInterval: any;
+  statusReconcileInterval: any;
+  processingStartedAt: any;
+  processingBaseMessage: any;
+  startupValidationInFlight: any;
+  speakerAutoApplyDebounceTimers: any;
+  speakerAutoApplyInFlight: any;
+  modalInstance: any;
+  recordingProcessor: any;
+  settings: any;
+  aiAdapters: any;
   static STARTUP_VALIDATION_TIMEOUT_MS = 4e3;
   static SPEAKER_AUTO_APPLY_DEBOUNCE_MS = 600;
 
-  constructor() {
-    super(...arguments);
+  constructor(...args: any[]) {
+    // @ts-expect-error obsidian Plugin ctor signature wrapped via rest spread
+    super(...args);
     this.buttonMap = /* @__PURE__ */ new Map();
     this.activeLeaf = null;
     this.settingTab = null;
@@ -64,11 +81,11 @@ class NeuroVoxPlugin extends Plugin {
    * Register event listeners for floating button setting changes
    */
   registerFloatingButtonEvents() {
-    this.events.on("floating-button-setting-changed", (isEnabled) => {
+    this.events.on("floating-button-setting-changed", (isEnabled: any) => {
       this.cleanupUI();
       if (isEnabled) {
         const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
-        if (activeView == null ? void 0 : activeView.file) {
+        if (activeView && activeView.file) {
           this.createButtonForFile(activeView.file);
         }
       }
@@ -100,7 +117,7 @@ class NeuroVoxPlugin extends Plugin {
   /**
    * Save settings to plugin data storage
    */
-  async saveSettings(options) {
+  async saveSettings(options?: any) {
     var _a, _b;
     try {
       this.settings.settingsVersion = CURRENT_SETTINGS_VERSION;
@@ -148,7 +165,7 @@ class NeuroVoxPlugin extends Plugin {
   }
   initializeAIAdapters() {
     try {
-      const adapters = [
+      const adapters: Array<[string, any]> = [
         ["openai" /* OpenAI */, new OpenAIAdapter(this.settings)],
         ["groq" /* Groq */, new GroqAdapter(this.settings)],
         ["deepgram" /* Deepgram */, new DeepgramAdapter(this.settings)]
@@ -167,7 +184,7 @@ class NeuroVoxPlugin extends Plugin {
       name: "Start recording",
       checkCallback: (checking) => {
         const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
-        if (!(activeView == null ? void 0 : activeView.file))
+        if (!(activeView && activeView.file))
           return false;
         if (checking)
           return true;
@@ -255,7 +272,7 @@ ${top.join("\n")}`, 12e3);
             new Notice("NeuroVox has no incomplete jobs to cancel.");
             return;
           }
-          await Promise.all(pending.map((job) => this.recordingProcessor.cancelJob(job.jobId)));
+          await Promise.all(pending.map((job: any) => this.recordingProcessor.cancelJob(job.jobId)));
           await this.reconcileProcessingStatusFromJobs();
           new Notice(`NeuroVox canceled ${pending.length} incomplete job(s).`);
         } catch (error) {
@@ -293,7 +310,7 @@ ${top.join("\n")}`, 12e3);
             return;
           }
           const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
-          const activeFile = activeView == null ? void 0 : activeView.file;
+          const activeFile = activeView && activeView.file;
           if (!activeFile) {
             new Notice("Open a transcript note with source metadata first.");
             return;
@@ -305,7 +322,7 @@ ${top.join("\n")}`, 12e3);
             return;
           }
           const adapter = this.app.vault.adapter;
-          const normalizedSource = (0, normalizePath)(sourcePath);
+          const normalizedSource = normalizePath(sourcePath);
           if (!await adapter.exists(normalizedSource)) {
             new Notice(`Source audio file not found: ${normalizedSource}`);
             return;
@@ -350,26 +367,26 @@ ${top.join("\n")}`, 12e3);
       }
     });
   }
-  isValidAudioFile(file) {
+  isValidAudioFile(file: any) {
     if (!file)
       return false;
     const validExtensions = ["mp3", "wav", "webm", "m4a"];
     return validExtensions.includes(file.extension.toLowerCase());
   }
-  isSupportedInboxAudioFile(file) {
+  isSupportedInboxAudioFile(file: any) {
     const validExtensions = ["mp3", "wav", "webm", "m4a", "ogg", "mp4", "aac"];
     return validExtensions.includes(file.extension.toLowerCase());
   }
-  isFileWithinFolder(filePath, folderPath) {
-    const normalizedFilePath = (0, normalizePath)(filePath);
-    const normalizedFolder = (0, normalizePath)(folderPath).replace(/\/+$/, "");
+  isFileWithinFolder(filePath: any, folderPath: any) {
+    const normalizedFilePath = normalizePath(filePath);
+    const normalizedFolder = normalizePath(folderPath).replace(/\/+$/, "");
     if (!normalizedFolder)
       return false;
     return normalizedFilePath.startsWith(`${normalizedFolder}/`);
   }
   async transcribeLatestIphoneInboxRecording() {
     try {
-      const inboxFolder = (0, normalizePath)(
+      const inboxFolder = normalizePath(
         (this.settings.iphoneInboxFolderPath || "Recordings/Inbox").trim()
       );
       const adapter = this.app.vault.adapter;
@@ -392,30 +409,30 @@ ${top.join("\n")}`, 12e3);
       new Notice(`Failed to transcribe latest iPhone inbox recording: ${message}`);
     }
   }
-  isValidVideoFile(file) {
+  isValidVideoFile(file: any) {
     if (!file)
       return false;
     const validExtensions = ["mp4", "webm", "mov"];
     return validExtensions.includes(file.extension.toLowerCase());
   }
-  getAudioMimeType(extension) {
+  getAudioMimeType(extension: any) {
     const mimeTypes = {
       "mp3": "audio/mpeg",
       "wav": "audio/wav",
       "webm": "audio/webm",
       "m4a": "audio/mp4"
-    };
+    } as Record<string, string>;
     return mimeTypes[extension.toLowerCase()] || "audio/wav";
   }
-  getVideoMimeType(extension) {
-    const mimeTypes = {
+  getVideoMimeType(extension: any) {
+    const mimeTypes: Record<string, string> = {
       "mp4": "video/mp4",
       "webm": "video/webm",
       "mov": "video/quicktime"
     };
     return mimeTypes[extension.toLowerCase()] || "video/mp4";
   }
-  async processExistingAudioFile(file) {
+  async processExistingAudioFile(file: any) {
     try {
       const adapter = this.aiAdapters.get(this.settings.transcriptionProvider);
       if (!adapter) {
@@ -430,7 +447,7 @@ ${top.join("\n")}`, 12e3);
       const baseFileName = `${transcriptsFolder}/${timestamp}-${sanitizedName}.md`;
       let newFileName = baseFileName;
       let count = 1;
-      const normalizedPath = (0, normalizePath)(transcriptsFolder);
+      const normalizedPath = normalizePath(transcriptsFolder);
       if (!await this.app.vault.adapter.exists(normalizedPath)) {
         await this.app.vault.createFolder(normalizedPath);
       }
@@ -463,7 +480,7 @@ ${top.join("\n")}`, 12e3);
       return;
     }
   }
-  async processVideoFile(file) {
+  async processVideoFile(file: any) {
     try {
       const videoProcessor = await VideoProcessor.getInstance(this);
       await videoProcessor.processVideo(file);
@@ -493,11 +510,11 @@ ${top.join("\n")}`, 12e3);
       this.bindLiveCalloutFoldStateCapture(el, ctx == null ? void 0 : ctx.sourcePath);
     });
   }
-  bindLiveCalloutFoldStateCapture(root, sourcePath) {
+  bindLiveCalloutFoldStateCapture(root: any, sourcePath: any) {
     const notePath = (sourcePath || "").trim();
     if (!notePath)
       return;
-    const liveCallouts = Array.from(root.querySelectorAll(".callout"));
+    const liveCallouts: any[] = Array.from(root.querySelectorAll(".callout"));
     if (liveCallouts.length === 0)
       return;
     for (const callout of liveCallouts) {
@@ -520,7 +537,7 @@ ${top.join("\n")}`, 12e3);
       });
     }
   }
-  isLiveTranscriptionCallout(callout) {
+  isLiveTranscriptionCallout(callout: any) {
     var _a, _b, _c;
     const titleText = ((_b = (_a = callout.querySelector(".callout-title-inner")) == null ? void 0 : _a.textContent) == null ? void 0 : _b.trim().toLowerCase()) || "";
     const bodyText = ((_c = callout.textContent) == null ? void 0 : _c.toLowerCase()) || "";
@@ -529,9 +546,9 @@ ${top.join("\n")}`, 12e3);
     }
     return false;
   }
-  convertLegacyTimestampLinks(root) {
+  convertLegacyTimestampLinks(root: any) {
     const links = root.querySelectorAll("a.internal-link");
-    links.forEach((link) => {
+    links.forEach((link: any) => {
       const hhmmss = this.extractLegacyTimestampFromLink(link);
       if (!hhmmss)
         return;
@@ -539,7 +556,7 @@ ${top.join("\n")}`, 12e3);
       link.replaceWith(tokenEl);
     });
   }
-  extractLegacyTimestampFromLink(link) {
+  extractLegacyTimestampFromLink(link: any) {
     const candidates = [
       link.getAttribute("data-href") || "",
       link.getAttribute("href") || "",
@@ -556,7 +573,7 @@ ${top.join("\n")}`, 12e3);
     }
     return null;
   }
-  decorateBracketTimestampTokens(root) {
+  decorateBracketTimestampTokens(root: any) {
     const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
     const textNodes = [];
     let current = walker.nextNode();
@@ -596,7 +613,7 @@ ${top.join("\n")}`, 12e3);
       parent.replaceChild(fragment, node);
     }
   }
-  createTimestampTokenEl(label, timestampText) {
+  createTimestampTokenEl(label: any, timestampText: any) {
     const token = document.createElement("span");
     token.className = "neurovox-timestamp-token";
     token.setAttribute("role", "button");
@@ -625,12 +642,12 @@ ${top.join("\n")}`, 12e3);
     });
     return token;
   }
-  parseTimestampToSeconds(timestampText) {
+  parseTimestampToSeconds(timestampText: any) {
     const parts = timestampText.trim().split(":");
     if (parts.length !== 2 && parts.length !== 3)
       return null;
-    const values = parts.map((part) => Number(part));
-    if (values.some((value) => !Number.isFinite(value))) {
+    const values = parts.map((part: any) => Number(part));
+    if (values.some((value: any) => !Number.isFinite(value))) {
       return null;
     }
     let hours = 0;
@@ -646,7 +663,7 @@ ${top.join("\n")}`, 12e3);
     }
     return Math.max(0, hours * 3600 + minutes * 60 + seconds);
   }
-  seekNearestAudioFromToken(tokenEl, targetSeconds) {
+  seekNearestAudioFromToken(tokenEl: any, targetSeconds: any) {
     const audio = this.findNearestAudioElement(tokenEl);
     if (!audio) {
       new Notice("No audio player found in this note.");
@@ -663,7 +680,7 @@ ${top.join("\n")}`, 12e3);
       new Notice("Could not seek audio for this timestamp.");
     }
   }
-  findNearestAudioElement(tokenEl) {
+  findNearestAudioElement(tokenEl: any) {
     const calloutContainer = tokenEl.closest(".callout");
     if (calloutContainer) {
       const inCallout = calloutContainer.querySelector("audio");
@@ -681,7 +698,7 @@ ${top.join("\n")}`, 12e3);
     const globalAudio = document.querySelector("audio");
     return globalAudio instanceof HTMLAudioElement ? globalAudio : null;
   }
-  async handleActiveLeafChange(leaf) {
+  async handleActiveLeafChange(leaf: any) {
     this.activeLeaf = leaf;
     for (const button of this.buttonMap.values()) {
       var _panel;
@@ -702,7 +719,7 @@ ${top.join("\n")}`, 12e3);
   handleLayoutChange() {
     if (this.settings.showFloatingButton) {
       const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
-      if (activeView == null ? void 0 : activeView.file) {
+      if (activeView && activeView.file) {
         const button = this.buttonMap.get(activeView.file.path);
         if (button) {
           button.show();
@@ -712,7 +729,7 @@ ${top.join("\n")}`, 12e3);
       }
     }
   }
-  handleFileDelete(file) {
+  handleFileDelete(file: any) {
     if (file instanceof TFile) {
       const button = this.buttonMap.get(file.path);
       if (button) {
@@ -724,7 +741,7 @@ ${top.join("\n")}`, 12e3);
   initializeUI() {
     this.cleanupUI();
   }
-  createButtonForFile(file) {
+  createButtonForFile(file: any) {
     const existingButton = this.buttonMap.get(file.path);
     if (existingButton) {
       existingButton.remove();
@@ -738,7 +755,7 @@ ${top.join("\n")}`, 12e3);
     this.buttonMap.set(file.path, button);
   }
   cleanupUI() {
-    this.buttonMap.forEach((button) => button.remove());
+    this.buttonMap.forEach((button: any) => button.remove());
     this.buttonMap.clear();
   }
   handleRecordingStart() {
@@ -758,7 +775,7 @@ ${top.join("\n")}`, 12e3);
       if (this.modalInstance)
         return;
       this.modalInstance = new TimerModal(this, activeFile, insertionPosition);
-      this.modalInstance.onStop = async (result) => {
+      this.modalInstance.onStop = async (result: any) => {
         try {
           if (typeof result === "string") {
             await this.recordingProcessor.processStreamingResult(
@@ -797,7 +814,7 @@ ${top.join("\n")}`, 12e3);
     }
   }
   updateAllButtonColors() {
-    this.buttonMap.forEach((button) => {
+    this.buttonMap.forEach((button: any) => {
       button.updateButtonColor();
     });
   }
@@ -816,8 +833,8 @@ ${top.join("\n")}`, 12e3);
   async reconcileProcessingStatusFromJobs() {
     try {
       const jobs = await this.recordingProcessor.getIncompleteJobs();
-      const activeCount = jobs.filter((job) => job.status === "queued" || job.status === "running").length;
-      const failedCount = jobs.filter((job) => job.status === "failed").length;
+      const activeCount = jobs.filter((job: any) => job.status === "queued" || job.status === "running").length;
+      const failedCount = jobs.filter((job: any) => job.status === "failed").length;
       if (activeCount > 0) {
         if (!this.processingStartedAt) {
           this.showProcessingStatus(`Processing ${activeCount} job(s)`);
@@ -915,7 +932,7 @@ ${top.join("\n")}`, 12e3);
       new Notice("NeuroVox recovery scan failed at startup.");
     }
   }
-  async executeRecoveryAction(action, ordered) {
+  async executeRecoveryAction(action: any, ordered: any) {
     if (action.type === "resume_newest") {
       const newest = ordered[0];
       if (!newest)
@@ -927,7 +944,7 @@ ${top.join("\n")}`, 12e3);
       return;
     }
     if (action.type === "cancel_all") {
-      await Promise.all(ordered.map((job) => this.recordingProcessor.cancelJob(job.jobId)));
+      await Promise.all(ordered.map((job: any) => this.recordingProcessor.cancelJob(job.jobId)));
       await this.reconcileProcessingStatusFromJobs();
       new Notice("NeuroVox canceled all incomplete transcription jobs.");
       return;
@@ -945,7 +962,7 @@ ${top.join("\n")}`, 12e3);
       new Notice("NeuroVox canceled the selected incomplete transcription job.");
     }
   }
-  async validateAdapterWithTimeout(adapter) {
+  async validateAdapterWithTimeout(adapter: any) {
     return await Promise.race([
       adapter.validateApiKey().catch(() => false),
       new Promise((resolve) => {
@@ -953,7 +970,7 @@ ${top.join("\n")}`, 12e3);
       })
     ]);
   }
-  showProcessingStatus(message) {
+  showProcessingStatus(message: any) {
     if (!this.processingStatusEl) {
       this.initializeProcessingStatus();
     }
@@ -968,7 +985,7 @@ ${top.join("\n")}`, 12e3);
       }, 1e3);
     }
   }
-  async persistSettingsBackup(source) {
+  async persistSettingsBackup(source: any) {
     if (!source)
       return;
     try {
@@ -984,7 +1001,7 @@ ${top.join("\n")}`, 12e3);
       new Notice("NeuroVox could not write settings backup before migration.");
     }
   }
-  setProcessingStatus(message) {
+  setProcessingStatus(message: any) {
     if (!this.processingStatusEl) {
       this.initializeProcessingStatus();
     }
@@ -1009,29 +1026,29 @@ ${top.join("\n")}`, 12e3);
     }
     this.processingStatusEl.setText(`NeuroVox: ${this.processingBaseMessage}`);
   }
-  extractSourcePathFromFrontmatter(content) {
+  extractSourcePathFromFrontmatter(content: any) {
     const fmMatch = content.match(/^---\n([\s\S]*?)\n---/);
     if (!fmMatch)
       return null;
     const frontmatter = fmMatch[1];
-    const sourceLine = frontmatter.split("\n").find((line) => line.trim().toLowerCase().startsWith("source:"));
+    const sourceLine = frontmatter.split("\n").find((line: any) => line.trim().toLowerCase().startsWith("source:"));
     if (!sourceLine)
       return null;
     return sourceLine.replace(/^source:\s*/i, "").trim();
   }
-  extractSourcePathFromCalloutMetadata(content) {
+  extractSourcePathFromCalloutMetadata(content: any) {
     const sourceMatch = /^\s*(?:>\s*)*Source:\s*(.+)\s*$/im.exec(content);
-    if (!(sourceMatch == null ? void 0 : sourceMatch[1]))
+    if (!sourceMatch || !sourceMatch[1])
       return null;
     return sourceMatch[1].trim();
   }
-  resolveSourcePathFromNote(content) {
+  resolveSourcePathFromNote(content: any) {
     const fromCallout = this.extractSourcePathFromCalloutMetadata(content);
     if (fromCallout)
       return fromCallout;
     return this.extractSourcePathFromFrontmatter(content);
   }
-  inferMimeTypeFromPath(path) {
+  inferMimeTypeFromPath(path: any) {
     const lower = path.toLowerCase();
     if (lower.endsWith(".m4a") || lower.endsWith(".mp4"))
       return "audio/mp4";
@@ -1048,7 +1065,7 @@ ${top.join("\n")}`, 12e3);
   async applySpeakerNamesFromMappingInActiveNote() {
     var _a;
     const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
-    const activeFile = activeView == null ? void 0 : activeView.file;
+    const activeFile = activeView && activeView.file;
     if (!(activeFile instanceof TFile) || !activeView || activeFile.extension.toLowerCase() !== "md") {
       new Notice("Open a transcript markdown note first.");
       return;
@@ -1060,7 +1077,7 @@ ${top.join("\n")}`, 12e3);
         new Notice("No scoped transcription entry mapping found at cursor.");
         return;
       }
-      const result = applySpeakerMappingToEntry(content, region.meta.id, region.start, region.end);
+      const result = applySpeakerMappingToEntry(content, (region.meta as any).id, region.start, region.end);
       if (result.mappedSpeakers === 0) {
         new Notice("No speaker names found in the Speaker Mapping section.");
         return;
@@ -1075,7 +1092,7 @@ ${top.join("\n")}`, 12e3);
       new Notice("Failed to apply speaker names from mapping.");
     }
   }
-  handleNoteModifyForSpeakerAutoApply(file) {
+  handleNoteModifyForSpeakerAutoApply(file: any) {
     if (!(file instanceof TFile) || file.extension.toLowerCase() !== "md") {
       return;
     }
@@ -1092,7 +1109,7 @@ ${top.join("\n")}`, 12e3);
     }, NeuroVoxPlugin.SPEAKER_AUTO_APPLY_DEBOUNCE_MS);
     this.speakerAutoApplyDebounceTimers.set(file.path, timer);
   }
-  async autoApplySpeakerMappingForPath(path) {
+  async autoApplySpeakerMappingForPath(path: any) {
     var _a;
     if (this.speakerAutoApplyInFlight.has(path))
       return;
@@ -1141,7 +1158,7 @@ ${top.join("\n")}`, 12e3);
   async generateSpeakerMappingForActiveNote() {
     var _a;
     const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
-    const activeFile = activeView == null ? void 0 : activeView.file;
+    const activeFile = activeView && activeView.file;
     if (!(activeFile instanceof TFile) || !activeView || activeFile.extension.toLowerCase() !== "md") {
       new Notice("Open a transcript markdown note first.");
       return;
@@ -1154,7 +1171,7 @@ ${top.join("\n")}`, 12e3);
         return;
       }
       const entryContent = content.slice(region.start, region.end);
-      if (hasEntrySpeakerMappingSection(entryContent, region.meta.id)) {
+      if (hasEntrySpeakerMappingSection(entryContent, (region.meta as any).id)) {
         new Notice("Speaker Mapping section already exists in this transcription.");
         return;
       }
@@ -1163,7 +1180,7 @@ ${top.join("\n")}`, 12e3);
         new Notice("No diarized speaker labels found in this transcription.");
         return;
       }
-      const section = buildEntrySpeakerMappingSection(labels, region.meta.id).trimEnd();
+      const section = buildEntrySpeakerMappingSection(labels, (region.meta as any).id).trimEnd();
       const calloutSection = section.split("\n").map((line) => line.trim().length > 0 ? `> ${line}` : ">").join("\n");
       const injection = `${calloutSection}
 >
@@ -1184,7 +1201,7 @@ ${top.join("\n")}`, 12e3);
   }
   async renameCurrentTranscriptionEntry() {
     const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
-    const activeFile = activeView == null ? void 0 : activeView.file;
+    const activeFile = activeView && activeView.file;
     if (!(activeFile instanceof TFile) || !activeView || activeFile.extension.toLowerCase() !== "md") {
       new Notice("Open a transcript markdown note first.");
       return;
@@ -1217,7 +1234,7 @@ ${top.join("\n")}`, 12e3);
       new Notice("Failed to rename transcription entry.");
     }
   }
-  updateEntryTitle(entryContent, title) {
+  updateEntryTitle(entryContent: any, title: any) {
     let updated = entryContent;
     const compactMarkerRegex = /<!--\s*neurovox:entry:({[\s\S]*?})\s*-->/;
     const compactMarkerMatch = updated.match(compactMarkerRegex);
@@ -1255,7 +1272,7 @@ ${top.join("\n")}`, 12e3);
     }
     return updated;
   }
-  insertSpeakerMappingAfterFrontmatter(content, section) {
+  insertSpeakerMappingAfterFrontmatter(content: any, section: any) {
     const frontmatterMatch = /^---\n[\s\S]*?\n---\n?/.exec(content);
     if (!frontmatterMatch || frontmatterMatch.index !== 0) {
       return `${section}${content}`;
@@ -1266,14 +1283,14 @@ ${top.join("\n")}`, 12e3);
     const spacer = suffix.startsWith("\n") ? "" : "\n";
     return `${prefix}${spacer}${section}${suffix}`;
   }
-  async writeDeepgramDiagnosticReport(diagnosis, sourcePath) {
+  async writeDeepgramDiagnosticReport(diagnosis: any, sourcePath: any) {
     const adapter = this.app.vault.adapter;
-    const baseDir = (0, normalizePath)("neurovox/diagnostics");
+    const baseDir = normalizePath("neurovox/diagnostics");
     if (!await adapter.exists(baseDir)) {
       await adapter.mkdir(baseDir);
     }
     const stamp = new Date().toISOString().replace(/[:.]/g, "-");
-    const filePath = (0, normalizePath)(`${baseDir}/deepgram-diagnosis-${stamp}.md`);
+    const filePath = normalizePath(`${baseDir}/deepgram-diagnosis-${stamp}.md`);
     const body = [
       "---",
       `date: ${new Date().toISOString()}`,
@@ -1312,7 +1329,7 @@ ${top.join("\n")}`, 12e3);
       window.clearInterval(this.statusReconcileInterval);
       this.statusReconcileInterval = null;
     }
-    this.speakerAutoApplyDebounceTimers.forEach((timer) => {
+    this.speakerAutoApplyDebounceTimers.forEach((timer: any) => {
       window.clearTimeout(timer);
     });
     this.speakerAutoApplyDebounceTimers.clear();

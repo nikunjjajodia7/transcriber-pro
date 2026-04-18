@@ -3,18 +3,19 @@ import { AIAdapter } from './AIAdapter';
 import { toRomanIfNeeded } from '../utils/text/Romanization';
 
 export class DeepgramAdapter extends AIAdapter {
+  apiKey: any;
   static MIN_TIMEOUT_MS = 18e4;
   static MAX_TIMEOUT_MS = 18e5;
   static TIMEOUT_PER_MB_MS = 8e3;
 
-  constructor(settings) {
+  constructor(settings: any) {
     super(settings, "deepgram" /* Deepgram */);
     this.apiKey = "";
   }
   getApiKey() {
     return this.apiKey;
   }
-  setApiKeyInternal(key) {
+  setApiKeyInternal(key: any) {
     this.apiKey = key;
   }
   getApiBaseUrl() {
@@ -42,13 +43,13 @@ export class DeepgramAdapter extends AIAdapter {
       return false;
     }
   }
-  parseTextGenerationResponse(response) {
+  parseTextGenerationResponse(response: any) {
     throw new Error("Text generation not supported by Deepgram");
   }
-  parseTranscriptionResponse(response) {
+  parseTranscriptionResponse(response: any) {
     return this.parseTranscriptionResponseWithOptions(response, false);
   }
-  parseTranscriptionResponseWithOptions(response, allowEmptyTranscription) {
+  parseTranscriptionResponseWithOptions(response: any, allowEmptyTranscription: any) {
     var _a, _b, _c, _d, _e, _f;
     let transcript = "";
     if (this.settings.enableSpeakerDiarization) {
@@ -73,7 +74,7 @@ export class DeepgramAdapter extends AIAdapter {
     return transcript;
   }
   // Override the transcribeAudio method since Deepgram has a different API structure
-  async transcribeAudio(audioArrayBuffer, model, options) {
+  async transcribeAudio(audioArrayBuffer: any, model: any, options: any) {
     var _a;
     try {
       const query = new URLSearchParams({
@@ -110,7 +111,7 @@ export class DeepgramAdapter extends AIAdapter {
       throw new Error(`Failed to transcribe audio with Deepgram: ${message}`);
     }
   }
-  async diagnoseAudio(audioArrayBuffer, model, options) {
+  async diagnoseAudio(audioArrayBuffer: any, model: any, options: any) {
     var _a, _b, _c, _d, _e, _f;
     const query = new URLSearchParams({
       model,
@@ -152,7 +153,7 @@ export class DeepgramAdapter extends AIAdapter {
       detectedLanguage: (channel == null ? void 0 : channel.detected_language) || null
     };
   }
-  calculateTimeoutMs(sizeBytes) {
+  calculateTimeoutMs(sizeBytes: any) {
     const sizeMb = Math.max(1, Math.ceil(sizeBytes / (1024 * 1024)));
     const computed = sizeMb * DeepgramAdapter.TIMEOUT_PER_MB_MS;
     return Math.min(
@@ -160,9 +161,9 @@ export class DeepgramAdapter extends AIAdapter {
       Math.max(DeepgramAdapter.MIN_TIMEOUT_MS, computed)
     );
   }
-  applyLanguageSettings(query, model) {
-    const languageHints = (this.settings.deepgramLanguageHints || "").split(",").map((s) => s.trim()).filter(Boolean);
-    const hintSet = new Set(languageHints.map((hint) => hint.toLowerCase()));
+  applyLanguageSettings(query: any, model: any) {
+    const languageHints = (this.settings.deepgramLanguageHints || "").split(",").map((s: any) => s.trim()).filter(Boolean);
+    const hintSet = new Set(languageHints.map((hint: any) => hint.toLowerCase()));
     const supportsMulti = /^nova-(2|3)/i.test(model);
     const shouldUseMulti = supportsMulti && (hintSet.has("multi") || languageHints.length > 1);
     if (shouldUseMulti) {
@@ -180,7 +181,7 @@ export class DeepgramAdapter extends AIAdapter {
       query.set("language", languageHints[0]);
     }
   }
-  async requestWithTimeout(endpoint, headers, body, timeoutMs) {
+  async requestWithTimeout(endpoint: any, headers: any, body: any, timeoutMs: any) {
     let timeoutHandle = null;
     try {
       return await Promise.race([
@@ -201,9 +202,9 @@ export class DeepgramAdapter extends AIAdapter {
       }
     }
   }
-  formatDiarizedTranscript(utterances) {
-    let currentSpeaker = null;
-    const lines = [];
+  formatDiarizedTranscript(utterances: any) {
+    let currentSpeaker: any = null;
+    const lines: any[] = [];
     for (const utt of utterances) {
       const text = typeof (utt == null ? void 0 : utt.transcript) === "string" ? utt.transcript.trim() : "";
       if (!text)
@@ -224,7 +225,7 @@ export class DeepgramAdapter extends AIAdapter {
     }
     return lines.join("\n").trim();
   }
-  normalizeSpeakerFormatting(transcript) {
+  normalizeSpeakerFormatting(transcript: any) {
     const speakerMatches = transcript.match(/Speaker\s+\d+:/g);
     if (!speakerMatches || speakerMatches.length < 2) {
       return transcript;
@@ -233,7 +234,7 @@ export class DeepgramAdapter extends AIAdapter {
     normalized = normalized.replace(/\n{3,}/g, "\n\n");
     return normalized;
   }
-  formatTimestampToken(startSeconds) {
+  formatTimestampToken(startSeconds: any) {
     const raw = typeof startSeconds === "number" && Number.isFinite(startSeconds) ? startSeconds : 0;
     const total = Math.max(0, Math.floor(raw));
     const hours = Math.floor(total / 3600).toString().padStart(2, "0");
@@ -242,14 +243,14 @@ export class DeepgramAdapter extends AIAdapter {
     return `[${hours}:${minutes}:${seconds}]`;
   }
   // Override the makeAPIRequest method to handle Deepgram's authorization header format
-  async makeAPIRequest(endpoint, method, headers, body) {
+  async makeAPIRequest(endpoint: any, method: any, headers: any, body: any) {
     try {
       const requestHeaders = {
         "Authorization": `Token ${this.getApiKey()}`,
         // Deepgram uses "Token" instead of "Bearer"
         ...headers
       };
-      const response = await (0, requestUrl)({
+      const response = await requestUrl({
         url: endpoint,
         method,
         headers: requestHeaders,
@@ -264,7 +265,7 @@ export class DeepgramAdapter extends AIAdapter {
       throw error;
     }
   }
-  getDeepgramErrorMessage(error) {
+  getDeepgramErrorMessage(error: any) {
     if (!(error instanceof Error)) {
       return this.getErrorMessage(error);
     }

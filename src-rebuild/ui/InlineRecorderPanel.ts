@@ -7,9 +7,43 @@ import { StreamingTranscriptionService } from '../utils/transcription/StreamingT
 import { canEditSaveAudio, canPauseToggle, canStartRecording, canStopRecording, canUploadAudio } from '../utils/recorder/RecorderStateMachine';
 
 export class InlineRecorderPanel {
+  panelEl: any;
+  statusRowEl: any;
+  statusEl: any;
+  timerEl: any;
+  uiContainerEl: any;
+  readyContainerEl: any;
+  activeContainerEl: any;
+  finalizingContainerEl: any;
+  ui: any;
+  streamingService: any;
+  state: any;
+  timerSeconds: any;
+  timerId: any;
+  livePreviewMarkerId: any;
+  livePreviewWriteChain: any;
+  isCollapsed: any;
+  isDisposed: any;
+  liveAudioCaptureActive: any;
+  saveAudioForSession: any;
+  saveAudioToggleEl: any;
+  startButtonEl: any;
+  uploadButtonEl: any;
+  cancelJobsButtonEl: any;
+  plugin: any;
+  containerEl: any;
+  activeFile: any;
+  cursorPosition: any;
+  onDispose: any;
+  onStateChange: any;
+  isMobileSheet: any;
+  deviceDetection: any;
+  recordingManager: any;
+  documentInserter: any;
+  useStreaming: any;
   static RECORDER_STOP_TIMEOUT_MS = 12e3;
 
-  constructor(options) {
+  constructor(options: any) {
     this.panelEl = null;
     this.statusRowEl = null;
     this.statusEl = null;
@@ -65,7 +99,7 @@ export class InlineRecorderPanel {
     this.isCollapsed = !this.isCollapsed;
     this.panelEl.toggleClass("is-collapsed", this.isCollapsed);
   }
-  updateAnchor(anchor) {
+  updateAnchor(anchor: any) {
     if (this.isDisposed || !this.panelEl)
       return;
     this.positionPanel(this.panelEl, anchor);
@@ -77,10 +111,10 @@ export class InlineRecorderPanel {
     try {
       if (this.useStreaming && !this.streamingService) {
         this.streamingService = new StreamingTranscriptionService(this.plugin, {
-          onMemoryWarning: (usage) => {
+          onMemoryWarning: (usage: any) => {
             new Notice(`Memory usage high: ${Math.round(usage)}%`);
           },
-          onChunkCommitted: async (_chunkText, _metadata, partialResult) => {
+          onChunkCommitted: async (_chunkText: any, _metadata: any, partialResult: any) => {
             if (!this.plugin.settings.showLiveChunkPreviewInNote)
               return;
             await this.enqueueLivePreviewUpdate(partialResult);
@@ -224,7 +258,7 @@ export class InlineRecorderPanel {
     this.panelEl = null;
     this.onDispose();
   }
-  createPanel(anchor) {
+  createPanel(anchor: any) {
     this.panelEl = document.createElement("div");
     this.panelEl.addClass("neurovox-inline-recorder-panel");
     if (this.isMobileSheet) {
@@ -267,7 +301,7 @@ export class InlineRecorderPanel {
     this.containerEl.appendChild(this.panelEl);
     this.syncControlAvailability();
   }
-  createOptionsRow(container) {
+  createOptionsRow(container: any) {
     const primaryRow = container.createDiv({
       cls: "neurovox-inline-recorder-options neurovox-inline-recorder-options-primary"
     });
@@ -356,13 +390,13 @@ export class InlineRecorderPanel {
         new Notice("No incomplete jobs to cancel.");
         return;
       }
-      await Promise.all(pending.map((job) => this.plugin.recordingProcessor.cancelJob(job.jobId)));
+      await Promise.all(pending.map((job: any) => this.plugin.recordingProcessor.cancelJob(job.jobId)));
       new Notice(`Canceled ${pending.length} incomplete job(s).`);
     } catch (e) {
       new Notice("Failed to cancel incomplete jobs.");
     }
   }
-  positionPanel(panelEl, anchor) {
+  positionPanel(panelEl: any, anchor: any) {
     const margin = 12;
     const parentRect = this.containerEl.getBoundingClientRect();
     const panelWidth = panelEl.offsetWidth || 300;
@@ -393,7 +427,7 @@ export class InlineRecorderPanel {
     panelEl.style.left = `${Math.round(left)}px`;
     panelEl.style.top = `${Math.round(top)}px`;
   }
-  setState(state) {
+  setState(state: any) {
     var _a, _b;
     this.state = state;
     (_a = this.panelEl) == null ? void 0 : _a.setAttribute("data-state", state);
@@ -450,7 +484,7 @@ export class InlineRecorderPanel {
       this.timerId = null;
     }
   }
-  async enqueueLivePreviewUpdate(partialResult) {
+  async enqueueLivePreviewUpdate(partialResult: any) {
     const markerId = this.livePreviewMarkerId;
     if (!markerId)
       return;
@@ -465,7 +499,7 @@ export class InlineRecorderPanel {
     });
     await this.livePreviewWriteChain;
   }
-  async clearLivePreviewBlock(markerIdOverride) {
+  async clearLivePreviewBlock(markerIdOverride: any) {
     const markerId = markerIdOverride != null ? markerIdOverride : this.livePreviewMarkerId;
     if (!markerId)
       return;
@@ -476,12 +510,12 @@ export class InlineRecorderPanel {
     } catch (e) {
     }
   }
-  handleFailure(message, error) {
+  handleFailure(message: any, error: any) {
     const detail = error instanceof Error ? error.message : String(error);
     new Notice(`${message}: ${detail}`);
     this.dispose();
   }
-  formatTimer(seconds) {
+  formatTimer(seconds: any) {
     const minutes = Math.floor(seconds / 60).toString().padStart(2, "0");
     const remainingSeconds = (seconds % 60).toString().padStart(2, "0");
     return `${minutes}:${remainingSeconds}`;

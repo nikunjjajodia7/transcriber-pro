@@ -1,20 +1,23 @@
 import { ButtonComponent, setIcon } from 'obsidian';
 
 export class TouchableButton extends ButtonComponent {
-  constructor(options) {
+  isProcessingAction: any;
+  DEBOUNCE_TIME: any;
+  actionTimeout: any;
+  constructor(options: any) {
     super(options.container);
     this.isProcessingAction = false;
     this.DEBOUNCE_TIME = 1e3;
     this.actionTimeout = null;
     this.setupButton(options);
   }
-  setupButton(options) {
+  setupButton(options: any) {
     this.setButtonText(options.text);
     if (options.icon) {
-      (0, setIcon)(this.buttonEl, options.icon);
+      setIcon(this.buttonEl, options.icon);
     }
     if (options.classes) {
-      options.classes.forEach((cls) => this.buttonEl.addClass(cls));
+      options.classes.forEach((cls: any) => this.buttonEl.addClass(cls));
     }
     if (options.ariaLabel) {
       this.buttonEl.setAttribute("aria-label", options.ariaLabel);
@@ -28,10 +31,10 @@ export class TouchableButton extends ButtonComponent {
     this.buttonEl.setAttribute("tabindex", "0");
     this.setupTouchHandlers(options.onClick);
   }
-  setupTouchHandlers(onClick) {
+  setupTouchHandlers(onClick: any) {
     let touchStartTime = 0;
     let isLongPress = false;
-    const handleTouchStart = (e) => {
+    const handleTouchStart = (e: any) => {
       e.preventDefault();
       e.stopPropagation();
       if (this.isProcessingAction)
@@ -46,7 +49,7 @@ export class TouchableButton extends ButtonComponent {
         }
       }, 500);
     };
-    const handleTouchEnd = async (e) => {
+    const handleTouchEnd = async (e: any) => {
       e.preventDefault();
       e.stopPropagation();
       this.buttonEl.removeClass("is-touching");
@@ -76,7 +79,7 @@ export class TouchableButton extends ButtonComponent {
    * Processes button actions with proper state management and feedback
    * 🎯 Handles action processing with proper cleanup
    */
-  async processButtonAction(onClick) {
+  async processButtonAction(onClick: any) {
     if (this.isProcessingAction)
       return;
     this.buttonEl.setAttribute("data-state", "processing");
