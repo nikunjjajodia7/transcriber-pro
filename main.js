@@ -11728,7 +11728,11 @@ var MobileDockPill = class {
     if (!this.containerEl) return;
     const hasOverlay = document.querySelector('.modal-container') !== null
       || document.querySelector('.menu') !== null
-      || document.querySelector('.prompt') !== null;
+      || document.querySelector('.prompt') !== null
+      || document.querySelector('.suggestion-container') !== null
+      || document.querySelector('.neurovox-upload-overlay') !== null
+      || this.isMobileDrawerOpen()
+      || !this.hasActiveMarkdownView();
     if (hasOverlay) {
       this.containerEl.style.visibility = 'hidden';
       this.containerEl.style.pointerEvents = 'none';
@@ -11737,28 +11741,56 @@ var MobileDockPill = class {
       this.containerEl.style.pointerEvents = '';
     }
   }
-  startDockTracking() {
-    if (this.dockTrackingRafId !== null) return;
+  isMobileDrawerOpen() {
+    const drawers = document.querySelectorAll('.workspace-drawer');
+    if (drawers.length === 0) return false;
+    const vw = window.innerWidth;
+    for (const drawer of drawers) {
+      const rect = drawer.getBoundingClientRect();
+      if (rect.width <= 0) continue;
+      if (drawer.classList.contains('mod-left') && rect.right > 1) return true;
+      if (drawer.classList.contains('mod-right') && rect.left < vw - 1) return true;
+    }
+    return false;
+  }
+  hasActiveMarkdownView() {
+    try {
+      return !!this.plugin.app.workspace.getActiveViewOfType(import_obsidian16.MarkdownView);
+    } catch (e) {
+      return true;
+    }
+  }
+  resolveDockEl() {
+    if (this.dockEl && this.dockEl.isConnected) return this.dockEl;
     this.dockEl = document.querySelector('.mobile-navbar')
         || document.querySelector('.workspace-tab-header-container-inner')
         || document.querySelector('.mod-mobile .workspace-tab-header-container');
-    if (!this.dockEl) return;
+    return this.dockEl;
+  }
+  startDockTracking() {
+    if (this.dockTrackingRafId !== null) return;
+    if (!this.resolveDockEl()) return;
     const track = () => {
-        if (this.isDisposed || !this.containerEl || !this.dockEl) {
+        if (this.isDisposed || !this.containerEl) {
             this.dockTrackingRafId = null;
             return;
         }
-        const dockRect = this.dockEl.getBoundingClientRect();
-        const distFromBottom = window.innerHeight - dockRect.top;
-        if (distFromBottom !== this.lastDockBottom) {
-            this.lastDockBottom = distFromBottom;
-            if (distFromBottom <= 0) {
-                this.containerEl.style.transform = 'translateX(-50%) translateY(100%)';
-            } else {
-                this.containerEl.style.transform = 'translateX(-50%)';
-                this.containerEl.style.bottom = (distFromBottom + 6) + 'px';
+        const dockEl = this.resolveDockEl();
+        if (dockEl) {
+            const dockRect = dockEl.getBoundingClientRect();
+            const dockMissing = dockRect.width === 0 && dockRect.height === 0;
+            const distFromBottom = dockMissing ? -1 : window.innerHeight - dockRect.top;
+            if (distFromBottom !== this.lastDockBottom) {
+                this.lastDockBottom = distFromBottom;
+                if (distFromBottom <= 0) {
+                    this.containerEl.style.transform = 'translateX(-50%) translateY(100%)';
+                } else {
+                    this.containerEl.style.transform = 'translateX(-50%)';
+                    this.containerEl.style.bottom = (distFromBottom + 6) + 'px';
+                }
             }
         }
+        this.updateVisibilityForOverlays();
         this.dockTrackingRafId = requestAnimationFrame(track);
     };
     this.dockTrackingRafId = requestAnimationFrame(track);
@@ -11773,11 +11805,11 @@ var MobileDockPill = class {
   }
   measureAndPositionAboveDock() {
     if (!this.containerEl) return;
-    const dockEl = document.querySelector('.mobile-navbar')
-      || document.querySelector('.workspace-tab-header-container-inner')
-      || document.querySelector('.mod-mobile .workspace-tab-header-container');
+    this.dockEl = null;
+    const dockEl = this.resolveDockEl();
     if (dockEl) {
       const dockRect = dockEl.getBoundingClientRect();
+      if (dockRect.width === 0 && dockRect.height === 0) return;
       const distFromBottom = window.innerHeight - dockRect.top;
       this.containerEl.style.bottom = (distFromBottom + 6) + 'px';
     }
@@ -12291,9 +12323,15 @@ var _FloatingButton = class {
   attachToActiveLeaf() {
     if (this.isMobileDevice && this.mobilePill) {
       const activeLeaf = this.plugin.app.workspace.getActiveViewOfType(import_obsidian16.MarkdownView);
-      if (!activeLeaf) return;
+      if (!activeLeaf) {
+        this.mobilePill.hide();
+        return;
+      }
       const viewContent = activeLeaf.containerEl.querySelector(".view-content");
-      if (!(viewContent instanceof HTMLElement)) return;
+      if (!(viewContent instanceof HTMLElement)) {
+        this.mobilePill.hide();
+        return;
+      }
       this.activeLeafContainer = viewContent;
       this.mobilePill.attachTo(viewContent);
       if (this.plugin.settings.showFloatingButton) {
