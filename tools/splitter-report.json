@@ -1,0 +1,102 @@
+{
+  "input": "tools/inputs/main-v1.0.19.js",
+  "input_sha256": "8f44937637dd0449708975c63f73abdb3684d0d67fc925c11b4b056af6f935cc",
+  "input_size_bytes": 585314,
+  "esbuild_version_assumed": "0.17.3",
+  "marker_count": 72,
+  "src_marker_count": 63,
+  "unique_src_paths": 52,
+  "files_emitted": 52,
+  "vendored_chunks_discarded": 9,
+  "output_total_bytes": 427698,
+  "multi_chunk_files": [
+    {
+      "path": "src/main.ts",
+      "chunk_count": 2,
+      "chunk_byte_offsets": [
+        140639,
+        519633
+      ]
+    },
+    {
+      "path": "src/settings/SettingTab.ts",
+      "chunk_count": 2,
+      "chunk_byte_offsets": [
+        276363,
+        305718
+      ]
+    },
+    {
+      "path": "src/ui/FloatingButton.ts",
+      "chunk_count": 2,
+      "chunk_byte_offsets": [
+        307192,
+        451318
+      ]
+    },
+    {
+      "path": "src/ui/InlineRecorderPanel.ts",
+      "chunk_count": 2,
+      "chunk_byte_offsets": [
+        322832,
+        384639
+      ]
+    },
+    {
+      "path": "src/ui/RecordingUI.ts",
+      "chunk_count": 2,
+      "chunk_byte_offsets": [
+        376733,
+        380535
+      ]
+    },
+    {
+      "path": "src/utils/backend/BackendBatchOrchestrationService.ts",
+      "chunk_count": 2,
+      "chunk_byte_offsets": [
+        232604,
+        234724
+      ]
+    },
+    {
+      "path": "src/utils/document/DocumentInserter.ts",
+      "chunk_count": 2,
+      "chunk_byte_offsets": [
+        181261,
+        196091
+      ]
+    },
+    {
+      "path": "src/utils/RecordingManager.ts",
+      "chunk_count": 2,
+      "chunk_byte_offsets": [
+        313748,
+        316471
+      ]
+    },
+    {
+      "path": "src/utils/RecordingProcessor.ts",
+      "chunk_count": 2,
+      "chunk_byte_offsets": [
+        155499,
+        244340
+      ]
+    },
+    {
+      "path": "src/utils/transcription/StreamingTranscriptionService.ts",
+      "chunk_count": 2,
+      "chunk_byte_offsets": [
+        334122,
+        348745
+      ]
+    },
+    {
+      "path": "src/utils/VideoProcessor.ts",
+      "chunk_count": 2,
+      "chunk_byte_offsets": [
+        140829,
+        272288
+      ]
+    }
+  ]
+}
