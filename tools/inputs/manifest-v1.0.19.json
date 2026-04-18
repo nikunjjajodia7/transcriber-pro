@@ -1,0 +1,14 @@
+{
+	"id": "neurovox",
+	"name": "NeuroVox",
+	"version": "1.0.19",
+	"minAppVersion": "0.15.0",
+	"description": "Enhances your note-taking with voice transcription and AI capabilities",
+	"author": "Synaptic Labs",
+	"authorUrl": "https://www.synapticlabs.ai",
+	"fundingUrl": "https://donate.stripe.com/bIY4gsgDo2mJ5kkfZ6",
+	"isDesktopOnly": false,
+	"settings": {
+		"showFloatingButton": true
+	}
+}
