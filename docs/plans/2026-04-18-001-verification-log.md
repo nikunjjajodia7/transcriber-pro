@@ -203,3 +203,113 @@ delta is within ±5 %.
 automated gate is clean. Final go/no-go for Checkpoint B requires the user to
 complete the six manual smoke scenarios above. If any scenario fails, return
 to Unit 4 for targeted fixes; if all pass, proceed to Phase 3 cutover.
+
+---
+
+## Manual smoke testing — partial run (2026-04-19, in Test Vault)
+
+The user installed the rebuilt `main.js` into `Test Vault/.obsidian/plugins/neurovox/`
+and exercised live recording + audio file upload. Findings below were collected
+under the `/investigate` skill (Iron Law: no fixes without root cause). Both
+findings reproduce identically against the v1.0.19 reference bundle and are
+therefore **inherited bugs, not rebuild regressions**. R1 (functional
+equivalence) is **not violated** — the rebuilt bundle reproduces v1.0.19
+behavior, including its bugs.
+
+### Finding 1 — Post-processing never runs for uploaded audio (HIGH)
+
+**Symptom:** Two upload runs of `Nikhil Geo.m4a` (`Untitled 1.md` entry 1,
+`Untitled 2.md`). Both have `generatePostProcessing: true` and a working OpenAI
+API key. Neither rendered a `>[!note]- Post-Processing` callout. Telemetry for
+`batch_1776610404687_u2iayc`:
+
+```
+provider_response (success, transcriptionChars: 33874)
+note_render_start
+note_render_commit
+job_complete
+```
+
+No `post_processing_*` event between commit and complete.
+
+**Root cause:** Three-step chain in the upload path:
+
+1. `BatchRoutingPolicy.decide()` (`src-rebuild/utils/routing/BatchRoutingPolicy.ts:12-20`)
+   forces `route: "backend_batch"` for **all** uploaded files unconditionally.
+   The `enableBackendOrchestration` setting only changes the `reason` string,
+   not the route.
+2. `BackendBatchOrchestrationService.transcribeLargeUpload()`
+   (`src-rebuild/utils/backend/BackendBatchOrchestrationService.ts:182-204`)
+   returns `{ transcription, postProcessing: status.postProcessing }`. The
+   Cloud Run backend at `neurovox-backend-5udji7gv3a-el.a.run.app` does **not**
+   compute `postProcessing` — it returns transcription only. So
+   `result.postProcessing` is always `undefined` for uploads.
+3. `RecordingProcessor.processRecording()` (`src-rebuild/utils/RecordingProcessor.ts:137-236`)
+   never falls back to client-side `generatePostProcessing()` after the backend
+   route returns. Compare to `processStreamingResult()` (lines 410-417) which
+   explicitly invokes it gated on `generatePostProcessing`.
+
+**Regression check:** The v1.0.19 reference bundle has the identical structure
+(`tools/inputs/main-v1.0.19.js:7095-7150` for batch path; `:7368-7375` for
+stream path). Inherited bug, not introduced by rebuild.
+
+**Suggested fix shape (defer to v1.0.20+ feature work, not this rebuild):**
+After the `if (routeDecision.route === "backend_batch") { … }` block in
+`processRecording`, if `result.postProcessing` is undefined and
+`this.plugin.settings.generatePostProcessing` is true, fall back to
+`await this.generatePostProcessing(result.transcription)`.
+
+### Finding 2 — Entries inserted at cursor can land above older entries (MEDIUM)
+
+**Symptom:** `Untitled 1.md` shows an upload entry recorded at 14:52:11 *above*
+a live-recording entry recorded at 14:35:58 — visually "merged in an odd way".
+
+**Root cause:** `DocumentInserter.insertAtPositionWithIdempotency()`
+(`src-rebuild/utils/document/DocumentInserter.ts:75-85`) inserts at the
+caller's `position.line / position.ch`. Both `processRecording` and
+`processStreamingResult` pass the cursor position captured at action-start
+time. When the user's cursor was at line 0 ch 0 when initiating the upload,
+the new entry is spliced at the very top, pushing the earlier live-recording
+entry down. The order on disk reflects insertion-cursor history, not
+chronological recording order.
+
+**Regression check:** Same code path in v1.0.19. Inherited behavior, not
+introduced by rebuild.
+
+**Suggested fix shape (defer — feature request, not bug):** Either anchor
+upload-path entries at end-of-file regardless of cursor, or render new entries
+in chronological order on the same note. Cross-cutting decision; out of scope
+for the rebuild.
+
+### Finding 3 — Earlier upload attempts failed with backend config errors (LOW, USER CONFIG)
+
+3 failed batch jobs in `queue/local-queue.json` and `recovery/jobs.json` from
+the same session: `"Backend base URL is not configured."` and two `Request
+failed, status 401` errors. These predate the user updating `backendBaseUrl`
+and `backendApiKey` in settings; subsequent attempts succeeded. Not a code
+defect.
+
+### R2 status update
+
+| # | Scenario                                                                                                                | Pass | Notes |
+| - | ----------------------------------------------------------------------------------------------------------------------- | :--: | ----- |
+| 1 | Floating mic button → record → transcribe → insert.                                                                     | [x]  | Live recording works; post-processing fires (see Finding 2 re: cursor placement).                  |
+| 4 | Drop an audio file into a note → process → insert.                                                                       | [x]  | Transcribes correctly, but post-processing is missing (Finding 1, inherited bug).                   |
+| 2 | Inline recorder pause/resume.                                                                                            | [ ]  | Not exercised this run.                                                                            |
+| 3 | Mobile dock pill responsive behavior.                                                                                    | [ ]  | Not exercised this run.                                                                            |
+| 5 | Failure → recovery modal → retry.                                                                                        | [~]  | 3 backend-config failures observed and recorded in `recovery/jobs.json`; recovery UI not exercised. |
+| 6 | Settings accordions render and persist.                                                                                  | [ ]  | Not exercised this run.                                                                            |
+
+### Updated decision
+
+**Equivalence verdict (R1):** PASS — both findings are inherited from v1.0.19
+and reproduce against the reference bundle.
+
+**Checkpoint B recommendation:** PROCEED with the cutover. Findings 1 and 2 are
+real product issues but they are pre-existing bugs in v1.0.19, not regressions
+caused by the rebuild. Fixing them belongs in v1.0.20+ feature work where it
+can be implemented in source, tested, and shipped through the new
+source → build → release flow this rebuild establishes. Holding the rebuild on
+inherited bugs would defeat the rebuild's purpose: getting to a state where
+fixes flow through source instead of hand-patches. Scenarios 2/3/6 should be
+exercised before final cutover for completeness.

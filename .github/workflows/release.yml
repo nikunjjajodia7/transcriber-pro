@@ -1,0 +1,120 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - '[0-9]+.[0-9]+.[0-9]+*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate manifest version matches tag
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          MANIFEST_VERSION=$(jq -r .version manifest.json)
+          PACKAGE_VERSION=$(jq -r .version package.json)
+          if [ "$MANIFEST_VERSION" != "$TAG" ]; then
+            echo "::error::manifest.json version ($MANIFEST_VERSION) does not match tag ($TAG)"
+            exit 1
+          fi
+          if [ "$PACKAGE_VERSION" != "$TAG" ]; then
+            echo "::error::package.json version ($PACKAGE_VERSION) does not match tag ($TAG)"
+            exit 1
+          fi
+          echo "Versions match: $TAG"
+
+      - name: Build
+        run: npm run build
+
+      - name: Generate SHA256SUMS
+        id: hashes
+        run: |
+          set -euo pipefail
+          shasum -a 256 main.js manifest.json styles.css > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+          {
+            echo "main_js=$(shasum -a 256 main.js | awk '{print $1}')"
+            echo "manifest_json=$(shasum -a 256 manifest.json | awk '{print $1}')"
+            echo "styles_css=$(shasum -a 256 styles.css | awk '{print $1}')"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Create draft release and upload assets
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+          draft: true
+          generate_release_notes: true
+          files: |
+            main.js
+            manifest.json
+            styles.css
+            SHA256SUMS.txt
+
+      - name: Verify release assets and integrity
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+          MAIN_JS_SHA: ${{ steps.hashes.outputs.main_js }}
+          MANIFEST_JSON_SHA: ${{ steps.hashes.outputs.manifest_json }}
+          STYLES_CSS_SHA: ${{ steps.hashes.outputs.styles_css }}
+        run: |
+          set -euo pipefail
+          ASSET_COUNT=$(gh release view "$TAG" --json assets --jq '.assets | length')
+          if [ "$ASSET_COUNT" != "4" ]; then
+            echo "::error::expected 4 assets, found $ASSET_COUNT"
+            exit 1
+          fi
+          IS_DRAFT=$(gh release view "$TAG" --json isDraft --jq '.isDraft')
+          if [ "$IS_DRAFT" != "true" ]; then
+            echo "::error::release is not draft (isDraft=$IS_DRAFT)"
+            exit 1
+          fi
+          echo "Waiting 60s for CDN propagation..."
+          sleep 60
+          mkdir -p _verify
+          cd _verify
+          gh release download "$TAG" --pattern 'main.js' --pattern 'manifest.json' --pattern 'styles.css' --pattern 'SHA256SUMS.txt'
+          REMOTE_MAIN=$(shasum -a 256 main.js | awk '{print $1}')
+          REMOTE_MANIFEST=$(shasum -a 256 manifest.json | awk '{print $1}')
+          REMOTE_STYLES=$(shasum -a 256 styles.css | awk '{print $1}')
+          if [ "$REMOTE_MAIN" != "$MAIN_JS_SHA" ]; then
+            echo "::error::main.js SHA drift: built=$MAIN_JS_SHA, released=$REMOTE_MAIN"
+            exit 1
+          fi
+          if [ "$REMOTE_MANIFEST" != "$MANIFEST_JSON_SHA" ]; then
+            echo "::error::manifest.json SHA drift: built=$MANIFEST_JSON_SHA, released=$REMOTE_MANIFEST"
+            exit 1
+          fi
+          if [ "$REMOTE_STYLES" != "$STYLES_CSS_SHA" ]; then
+            echo "::error::styles.css SHA drift: built=$STYLES_CSS_SHA, released=$REMOTE_STYLES"
+            exit 1
+          fi
+          echo "All asset SHAs match build-time hashes."

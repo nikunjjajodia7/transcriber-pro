@@ -50,6 +50,10 @@ export class RecordingProcessor {
   async processRecording(audioBlob: any, activeFile: any, cursorPosition: any, audioFilePath: any) {
     const logContext = RuntimeLogger.createContext("batch");
     const now = new Date().toISOString();
+    const detectedSourceType = this.batchRoutingPolicy.detectSourceType(audioFilePath);
+    if (detectedSourceType === "uploaded") {
+      cursorPosition = await this.computeEndOfFilePosition(activeFile, cursorPosition);
+    }
     const resumeAnchor = await this.createResumeAnchor(activeFile, cursorPosition);
     const baseJob = {
       jobId: logContext.jobId,
@@ -133,7 +137,7 @@ export class RecordingProcessor {
         sourceType: routeDecision.sourceType,
         isLargeUpload: routeDecision.isLargeUpload
       });
-      let result;
+      let result: any;
       if (routeDecision.route === "backend_batch") {
         try {
           this.plugin.showProcessingStatus("Routing large upload to backend workers");
@@ -233,6 +237,32 @@ export class RecordingProcessor {
             }
           }
         );
+      }
+      if (this.plugin.settings.generatePostProcessing && !result.postProcessing) {
+        this.processingState.startStep("Post-processing");
+        await RuntimeLogger.log(this.plugin, logContext, "post_processing_fallback", {
+          status: "started"
+        });
+        try {
+          const generated = await this.executeWithRetry(
+            () => this.generatePostProcessing(result.transcription)
+          );
+          result = { ...result, postProcessing: generated };
+          await RuntimeLogger.log(this.plugin, logContext, "post_processing_fallback", {
+            status: "success"
+          });
+          this.processingState.completeStep();
+        } catch (postProcessingError) {
+          await RuntimeLogger.log(this.plugin, logContext, "post_processing_failure", {
+            status: "failed",
+            reason: postProcessingError instanceof Error ? postProcessingError.message : String(postProcessingError)
+          });
+          await RuntimeLogger.log(this.plugin, logContext, "post_processing_fallback", {
+            status: "failed",
+            reason: postProcessingError instanceof Error ? postProcessingError.message : String(postProcessingError)
+          });
+          this.processingState.completeStep();
+        }
       }
       await RuntimeLogger.log(this.plugin, logContext, "provider_response", {
         status: "success",
@@ -680,6 +710,21 @@ ${transcription}`;
           queueJob.reason || `queue_${queueJob.status}`
         );
       }
+    }
+  }
+  async computeEndOfFilePosition(activeFile: any, fallback: any) {
+    var _a, _b;
+    try {
+      const content = await this.plugin.app.vault.read(activeFile);
+      if (!content) {
+        return fallback;
+      }
+      const lines = content.split("\n");
+      const line = Math.max(0, lines.length - 1);
+      const ch = (_b = (_a = lines[line]) == null ? void 0 : _a.length) != null ? _b : 0;
+      return { line, ch };
+    } catch (e) {
+      return fallback;
     }
   }
   async createResumeAnchor(file: any, position: any) {

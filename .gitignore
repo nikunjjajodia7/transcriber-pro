@@ -5,3 +5,11 @@ node_modules/
 .npm-cache/
 .npm-logs/
 data.json
+
+# Built artifact (produced locally / by release workflow; distributed via GitHub Releases)
+main.js
+
+# Local rebuild backups and diff outputs
+.main.js.v104.bak
+tools/diff-output.patch
+tools/diff-output.actual-logic.txt
