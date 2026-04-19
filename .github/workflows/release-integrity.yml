@@ -1,0 +1,76 @@
+name: Release Integrity
+
+on:
+  schedule:
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout (full history + tags)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Iterate release tags and verify main.js parity
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mapfile -t TAGS < <(git tag -l | grep -E '^[0-9]+\.[0-9]+\.[0-9]+([.-].+)?$' || true)
+          if [ "${#TAGS[@]}" -eq 0 ]; then
+            echo "No release tags found; nothing to verify."
+            exit 0
+          fi
+          echo "Found ${#TAGS[@]} release tag(s)."
+          FAIL=0
+          mkdir -p _integrity
+          for TAG in "${TAGS[@]}"; do
+            echo "::group::Verifying tag $TAG"
+            WORK=$(mktemp -d)
+            git worktree add "$WORK" "$TAG" >/dev/null
+            pushd "$WORK" >/dev/null
+            if [ ! -f package.json ] || [ ! -f esbuild.config.mjs ]; then
+              echo "Tag $TAG predates source-built workflow; skipping."
+              popd >/dev/null
+              git worktree remove --force "$WORK" >/dev/null
+              echo "::endgroup::"
+              continue
+            fi
+            npm ci
+            npm run build
+            BUILT_SHA=$(shasum -a 256 main.js | awk '{print $1}')
+            popd >/dev/null
+            DLDIR=$(mktemp -d)
+            if ! gh release download "$TAG" --pattern 'main.js' --dir "$DLDIR"; then
+              echo "::warning::No main.js asset on release $TAG; skipping comparison."
+              git worktree remove --force "$WORK" >/dev/null
+              echo "::endgroup::"
+              continue
+            fi
+            RELEASED_SHA=$(shasum -a 256 "$DLDIR/main.js" | awk '{print $1}')
+            if [ "$BUILT_SHA" != "$RELEASED_SHA" ]; then
+              echo "::error::Tag $TAG: built=$BUILT_SHA, released=$RELEASED_SHA — drift detected. See tools/integrity-allowlist.md for known acceptable noise."
+              FAIL=1
+            else
+              echo "Tag $TAG: SHA matches ($BUILT_SHA)."
+            fi
+            git worktree remove --force "$WORK" >/dev/null
+            echo "::endgroup::"
+          done
+          if [ "$FAIL" -ne 0 ]; then
+            exit 1
+          fi
