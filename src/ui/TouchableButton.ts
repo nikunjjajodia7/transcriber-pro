@@ -4,6 +4,9 @@ export class TouchableButton extends ButtonComponent {
   isProcessingAction: any;
   DEBOUNCE_TIME: any;
   actionTimeout: any;
+  longPressTimerId: any = null;
+  errorRecoveryTimerId: any = null;
+  isDisposed: any = false;
   constructor(options: any) {
     super(options.container);
     this.isProcessingAction = false;
@@ -42,11 +45,13 @@ export class TouchableButton extends ButtonComponent {
       touchStartTime = Date.now();
       isLongPress = false;
       this.buttonEl.addClass("is-touching");
-      setTimeout(() => {
+      this.longPressTimerId = setTimeout(() => {
+        if (this.isDisposed) return;
         if (this.buttonEl.matches(":active")) {
           isLongPress = true;
           this.buttonEl.addClass("is-long-press");
         }
+        this.longPressTimerId = null;
       }, 500);
     };
     const handleTouchEnd = async (e: any) => {
@@ -99,9 +104,11 @@ export class TouchableButton extends ButtonComponent {
       this.isProcessingAction = false;
       this.buttonEl.setAttribute("data-state", "error");
       this.buttonEl.addClass("has-error");
-      setTimeout(() => {
+      this.errorRecoveryTimerId = setTimeout(() => {
+        if (this.isDisposed) return;
         this.buttonEl.setAttribute("data-state", "ready");
         this.buttonEl.removeClass("has-error");
+        this.errorRecoveryTimerId = null;
       }, 2e3);
     }
   }
@@ -113,6 +120,15 @@ export class TouchableButton extends ButtonComponent {
       clearTimeout(this.actionTimeout);
       this.actionTimeout = null;
     }
+    if (this.longPressTimerId) {
+      clearTimeout(this.longPressTimerId);
+      this.longPressTimerId = null;
+    }
+    if (this.errorRecoveryTimerId) {
+      clearTimeout(this.errorRecoveryTimerId);
+      this.errorRecoveryTimerId = null;
+    }
     this.buttonEl.remove();
+    this.isDisposed = true;
   }
 }

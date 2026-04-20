@@ -9,12 +9,15 @@ export class RecordingUI {
   pauseButton: any;
   stopButton: any;
   waveContainer: any;
+  onUnloadBound: any = null;
+  isDisposed: any = false;
   constructor(container: any, handlers: any) {
     this.container = container;
     this.handlers = handlers;
     this.currentState = "inactive";
     this.initializeComponents();
-    window.addEventListener("unload", () => this.cleanup());
+    this.onUnloadBound = () => this.cleanup();
+    window.addEventListener("unload", this.onUnloadBound);
   }
   initializeComponents() {
     this.setupTouchHandlers();
@@ -110,9 +113,15 @@ export class RecordingUI {
    * 🧹 Ensures all resources are properly released
    */
   cleanup() {
+    if (this.isDisposed) return;
+    if (this.onUnloadBound) {
+      window.removeEventListener("unload", this.onUnloadBound);
+      this.onUnloadBound = null;
+    }
     var _a, _b;
     (_a = this.pauseButton) == null ? void 0 : _a.cleanup();
     (_b = this.stopButton) == null ? void 0 : _b.cleanup();
     this.container.empty();
+    this.isDisposed = true;
   }
 }

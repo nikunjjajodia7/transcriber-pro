@@ -17,6 +17,7 @@ export class UploadBottomSheet {
   chooseLinkEl: any;
   onEscBound: any;
   onPopStateBound: any;
+  closeTimerId: any = null;
   constructor(options: any) {
     this.plugin = options.plugin;
     this.saveAudioOn = options.saveAudioOn;
@@ -34,6 +35,14 @@ export class UploadBottomSheet {
     this.chooseLinkEl = null;
   }
   open() {
+    // If a close animation is pending, cancel it and run the pending removals
+    // synchronously so the new sheet starts from a clean slate. Do NOT fire
+    // onCancel in this path — the re-open implies the parent still owns the sheet.
+    if (this.closeTimerId !== null) {
+      clearTimeout(this.closeTimerId);
+      this.closeTimerId = null;
+      this._removeSheetElements();
+    }
     // Overlay
     this.overlayEl = document.createElement("div");
     this.overlayEl.classList.add("neurovox-upload-overlay");
@@ -207,11 +216,15 @@ export class UploadBottomSheet {
     if (this.sheetEl) {
       this.sheetEl.classList.remove("visible");
     }
-    setTimeout(() => {
-      if (this.overlayEl) { this.overlayEl.remove(); this.overlayEl = null; }
-      if (this.sheetEl) { this.sheetEl.remove(); this.sheetEl = null; }
-      if (this.fileInputEl) { this.fileInputEl.remove(); this.fileInputEl = null; }
+    this.closeTimerId = setTimeout(() => {
+      this.closeTimerId = null;
+      this._removeSheetElements();
       this.onCancel();
     }, 320);
+  }
+  _removeSheetElements() {
+    if (this.overlayEl) { this.overlayEl.remove(); this.overlayEl = null; }
+    if (this.sheetEl) { this.sheetEl.remove(); this.sheetEl = null; }
+    if (this.fileInputEl) { this.fileInputEl.remove(); this.fileInputEl = null; }
   }
 }

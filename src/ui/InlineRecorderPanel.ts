@@ -41,6 +41,9 @@ export class InlineRecorderPanel {
   recordingManager: any;
   documentInserter: any;
   useStreaming: any;
+  viewportListener: any;
+  viewportSettleTimerId: any;
+  lastAnchor: any;
   static RECORDER_STOP_TIMEOUT_MS = 12e3;
 
   constructor(options: any) {
@@ -67,6 +70,9 @@ export class InlineRecorderPanel {
     this.startButtonEl = null;
     this.uploadButtonEl = null;
     this.cancelJobsButtonEl = null;
+    this.viewportListener = null;
+    this.viewportSettleTimerId = null;
+    this.lastAnchor = null;
     var _a;
     this.plugin = options.plugin;
     this.containerEl = options.containerEl;
@@ -80,7 +86,9 @@ export class InlineRecorderPanel {
     this.documentInserter = new DocumentInserter(this.plugin);
     this.saveAudioForSession = this.plugin.settings.saveLiveRecordingAudio;
     this.useStreaming = (_a = this.plugin.settings.streamingMode) != null ? _a : this.deviceDetection.shouldUseStreamingMode();
+    this.lastAnchor = options.anchor;
     this.createPanel(options.anchor);
+    this.startViewportTracking();
   }
   async start() {
     var _a;
@@ -99,9 +107,40 @@ export class InlineRecorderPanel {
     this.isCollapsed = !this.isCollapsed;
     this.panelEl.toggleClass("is-collapsed", this.isCollapsed);
   }
+  startViewportTracking() {
+    if (this.viewportListener || typeof window === "undefined" || !window.visualViewport) return;
+    this.viewportListener = () => this.handleViewportChange();
+    window.visualViewport.addEventListener('resize', this.viewportListener);
+    window.visualViewport.addEventListener('scroll', this.viewportListener);
+    this.handleViewportChange();
+  }
+  stopViewportTracking() {
+    if (this.viewportListener && typeof window !== "undefined" && window.visualViewport) {
+      window.visualViewport.removeEventListener('resize', this.viewportListener);
+      window.visualViewport.removeEventListener('scroll', this.viewportListener);
+    }
+    this.viewportListener = null;
+    if (this.viewportSettleTimerId !== null) {
+      window.clearTimeout(this.viewportSettleTimerId);
+      this.viewportSettleTimerId = null;
+    }
+  }
+  handleViewportChange() {
+    if (this.isDisposed || !this.panelEl) return;
+    this.positionPanel(this.panelEl, this.lastAnchor);
+    if (this.viewportSettleTimerId !== null) {
+      window.clearTimeout(this.viewportSettleTimerId);
+    }
+    this.viewportSettleTimerId = window.setTimeout(() => {
+      this.viewportSettleTimerId = null;
+      if (this.isDisposed || !this.panelEl) return;
+      this.positionPanel(this.panelEl, this.lastAnchor);
+    }, 300);
+  }
   updateAnchor(anchor: any) {
     if (this.isDisposed || !this.panelEl)
       return;
+    this.lastAnchor = anchor;
     this.positionPanel(this.panelEl, anchor);
   }
   async startRecordingSession() {
@@ -254,6 +293,7 @@ export class InlineRecorderPanel {
     }
     this.recordingManager.cleanup();
     this.liveAudioCaptureActive = false;
+    this.stopViewportTracking();
     (_a = this.panelEl) == null ? void 0 : _a.remove();
     this.panelEl = null;
     this.onDispose();

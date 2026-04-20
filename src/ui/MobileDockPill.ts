@@ -40,6 +40,8 @@ export class MobileDockPill {
   saveAudioOn: any;
   useStreaming: any;
   overlayCheckPending: any;
+  viewportListener: any;
+  viewportSettleTimerId: any;
   constructor(plugin: any) {
     this.plugin = plugin;
     this.state = "idle";
@@ -71,6 +73,8 @@ export class MobileDockPill {
     this.onDispose = null;
     this.uploadSheet = null;
     this.overlayObserver = null;
+    this.viewportListener = null;
+    this.viewportSettleTimerId = null;
     this.deviceDetection = DeviceDetection.getInstance();
     this.saveAudioOn = this.plugin.settings.saveLiveRecordingAudio || false;
     this.useStreaming = this.plugin.settings.streamingMode != null ? this.plugin.settings.streamingMode : this.deviceDetection.shouldUseStreamingMode();
@@ -441,6 +445,7 @@ export class MobileDockPill {
     this.measureAndPositionAboveDock();
     this.startOverlayObserver();
     this.startDockTracking();
+    this.startViewportTracking();
   }
   startOverlayObserver() {
     if (this.overlayObserver) return;
@@ -534,6 +539,37 @@ export class MobileDockPill {
     this.lastDockBottom = null;
     this.dockEl = null;
   }
+  startViewportTracking() {
+    if (this.viewportListener || !window.visualViewport) return;
+    this.viewportListener = () => this.handleViewportChange();
+    window.visualViewport.addEventListener('resize', this.viewportListener);
+    window.visualViewport.addEventListener('scroll', this.viewportListener);
+  }
+  stopViewportTracking() {
+    if (this.viewportListener && window.visualViewport) {
+      window.visualViewport.removeEventListener('resize', this.viewportListener);
+      window.visualViewport.removeEventListener('scroll', this.viewportListener);
+    }
+    this.viewportListener = null;
+    if (this.viewportSettleTimerId !== null) {
+      window.clearTimeout(this.viewportSettleTimerId);
+      this.viewportSettleTimerId = null;
+    }
+  }
+  handleViewportChange() {
+    if (this.isDisposed || !this.containerEl) return;
+    this.dockEl = null;
+    this.lastDockBottom = null;
+    if (this.viewportSettleTimerId !== null) {
+      window.clearTimeout(this.viewportSettleTimerId);
+    }
+    this.viewportSettleTimerId = window.setTimeout(() => {
+      this.viewportSettleTimerId = null;
+      if (this.isDisposed || !this.containerEl) return;
+      this.dockEl = null;
+      this.lastDockBottom = null;
+    }, 300);
+  }
   measureAndPositionAboveDock() {
     if (!this.containerEl) return;
     this.dockEl = null;
@@ -556,6 +592,7 @@ export class MobileDockPill {
     this.stopTimer();
     this.cancelRecording();
     this.stopDockTracking();
+    this.stopViewportTracking();
     if (this.overlayObserver) {
       this.overlayObserver.disconnect();
       this.overlayObserver = null;

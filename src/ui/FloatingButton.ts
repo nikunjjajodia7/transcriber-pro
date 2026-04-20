@@ -28,6 +28,9 @@ export class FloatingButton {
   isMobileDevice: any;
   mobileDefaultsEnsured: any;
   isDisposed: any;
+  initialPositionTimerId: any;
+  onMicDragLeaveBound: any;
+  onPageDragLeaveBound: any;
   activeLeafRef: any;
   layoutChangeRef: any;
   resizeRef: any;
@@ -56,6 +59,9 @@ export class FloatingButton {
     this.isMobileDevice = this.deviceDetection.isMobile();
     this.mobileDefaultsEnsured = false;
     this.isDisposed = false;
+    this.initialPositionTimerId = null;
+    this.onMicDragLeaveBound = null;
+    this.onPageDragLeaveBound = null;
     this.activeLeafRef = null;
     this.layoutChangeRef = null;
     this.resizeRef = null;
@@ -113,6 +119,9 @@ export class FloatingButton {
         requestAnimationFrame(() => {
           if (this.positionManager) {
             this.positionManager.constrainPosition();
+          }
+          if (this.desktopPill?.state !== 'idle') {
+            this.desktopPill?.applyEdgeNudge();
           }
         });
       }
@@ -206,12 +215,16 @@ export class FloatingButton {
       (_a = this.buttonEl) == null ? void 0 : _a.removeClass("drag-over");
       void this.handleDroppedAudio(event.dataTransfer, "mic");
     };
-    this.buttonEl.addEventListener("dragover", this.onMicDragOverBound);
-    this.buttonEl.addEventListener("drop", this.onMicDropBound);
-    this.buttonEl.addEventListener("dragleave", () => {
+    if (this.onMicDragLeaveBound) {
+      this.buttonEl.removeEventListener("dragleave", this.onMicDragLeaveBound);
+    }
+    this.onMicDragLeaveBound = (event: any) => {
       var _a;
       return (_a = this.buttonEl) == null ? void 0 : _a.removeClass("drag-over");
-    });
+    };
+    this.buttonEl.addEventListener("dragover", this.onMicDragOverBound);
+    this.buttonEl.addEventListener("drop", this.onMicDropBound);
+    this.buttonEl.addEventListener("dragleave", this.onMicDragLeaveBound);
   }
   async initializePositionManager() {
     if (this.isMobileDevice)
@@ -228,7 +241,12 @@ export class FloatingButton {
       this.handleDragEnd.bind(this),
       this.onClickCallback
     );
-    setTimeout(async () => {
+    if (this.initialPositionTimerId !== null) {
+      clearTimeout(this.initialPositionTimerId);
+    }
+    this.initialPositionTimerId = setTimeout(async () => {
+      if (this.isDisposed) return;
+      this.initialPositionTimerId = null;
       await this.setInitialPosition();
     }, 0);
   }
@@ -310,6 +328,9 @@ export class FloatingButton {
         if (this.positionManager && this.activeLeafContainer) {
           this.positionManager.updateContainer(this.activeLeafContainer);
         }
+        if (this.desktopPill?.state !== 'idle') {
+          this.desktopPill?.applyEdgeNudge();
+        }
         if (this.mobilePill) {
           this.mobilePill.measureAndPositionAboveDock();
         }
@@ -330,6 +351,9 @@ export class FloatingButton {
             if (this.isDisposed) return;
             if (this.positionManager && this.activeLeafContainer) {
               this.positionManager.updateContainer(this.activeLeafContainer);
+            }
+            if (this.desktopPill?.state !== 'idle') {
+              this.desktopPill?.applyEdgeNudge();
             }
           });
         }
@@ -427,12 +451,16 @@ export class FloatingButton {
       (_a = this.activeLeafContainer) == null ? void 0 : _a.removeClass("neurovox-drop-target-active");
       void this.handleDroppedAudio(event.dataTransfer, "page");
     };
-    this.activeLeafContainer.addEventListener("dragover", this.onPageDragOverBound);
-    this.activeLeafContainer.addEventListener("drop", this.onPageDropBound);
-    this.activeLeafContainer.addEventListener("dragleave", () => {
+    if (this.onPageDragLeaveBound) {
+      this.activeLeafContainer.removeEventListener("dragleave", this.onPageDragLeaveBound);
+    }
+    this.onPageDragLeaveBound = (event: any) => {
       var _a;
       (_a = this.activeLeafContainer) == null ? void 0 : _a.removeClass("neurovox-drop-target-active");
-    });
+    };
+    this.activeLeafContainer.addEventListener("dragover", this.onPageDragOverBound);
+    this.activeLeafContainer.addEventListener("drop", this.onPageDropBound);
+    this.activeLeafContainer.addEventListener("dragleave", this.onPageDragLeaveBound);
   }
   /**
    * Handles updating the active container when switching notes
@@ -536,6 +564,10 @@ export class FloatingButton {
       clearTimeout(this.resizeTimeout);
       this.resizeTimeout = null;
     }
+    if (this.initialPositionTimerId !== null) {
+      clearTimeout(this.initialPositionTimerId);
+      this.initialPositionTimerId = null;
+    }
     if (this.positionManager) {
       this.positionManager.cleanup();
       this.positionManager = null;
@@ -554,8 +586,12 @@ export class FloatingButton {
       if (this.onPageDropBound) {
         this.activeLeafContainer.removeEventListener("drop", this.onPageDropBound);
       }
+      if (this.onPageDragLeaveBound) {
+        this.activeLeafContainer.removeEventListener("dragleave", this.onPageDragLeaveBound);
+      }
       this.activeLeafContainer.removeClass("neurovox-drop-target-active");
     }
+    this.onPageDragLeaveBound = null;
     if (this.buttonEl) {
       if (this.onMicDragOverBound) {
         this.buttonEl.removeEventListener("dragover", this.onMicDragOverBound);
@@ -563,9 +599,13 @@ export class FloatingButton {
       if (this.onMicDropBound) {
         this.buttonEl.removeEventListener("drop", this.onMicDropBound);
       }
+      if (this.onMicDragLeaveBound) {
+        this.buttonEl.removeEventListener("dragleave", this.onMicDragLeaveBound);
+      }
       this.buttonEl.remove();
       this.buttonEl = null;
     }
+    this.onMicDragLeaveBound = null;
     if (this.containerEl) {
       this.containerEl.remove();
       this.containerEl = null;
