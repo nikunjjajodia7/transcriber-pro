@@ -767,14 +767,6 @@ ${top.join("\n")}`, 12e3);
   async handleActiveLeafChange(leaf: any) {
     this.activeLeaf = leaf;
     for (const button of this.buttonMap.values()) {
-      var _panel;
-      if ((_panel = button.inlineRecorderPanel) && (_panel.state === "recording" || _panel.state === "paused")) {
-        try {
-          await _panel.stop();
-        } catch (e) {
-          console.error("[NeuroVox] Failed to stop recording on note switch:", e);
-        }
-      }
       button.remove();
     }
     this.buttonMap.clear();
