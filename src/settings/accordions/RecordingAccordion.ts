@@ -1,5 +1,6 @@
-import { Setting } from 'obsidian';
+import { Platform, Setting } from 'obsidian';
 import { AIModels } from '../../adapters/AIAdapter';
+import { RecorderMode } from '../Settings';
 import { BaseAccordion } from './BaseAccordion';
 
 export class RecordingAccordion extends BaseAccordion {
@@ -22,6 +23,7 @@ export class RecordingAccordion extends BaseAccordion {
     this.createTranscriptPathSetting();
     this.createAudioQualitySetting();
     this.createStreamingModeSetting();
+    this.createRecorderModeSetting();
     this.createFloatingButtonSetting();
     this.createMicButtonColorSetting();
     this.createTranscriptionFormatSetting();
@@ -29,6 +31,28 @@ export class RecordingAccordion extends BaseAccordion {
     this.createSpeakerDiarizationSetting();
     this.createDeepgramLanguageSettings();
     this.createBatchChunkingSettings();
+  }
+  createRecorderModeSetting() {
+    const desc = Platform.isMobile
+      ? 'Mobile: Ribbon (recommended) avoids iOS keyboard positioning bugs by using Obsidian’s native ribbon icons + a tap-to-stop indicator.'
+      : 'Desktop: Floating mic stays the default. Switch to Modal to use the timer modal flow.';
+    new Setting(this.contentEl).setName('Recorder style').setDesc(desc).addDropdown((dropdown) => {
+      dropdown.addOption('floating', 'Floating mic');
+      if (Platform.isMobile) {
+        dropdown.addOption('ribbon', 'Ribbon (mobile)');
+      }
+      dropdown.addOption('modal', 'Modal (timer)');
+      const current: RecorderMode = this.settings.recorderMode === 'ribbon' || this.settings.recorderMode === 'modal'
+        ? this.settings.recorderMode
+        : 'floating';
+      dropdown.setValue(current).onChange(async (value: string) => {
+        if (value !== 'floating' && value !== 'ribbon' && value !== 'modal') {
+          return;
+        }
+        this.settings.recorderMode = value as RecorderMode;
+        await this.plugin.saveSettings();
+      });
+    });
   }
   createTranscriptPathSetting() {
     new Setting(this.contentEl).setName("Transcript path").setDesc("Specify the folder path to save transcripts relative to the vault root").addText((text) => {
@@ -178,12 +202,6 @@ export class RecordingAccordion extends BaseAccordion {
     new Setting(this.contentEl).setName("Enable streaming mode").setDesc("Process recording in chunks during capture for better long-session reliability").addToggle((toggle) => {
       toggle.setValue(this.settings.streamingMode).onChange(async (value) => {
         this.settings.streamingMode = value;
-        await this.plugin.saveSettings();
-      });
-    });
-    new Setting(this.contentEl).setName("Use expandable floating recorder").setDesc("Expand the floating mic into a non-blocking recorder panel instead of opening a modal").addToggle((toggle) => {
-      toggle.setValue(this.settings.useExpandableFloatingRecorder).onChange(async (value) => {
-        this.settings.useExpandableFloatingRecorder = value;
         await this.plugin.saveSettings();
       });
     });
