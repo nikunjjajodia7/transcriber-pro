@@ -9,6 +9,7 @@ import { NeuroVoxSettingTab } from './settings/SettingTab';
 import { OpenAIAdapter } from './adapters/OpenAIAdapter';
 import { RecordingProcessor } from './utils/RecordingProcessor';
 import { RecoveryJobsModal } from './modals/RecoveryJobsModal';
+import { RibbonRecorderController } from './ui/RibbonRecorderController';
 import { RuntimeLogger } from './utils/telemetry/RuntimeLogger';
 import { TimerModal } from './modals/TimerModal';
 import { VideoProcessor } from './utils/VideoProcessor';
@@ -31,6 +32,7 @@ class NeuroVoxPlugin extends Plugin {
   speakerAutoApplyInFlight: any;
   modalInstance: any;
   recordingProcessor: any;
+  ribbonController: RibbonRecorderController | null = null;
   settings: any;
   aiAdapters: any;
   static STARTUP_VALIDATION_TIMEOUT_MS = 4e3;
@@ -66,6 +68,7 @@ class NeuroVoxPlugin extends Plugin {
       this.recordingProcessor = RecordingProcessor.getInstance(this);
       this.initializeUI();
       this.initializeProcessingStatus();
+      this.initializeRibbonController();
       await this.reconcileProcessingStatusFromJobs();
       this.startProcessingStatusReconciliation();
       this.registerFloatingButtonEvents();
@@ -77,6 +80,13 @@ class NeuroVoxPlugin extends Plugin {
     } catch (error) {
       new Notice("Failed to initialize NeuroVox plugin");
     }
+  }
+  initializeRibbonController() {
+    if (!Platform.isMobile) return;
+    if (this.settings.recorderMode !== 'ribbon') return;
+    if (this.ribbonController) return;
+    this.ribbonController = new RibbonRecorderController(this);
+    this.ribbonController.register();
   }
   // One-time upgrade Notice for mobile users flipped to `recorderMode: 'ribbon'`
   // by the v5→v6 migration. Lets them revert to the floating mic in one tap.
@@ -1393,6 +1403,10 @@ ${top.join("\n")}`, 12e3);
     if (this.modalInstance) {
       this.modalInstance.close();
       this.modalInstance = null;
+    }
+    if (this.ribbonController) {
+      this.ribbonController.dispose();
+      this.ribbonController = null;
     }
     this.cleanupUI();
   }
