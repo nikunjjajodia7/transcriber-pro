@@ -149,7 +149,7 @@ class NeuroVoxPlugin extends Plugin {
   registerFloatingButtonEvents() {
     this.events.on("floating-button-setting-changed", (isEnabled: any) => {
       this.cleanupUI();
-      if (isEnabled) {
+      if (isEnabled && this.shouldRenderFloatingButton()) {
         const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
         if (activeView && activeView.file) {
           this.createButtonForFile(activeView.file);
@@ -778,12 +778,12 @@ ${top.join("\n")}`, 12e3);
       button.remove();
     }
     this.buttonMap.clear();
-    if (this.settings.showFloatingButton && (leaf == null ? void 0 : leaf.view) instanceof MarkdownView && leaf.view.file) {
+    if (this.settings.showFloatingButton && this.shouldRenderFloatingButton() && (leaf == null ? void 0 : leaf.view) instanceof MarkdownView && leaf.view.file) {
       this.createButtonForFile(leaf.view.file);
     }
   }
   handleLayoutChange() {
-    if (this.settings.showFloatingButton) {
+    if (this.settings.showFloatingButton && this.shouldRenderFloatingButton()) {
       const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
       if (activeView && activeView.file) {
         const button = this.buttonMap.get(activeView.file.path);
@@ -794,6 +794,9 @@ ${top.join("\n")}`, 12e3);
         }
       }
     }
+  }
+  shouldRenderFloatingButton() {
+    return !(Platform.isMobile && this.settings.recorderMode === 'ribbon');
   }
   handleFileDelete(file: any) {
     if (file instanceof TFile) {
@@ -808,6 +811,7 @@ ${top.join("\n")}`, 12e3);
     this.cleanupUI();
   }
   createButtonForFile(file: any) {
+    if (!this.shouldRenderFloatingButton()) return;
     const existingButton = this.buttonMap.get(file.path);
     if (existingButton) {
       existingButton.remove();
