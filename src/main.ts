@@ -1,4 +1,4 @@
-import { Events, MarkdownView, Notice, Plugin, TFile, normalizePath } from 'obsidian';
+import { Events, MarkdownView, Notice, Platform, Plugin, TFile, normalizePath } from 'obsidian';
 import { CURRENT_SETTINGS_VERSION, DEFAULT_SETTINGS } from './settings/Settings';
 import { DeepgramAdapter } from './adapters/DeepgramAdapter';
 import { DocumentInserter } from './utils/document/DocumentInserter';
@@ -70,12 +70,68 @@ class NeuroVoxPlugin extends Plugin {
       this.startProcessingStatusReconciliation();
       this.registerFloatingButtonEvents();
       this.events.trigger("floating-button-setting-changed", this.settings.showFloatingButton);
+      this.maybeShowRibbonFirstRunNotice();
       const elapsed = Math.round(performance.now() - startupStartedAt);
       console.debug(`[NeuroVox][Startup] critical startup complete in ${elapsed}ms`);
       this.startDeferredStartupTasks();
     } catch (error) {
       new Notice("Failed to initialize NeuroVox plugin");
     }
+  }
+  // One-time upgrade Notice for mobile users flipped to `recorderMode: 'ribbon'`
+  // by the v5→v6 migration. Lets them revert to the floating mic in one tap.
+  maybeShowRibbonFirstRunNotice() {
+    if (!Platform.isMobile) return;
+    if (this.settings.recorderMode !== 'ribbon') return;
+    if (this.settings.firstRunRibbonNoticeShown) return;
+    const fragment = document.createDocumentFragment();
+    const intro = document.createElement('div');
+    intro.setText(
+      'NeuroVox mobile now uses ribbon icons + a tap-to-stop indicator. The floating mic was retired to fix iOS keyboard bugs.'
+    );
+    intro.style.marginBottom = '8px';
+    fragment.appendChild(intro);
+    const actions = document.createElement('div');
+    actions.style.display = 'flex';
+    actions.style.gap = '8px';
+    actions.style.flexWrap = 'wrap';
+    const gotIt = document.createElement('button');
+    gotIt.textContent = 'Got it';
+    gotIt.classList.add('mod-cta');
+    const restore = document.createElement('button');
+    restore.textContent = 'Restore floating mic';
+    actions.appendChild(gotIt);
+    actions.appendChild(restore);
+    fragment.appendChild(actions);
+    const notice = new Notice(fragment, 0);
+    let resolved = false;
+    const finish = async (restoreFloating: boolean) => {
+      if (resolved) return;
+      resolved = true;
+      this.settings.firstRunRibbonNoticeShown = true;
+      if (restoreFloating) {
+        this.settings.recorderMode = 'floating';
+      }
+      try {
+        await this.saveSettings({ refreshUi: false, triggerFloatingRefresh: restoreFloating });
+      } catch (e) {
+        // best-effort persistence — Notice still hides below
+      }
+      notice.hide();
+      if (restoreFloating) {
+        new Notice('Floating mic restored. Reload Obsidian to take effect.', 8000);
+      }
+    };
+    gotIt.addEventListener('click', (evt) => {
+      evt.preventDefault();
+      evt.stopPropagation();
+      void finish(false);
+    });
+    restore.addEventListener('click', (evt) => {
+      evt.preventDefault();
+      evt.stopPropagation();
+      void finish(true);
+    });
   }
   /**
    * Register event listeners for floating button setting changes
