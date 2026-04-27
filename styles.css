@@ -1531,3 +1531,17 @@ button.neurovox-button.recording {
     0%, 100% { opacity: 1; }
     50% { opacity: 0.6; }
 }
+
+/* Persistent recording indicator for ribbon mode (mobile). The Notice itself
+   is positioned by Obsidian; we only style its content + interaction. */
+.neurovox-recording-notice {
+    cursor: pointer;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    white-space: pre-wrap;
+    line-height: 1.35;
+    max-width: 360px;
+}
+.neurovox-recording-notice:active {
+    opacity: 0.85;
+}

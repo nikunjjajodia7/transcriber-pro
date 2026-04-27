@@ -4,7 +4,8 @@ export var AudioQuality: any = /* @__PURE__ */ ((AudioQuality2: any) => {
   AudioQuality2["High"] = "high";
   return AudioQuality2;
 })(AudioQuality || {});
-export var CURRENT_SETTINGS_VERSION = 5;
+export type RecorderMode = 'floating' | 'ribbon' | 'modal';
+export var CURRENT_SETTINGS_VERSION = 6;
 export var DEFAULT_SETTINGS = {
   settingsVersion: CURRENT_SETTINGS_VERSION,
   // AI Providers
@@ -18,7 +19,8 @@ export var DEFAULT_SETTINGS = {
   transcriptFolderPath: "Transcripts",
   showFloatingButton: true,
   useRecordingModal: true,
-  showToolbarButton: false,
+  recorderMode: 'floating' as RecorderMode,
+  firstRunRibbonNoticeShown: true,
   micButtonColor: "#4B4B4B",
   transcriptionModel: "whisper-1",
   transcriptionProvider: "openai" /* OpenAI */,
@@ -48,7 +50,6 @@ export var DEFAULT_SETTINGS = {
   saveLiveRecordingAudio: false,
   allowPartialOnStreamFinalizeFailure: true,
   streamTransportFallbackEnabled: true,
-  useExpandableFloatingRecorder: true,
   enableBatchChunkingForUploads: true,
   batchChunkThresholdMB: 25,
   batchChunkDurationSec: 360,

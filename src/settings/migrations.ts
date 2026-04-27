@@ -1,15 +1,27 @@
+import { Platform } from 'obsidian';
 import { AIProvider } from '../adapters/AIAdapter';
-import { AudioQuality, CURRENT_SETTINGS_VERSION, DEFAULT_SETTINGS } from './Settings';
+import {
+  AudioQuality,
+  CURRENT_SETTINGS_VERSION,
+  DEFAULT_SETTINGS,
+  RecorderMode
+} from './Settings';
 
 export function migrateAndNormalizeSettings(data: any) {
   const raw = isRecord(data) ? data : {};
   const sourceVersion = getSourceVersion(raw);
+  const isFreshInstall = Object.keys(raw).length === 0;
   const warnings = [];
   const migrated = sourceVersion < CURRENT_SETTINGS_VERSION;
   const merged = {
     ...DEFAULT_SETTINGS,
     ...raw
   };
+  const { recorderMode, firstRunRibbonNoticeShown } = resolveRecorderMode(
+    merged,
+    sourceVersion,
+    isFreshInstall
+  );
   const settings = {
     ...DEFAULT_SETTINGS,
     settingsVersion: CURRENT_SETTINGS_VERSION,
@@ -22,7 +34,8 @@ export function migrateAndNormalizeSettings(data: any) {
     transcriptFolderPath: asPath(merged.transcriptFolderPath, DEFAULT_SETTINGS.transcriptFolderPath),
     showFloatingButton: asBoolean(merged.showFloatingButton, DEFAULT_SETTINGS.showFloatingButton),
     useRecordingModal: asBoolean(merged.useRecordingModal, DEFAULT_SETTINGS.useRecordingModal),
-    showToolbarButton: false,
+    recorderMode,
+    firstRunRibbonNoticeShown,
     micButtonColor: asString(merged.micButtonColor, DEFAULT_SETTINGS.micButtonColor),
     transcriptionModel: asString(merged.transcriptionModel, DEFAULT_SETTINGS.transcriptionModel),
     transcriptionProvider: asEnum(
@@ -119,10 +132,6 @@ export function migrateAndNormalizeSettings(data: any) {
       merged.streamTransportFallbackEnabled,
       DEFAULT_SETTINGS.streamTransportFallbackEnabled
     ),
-    useExpandableFloatingRecorder: asBoolean(
-      merged.useExpandableFloatingRecorder,
-      DEFAULT_SETTINGS.useExpandableFloatingRecorder
-    ),
     enableBatchChunkingForUploads: asBoolean(
       merged.enableBatchChunkingForUploads,
       DEFAULT_SETTINGS.enableBatchChunkingForUploads
@@ -205,6 +214,39 @@ function getSourceVersion(raw: any) {
     return Math.floor(version);
   }
   return 1;
+}
+function isValidRecorderMode(value: any): value is RecorderMode {
+  return value === 'floating' || value === 'ribbon' || value === 'modal';
+}
+// v5 → v6: introduce `recorderMode` enum. Mobile users flip to `ribbon` by
+// default (opt-out) so the iOS keyboard bug class is fixed by upgrade; a
+// first-run Notice (Unit 1a) lets them revert. Desktop users keep `floating`.
+function resolveRecorderMode(merged: any, sourceVersion: number, isFreshInstall: boolean) {
+  if (sourceVersion >= CURRENT_SETTINGS_VERSION && isValidRecorderMode(merged.recorderMode)) {
+    return {
+      recorderMode: merged.recorderMode as RecorderMode,
+      firstRunRibbonNoticeShown: typeof merged.firstRunRibbonNoticeShown === 'boolean'
+        ? merged.firstRunRibbonNoticeShown
+        : true
+    };
+  }
+  let recorderMode: RecorderMode;
+  if (merged.useRecordingModal === true && merged.showFloatingButton === false) {
+    recorderMode = 'modal';
+  } else if (Platform.isMobile) {
+    recorderMode = 'ribbon';
+  } else {
+    recorderMode = 'floating';
+  }
+  let firstRunRibbonNoticeShown: boolean;
+  if (isFreshInstall) {
+    firstRunRibbonNoticeShown = true;
+  } else if (Platform.isMobile && recorderMode === 'ribbon' && sourceVersion < CURRENT_SETTINGS_VERSION) {
+    firstRunRibbonNoticeShown = false;
+  } else {
+    firstRunRibbonNoticeShown = true;
+  }
+  return { recorderMode, firstRunRibbonNoticeShown };
 }
 function asBoolean(value: any, fallback: any) {
   return typeof value === "boolean" ? value : fallback;

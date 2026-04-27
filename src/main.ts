@@ -1,4 +1,4 @@
-import { Events, MarkdownView, Notice, Plugin, TFile, normalizePath } from 'obsidian';
+import { Events, MarkdownView, Notice, Platform, Plugin, TFile, normalizePath } from 'obsidian';
 import { CURRENT_SETTINGS_VERSION, DEFAULT_SETTINGS } from './settings/Settings';
 import { DeepgramAdapter } from './adapters/DeepgramAdapter';
 import { DocumentInserter } from './utils/document/DocumentInserter';
@@ -9,6 +9,7 @@ import { NeuroVoxSettingTab } from './settings/SettingTab';
 import { OpenAIAdapter } from './adapters/OpenAIAdapter';
 import { RecordingProcessor } from './utils/RecordingProcessor';
 import { RecoveryJobsModal } from './modals/RecoveryJobsModal';
+import { RibbonRecorderController } from './ui/RibbonRecorderController';
 import { RuntimeLogger } from './utils/telemetry/RuntimeLogger';
 import { TimerModal } from './modals/TimerModal';
 import { VideoProcessor } from './utils/VideoProcessor';
@@ -31,6 +32,7 @@ class NeuroVoxPlugin extends Plugin {
   speakerAutoApplyInFlight: any;
   modalInstance: any;
   recordingProcessor: any;
+  ribbonController: RibbonRecorderController | null = null;
   settings: any;
   aiAdapters: any;
   static STARTUP_VALIDATION_TIMEOUT_MS = 4e3;
@@ -66,10 +68,12 @@ class NeuroVoxPlugin extends Plugin {
       this.recordingProcessor = RecordingProcessor.getInstance(this);
       this.initializeUI();
       this.initializeProcessingStatus();
+      this.initializeRibbonController();
       await this.reconcileProcessingStatusFromJobs();
       this.startProcessingStatusReconciliation();
       this.registerFloatingButtonEvents();
       this.events.trigger("floating-button-setting-changed", this.settings.showFloatingButton);
+      this.maybeShowRibbonFirstRunNotice();
       const elapsed = Math.round(performance.now() - startupStartedAt);
       console.debug(`[NeuroVox][Startup] critical startup complete in ${elapsed}ms`);
       this.startDeferredStartupTasks();
@@ -77,13 +81,75 @@ class NeuroVoxPlugin extends Plugin {
       new Notice("Failed to initialize NeuroVox plugin");
     }
   }
+  initializeRibbonController() {
+    if (!Platform.isMobile) return;
+    if (this.settings.recorderMode !== 'ribbon') return;
+    if (this.ribbonController) return;
+    this.ribbonController = new RibbonRecorderController(this);
+    this.ribbonController.register();
+  }
+  // One-time upgrade Notice for mobile users flipped to `recorderMode: 'ribbon'`
+  // by the v5→v6 migration. Lets them revert to the floating mic in one tap.
+  maybeShowRibbonFirstRunNotice() {
+    if (!Platform.isMobile) return;
+    if (this.settings.recorderMode !== 'ribbon') return;
+    if (this.settings.firstRunRibbonNoticeShown) return;
+    const fragment = document.createDocumentFragment();
+    const intro = document.createElement('div');
+    intro.setText(
+      'NeuroVox mobile now uses ribbon icons + a tap-to-stop indicator. The floating mic was retired to fix iOS keyboard bugs.'
+    );
+    intro.style.marginBottom = '8px';
+    fragment.appendChild(intro);
+    const actions = document.createElement('div');
+    actions.style.display = 'flex';
+    actions.style.gap = '8px';
+    actions.style.flexWrap = 'wrap';
+    const gotIt = document.createElement('button');
+    gotIt.textContent = 'Got it';
+    gotIt.classList.add('mod-cta');
+    const restore = document.createElement('button');
+    restore.textContent = 'Restore floating mic';
+    actions.appendChild(gotIt);
+    actions.appendChild(restore);
+    fragment.appendChild(actions);
+    const notice = new Notice(fragment, 0);
+    let resolved = false;
+    const finish = async (restoreFloating: boolean) => {
+      if (resolved) return;
+      resolved = true;
+      this.settings.firstRunRibbonNoticeShown = true;
+      if (restoreFloating) {
+        this.settings.recorderMode = 'floating';
+      }
+      try {
+        await this.saveSettings({ refreshUi: false, triggerFloatingRefresh: restoreFloating });
+      } catch (e) {
+        // best-effort persistence — Notice still hides below
+      }
+      notice.hide();
+      if (restoreFloating) {
+        new Notice('Floating mic restored. Reload Obsidian to take effect.', 8000);
+      }
+    };
+    gotIt.addEventListener('click', (evt) => {
+      evt.preventDefault();
+      evt.stopPropagation();
+      void finish(false);
+    });
+    restore.addEventListener('click', (evt) => {
+      evt.preventDefault();
+      evt.stopPropagation();
+      void finish(true);
+    });
+  }
   /**
    * Register event listeners for floating button setting changes
    */
   registerFloatingButtonEvents() {
     this.events.on("floating-button-setting-changed", (isEnabled: any) => {
       this.cleanupUI();
-      if (isEnabled) {
+      if (isEnabled && this.shouldRenderFloatingButton()) {
         const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
         if (activeView && activeView.file) {
           this.createButtonForFile(activeView.file);
@@ -712,12 +778,12 @@ ${top.join("\n")}`, 12e3);
       button.remove();
     }
     this.buttonMap.clear();
-    if (this.settings.showFloatingButton && (leaf == null ? void 0 : leaf.view) instanceof MarkdownView && leaf.view.file) {
+    if (this.settings.showFloatingButton && this.shouldRenderFloatingButton() && (leaf == null ? void 0 : leaf.view) instanceof MarkdownView && leaf.view.file) {
       this.createButtonForFile(leaf.view.file);
     }
   }
   handleLayoutChange() {
-    if (this.settings.showFloatingButton) {
+    if (this.settings.showFloatingButton && this.shouldRenderFloatingButton()) {
       const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
       if (activeView && activeView.file) {
         const button = this.buttonMap.get(activeView.file.path);
@@ -728,6 +794,9 @@ ${top.join("\n")}`, 12e3);
         }
       }
     }
+  }
+  shouldRenderFloatingButton() {
+    return !(Platform.isMobile && this.settings.recorderMode === 'ribbon');
   }
   handleFileDelete(file: any) {
     if (file instanceof TFile) {
@@ -742,6 +811,7 @@ ${top.join("\n")}`, 12e3);
     this.cleanupUI();
   }
   createButtonForFile(file: any) {
+    if (!this.shouldRenderFloatingButton()) return;
     const existingButton = this.buttonMap.get(file.path);
     if (existingButton) {
       existingButton.remove();
@@ -1337,6 +1407,10 @@ ${top.join("\n")}`, 12e3);
     if (this.modalInstance) {
       this.modalInstance.close();
       this.modalInstance = null;
+    }
+    if (this.ribbonController) {
+      this.ribbonController.dispose();
+      this.ribbonController = null;
     }
     this.cleanupUI();
   }
