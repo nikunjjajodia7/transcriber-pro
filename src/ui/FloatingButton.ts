@@ -3,7 +3,6 @@ import { AudioRecordingManager } from '../utils/RecordingManager';
 import { ButtonPositionManager } from '../utils/ButtonPositionManager';
 import { DesktopDockPill } from './DesktopDockPill';
 import { DeviceDetection } from '../utils/DeviceDetection';
-import { InlineRecorderPanel } from './InlineRecorderPanel';
 import { MobileDockPill } from './MobileDockPill';
 
 export class FloatingButton {
@@ -17,7 +16,6 @@ export class FloatingButton {
   audioManager: any;
   isRecording: any;
   isProcessing: any;
-  inlineRecorderPanel: any;
   onPageDragOverBound: any;
   onPageDropBound: any;
   onMicDragOverBound: any;
@@ -48,7 +46,6 @@ export class FloatingButton {
     this.audioManager = null;
     this.isRecording = false;
     this.isProcessing = false;
-    this.inlineRecorderPanel = null;
     this.onPageDragOverBound = null;
     this.onPageDropBound = null;
     this.onMicDragOverBound = null;
@@ -254,11 +251,9 @@ export class FloatingButton {
     if (!this.containerEl)
       return;
     requestAnimationFrame(() => {
-      var _a;
       if (this.containerEl) {
         this.containerEl.style.transform = `translate3d(${x}px, ${y}px, 0)`;
       }
-      (_a = this.inlineRecorderPanel) == null ? void 0 : _a.updateAnchor({ x, y });
     });
   }
   async handleDragEnd(position: any) {
@@ -536,7 +531,6 @@ export class FloatingButton {
     this.containerEl.style.opacity = "0";
   }
   remove() {
-    var _a;
     this.isDisposed = true;
     if (this.activeLeafRef) {
       this.plugin.app.workspace.offref(this.activeLeafRef);
@@ -577,8 +571,6 @@ export class FloatingButton {
       this.resizeObserver = null;
     }
     this.cleanup();
-    (_a = this.inlineRecorderPanel) == null ? void 0 : _a.dispose();
-    this.inlineRecorderPanel = null;
     if (this.activeLeafContainer) {
       if (this.onPageDragOverBound) {
         this.activeLeafContainer.removeEventListener("dragover", this.onPageDragOverBound);
@@ -622,17 +614,11 @@ export class FloatingButton {
       await this.ensureMobileLiveDefaults();
       if (this.mobilePill) {
         this.mobilePill.handlePillTap();
-        return;
       }
-      await this.toggleInlineRecorderPanel();
       return;
     }
     if (this.desktopPill) {
       this.desktopPill.handlePillTap();
-      return;
-    }
-    if (this.pluginData.useRecordingModal && this.plugin.settings.useExpandableFloatingRecorder) {
-      await this.toggleInlineRecorderPanel();
       return;
     }
     if (this.isProcessing)
@@ -782,46 +768,6 @@ export class FloatingButton {
       });
       modal.open();
     });
-  }
-  async toggleInlineRecorderPanel() {
-    if (this.isMobileDevice && this.mobilePill) {
-      return;
-    }
-    if (this.inlineRecorderPanel) {
-      this.inlineRecorderPanel.toggleCollapsed();
-      return;
-    }
-    const activeView = this.plugin.app.workspace.getActiveViewOfType(MarkdownView);
-    if (!activeView || !activeView.file) {
-      new Notice("No active note found to insert transcription.");
-      return;
-    }
-    if (!this.activeLeafContainer) {
-      new Notice("Recorder panel unavailable in this view.");
-      return;
-    }
-    const anchor = this.getCurrentPosition();
-    const cursorPosition = activeView.editor.getCursor();
-    this.inlineRecorderPanel = new InlineRecorderPanel({
-      plugin: this.plugin,
-      containerEl: this.activeLeafContainer,
-      anchor,
-      isMobileSheet: this.isMobileDevice,
-      activeFile: activeView.file,
-      cursorPosition,
-      onDispose: () => {
-        this.inlineRecorderPanel = null;
-        this.updateRecordingState(false);
-        this.isRecording = false;
-        this.isProcessing = false;
-        this.updateProcessingState(false);
-      },
-      onStateChange: (state: any) => {
-        this.isRecording = state === "recording" || state === "paused" || state === "finalizing";
-        this.updateRecordingState(this.isRecording);
-      }
-    });
-    await this.inlineRecorderPanel.start();
   }
   async ensureMobileLiveDefaults() {
     if (!this.isMobileDevice || this.mobileDefaultsEnsured)
