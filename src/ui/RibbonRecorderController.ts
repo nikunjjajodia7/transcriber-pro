@@ -1,6 +1,7 @@
 import { MarkdownView, Notice } from 'obsidian';
 import { AudioRecordingManager } from '../utils/RecordingManager';
 import { DeviceDetection } from '../utils/DeviceDetection';
+import { LivePreviewWriter } from '../utils/document/LivePreviewWriter';
 import { StreamingTranscriptionService } from '../utils/transcription/StreamingTranscriptionService';
 import { UploadBottomSheet } from './UploadBottomSheet';
 
@@ -26,6 +27,7 @@ export class RibbonRecorderController {
   private recordingStartedAt: number = 0;
   private recordingManager: any = null;
   private streamingService: any = null;
+  private livePreviewWriter: any = null;
   private activeFile: any = null;
   private cursorPosition: any = null;
   private saveAudioOn: boolean = false;
@@ -152,8 +154,18 @@ export class RibbonRecorderController {
         this.streamingService = new StreamingTranscriptionService(this.plugin, {
           onMemoryWarning: (usage: any) => {
             new Notice(`Memory usage high: ${Math.round(usage)}%`);
+          },
+          onChunkCommitted: async (_chunkText: any, _metadata: any, partialResult: any) => {
+            if (!this.plugin.settings.showLiveChunkPreviewInNote) return;
+            await this.livePreviewWriter?.enqueue(partialResult);
           }
         });
+        this.livePreviewWriter = new LivePreviewWriter(
+          this.plugin,
+          this.activeFile,
+          this.cursorPosition,
+          this.streamingService.getRecoveryJobId()
+        );
       }
       if (this.useStreaming && this.streamingService) {
         const stream = this.recordingManager.getStream();
@@ -214,6 +226,8 @@ export class RibbonRecorderController {
     this.stopRecordingTimer();
     this.state = 'processing';
     this.showProcessingNotice('Transcribing...');
+    this.livePreviewWriter?.close();
+    const writerForCleanup = this.livePreviewWriter;
     try {
       let finalBlob = null;
       if (this.useStreaming) {
@@ -249,6 +263,9 @@ export class RibbonRecorderController {
       this.handleFailure('Failed to stop recording', error);
     } finally {
       this.hideCurrentNotice();
+      if (writerForCleanup) {
+        await writerForCleanup.clear();
+      }
     }
   }
 
@@ -317,12 +334,17 @@ export class RibbonRecorderController {
   private handleFailure(message: string, error: any) {
     const detail = error instanceof Error ? error.message : String(error);
     new Notice(`${message}: ${detail}`);
+    const writer = this.livePreviewWriter;
+    writer?.close();
     if (this.streamingService) {
       this.streamingService.abort(detail);
       this.streamingService = null;
     }
     this.resetRecordingState();
     this.stopRecordingIndicator();
+    if (writer) {
+      void writer.clear();
+    }
   }
 
   private resetRecordingState() {
@@ -330,6 +352,7 @@ export class RibbonRecorderController {
     this.liveAudioCaptureActive = false;
     this.activeFile = null;
     this.cursorPosition = null;
+    this.livePreviewWriter = null;
     if (this.recordingManager) {
       this.recordingManager.cleanup();
       this.recordingManager = null;
@@ -337,12 +360,17 @@ export class RibbonRecorderController {
   }
 
   dispose() {
+    const writer = this.livePreviewWriter;
+    writer?.close();
     this.stopRecordingIndicator();
     if (this.streamingService) {
       this.streamingService.abort('plugin_unload');
       this.streamingService = null;
     }
     this.resetRecordingState();
+    if (writer) {
+      void writer.clear();
+    }
     for (const el of this.ribbonElements) {
       try {
         el.remove();

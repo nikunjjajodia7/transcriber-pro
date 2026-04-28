@@ -1,7 +1,7 @@
 import { MarkdownView, Notice, setIcon } from 'obsidian';
 import { AudioRecordingManager } from '../utils/RecordingManager';
 import { DeviceDetection } from '../utils/DeviceDetection';
-import { DocumentInserter } from '../utils/document/DocumentInserter';
+import { LivePreviewWriter } from '../utils/document/LivePreviewWriter';
 import { StreamingTranscriptionService } from '../utils/transcription/StreamingTranscriptionService';
 
 export class DesktopDockPill {
@@ -22,9 +22,7 @@ export class DesktopDockPill {
   isDisposed: any;
   recordingManager: any;
   streamingService: any;
-  documentInserter: any;
-  livePreviewMarkerId: any;
-  livePreviewWriteChain: any;
+  livePreviewWriter: any;
   liveAudioCaptureActive: any;
   activeFile: any;
   cursorPosition: any;
@@ -51,9 +49,7 @@ export class DesktopDockPill {
     this.isDisposed = false;
     this.recordingManager = null;
     this.streamingService = null;
-    this.documentInserter = null;
-    this.livePreviewMarkerId = null;
-    this.livePreviewWriteChain = Promise.resolve();
+    this.livePreviewWriter = null;
     this.liveAudioCaptureActive = false;
     this.activeFile = null;
     this.cursorPosition = null;
@@ -251,9 +247,6 @@ export class DesktopDockPill {
         this.recordingManager = new AudioRecordingManager(this.plugin);
       }
       await this.recordingManager.initialize();
-      if (!this.documentInserter) {
-        this.documentInserter = new DocumentInserter(this.plugin);
-      }
       if (this.useStreaming && !this.streamingService) {
         this.streamingService = new StreamingTranscriptionService(this.plugin, {
           onMemoryWarning: (usage: any) => {
@@ -261,10 +254,15 @@ export class DesktopDockPill {
           },
           onChunkCommitted: async (_chunkText: any, _metadata: any, partialResult: any) => {
             if (!this.plugin.settings.showLiveChunkPreviewInNote) return;
-            await this.enqueueLivePreviewUpdate(partialResult);
+            await this.livePreviewWriter?.enqueue(partialResult);
           }
         });
-        this.livePreviewMarkerId = this.streamingService.getRecoveryJobId();
+        this.livePreviewWriter = new LivePreviewWriter(
+          this.plugin,
+          this.activeFile,
+          this.cursorPosition,
+          this.streamingService.getRecoveryJobId()
+        );
       }
       if (this.useStreaming && this.streamingService) {
         const stream = this.recordingManager.getStream();
@@ -318,7 +316,8 @@ export class DesktopDockPill {
     if (this.state !== "recording" && this.state !== "paused") return;
     this.setState("finalizing");
     this.stopTimer();
-    const markerIdForCleanup = this.livePreviewMarkerId;
+    this.livePreviewWriter?.close();
+    const writerForCleanup = this.livePreviewWriter;
     try {
       let finalBlob = null;
       if (this.useStreaming) {
@@ -351,7 +350,9 @@ export class DesktopDockPill {
       }
       this.handleFailure("Failed to stop recording", error);
     } finally {
-      await this.clearLivePreviewBlock(markerIdForCleanup);
+      if (writerForCleanup) {
+        await writerForCleanup.clear();
+      }
     }
   }
   async stopRecorderWithTimeout() {
@@ -373,6 +374,8 @@ export class DesktopDockPill {
   }
   cancelRecording() {
     this.stopTimer();
+    const writer = this.livePreviewWriter;
+    writer?.close();
     if (this.useStreaming && this.streamingService) {
       this.streamingService.abort("user_cancelled");
       this.streamingService = null;
@@ -384,7 +387,9 @@ export class DesktopDockPill {
       try { this.recordingManager.stop(); } catch (e) {}
     }
     this.resetRecordingState();
-    void this.clearLivePreviewBlock(this.livePreviewMarkerId);
+    if (writer) {
+      void writer.clear();
+    }
   }
   cancelTranscription() {
     if (this.streamingService) {
@@ -395,14 +400,11 @@ export class DesktopDockPill {
   }
   resetRecordingState() {
     this.timerSeconds = 0;
-    this.livePreviewMarkerId = null;
+    this.livePreviewWriter = null;
     this.liveAudioCaptureActive = false;
     if (this.recordingManager) {
       this.recordingManager.cleanup();
       this.recordingManager = null;
-    }
-    if (this.documentInserter) {
-      this.documentInserter = null;
     }
     if (this.pauseBtnEl) {
       setIcon(this.pauseBtnEl, "pause");
@@ -461,22 +463,6 @@ export class DesktopDockPill {
     const m = Math.floor(seconds / 60);
     const s = (seconds % 60).toString().padStart(2, "0");
     return `${m}:${s}`;
-  }
-  async enqueueLivePreviewUpdate(partialResult: any) {
-    const markerId = this.livePreviewMarkerId;
-    if (!markerId || !this.documentInserter) return;
-    this.livePreviewWriteChain = this.livePreviewWriteChain.then(async () => {
-      await this.documentInserter.upsertLiveTranscriptionBlock(this.activeFile, this.cursorPosition, markerId, partialResult);
-    }).catch(() => {});
-    await this.livePreviewWriteChain;
-  }
-  async clearLivePreviewBlock(markerIdOverride: any) {
-    const markerId = markerIdOverride != null ? markerIdOverride : this.livePreviewMarkerId;
-    if (!markerId || !this.documentInserter) return;
-    await this.livePreviewWriteChain.catch(() => {});
-    try {
-      await this.documentInserter.removeLiveTranscriptionBlock(this.activeFile, markerId);
-    } catch (e) {}
   }
   handleFailure(message: any, error: any) {
     const detail = error instanceof Error ? error.message : String(error);
