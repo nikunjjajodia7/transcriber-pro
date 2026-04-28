@@ -4,8 +4,8 @@ export var AudioQuality: any = /* @__PURE__ */ ((AudioQuality2: any) => {
   AudioQuality2["High"] = "high";
   return AudioQuality2;
 })(AudioQuality || {});
-export type RecorderMode = 'floating' | 'ribbon' | 'modal';
-export var CURRENT_SETTINGS_VERSION = 6;
+export type RecorderMode = 'floating' | 'ribbon';
+export var CURRENT_SETTINGS_VERSION = 7;
 export var DEFAULT_SETTINGS = {
   settingsVersion: CURRENT_SETTINGS_VERSION,
   // AI Providers
@@ -18,7 +18,6 @@ export var DEFAULT_SETTINGS = {
   iphoneInboxFolderPath: "Recordings/Inbox",
   transcriptFolderPath: "Transcripts",
   showFloatingButton: true,
-  useRecordingModal: true,
   recorderMode: 'floating' as RecorderMode,
   firstRunRibbonNoticeShown: true,
   micButtonColor: "#4B4B4B",

@@ -33,20 +33,14 @@ export class RecordingAccordion extends BaseAccordion {
     this.createBatchChunkingSettings();
   }
   createRecorderModeSetting() {
-    const desc = Platform.isMobile
-      ? 'Mobile: Ribbon (recommended) avoids iOS keyboard positioning bugs by using Obsidian’s native ribbon icons + a tap-to-stop indicator.'
-      : 'Desktop: Floating mic stays the default. Switch to Modal to use the timer modal flow.';
+    if (!Platform.isMobile) return;
+    const desc = 'Mobile: Ribbon (recommended) avoids iOS keyboard positioning bugs by using Obsidian’s native ribbon icons + a tap-to-stop indicator. Floating mic stays as a fallback.';
     new Setting(this.contentEl).setName('Recorder style').setDesc(desc).addDropdown((dropdown) => {
+      dropdown.addOption('ribbon', 'Ribbon (recommended)');
       dropdown.addOption('floating', 'Floating mic');
-      if (Platform.isMobile) {
-        dropdown.addOption('ribbon', 'Ribbon (mobile)');
-      }
-      dropdown.addOption('modal', 'Modal (timer)');
-      const current: RecorderMode = this.settings.recorderMode === 'ribbon' || this.settings.recorderMode === 'modal'
-        ? this.settings.recorderMode
-        : 'floating';
+      const current: RecorderMode = this.settings.recorderMode === 'ribbon' ? 'ribbon' : 'floating';
       dropdown.setValue(current).onChange(async (value: string) => {
-        if (value !== 'floating' && value !== 'ribbon' && value !== 'modal') {
+        if (value !== 'floating' && value !== 'ribbon') {
           return;
         }
         this.settings.recorderMode = value as RecorderMode;

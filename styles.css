@@ -12,9 +12,6 @@
     /* Component Sizes */
     --neurovox-button-size: 38px;
     --neurovox-control-size: 48px;
-    --neurovox-timer-size: 3rem;
-    --neurovox-wave-width: 7px;
-    --neurovox-wave-height: 40px;
     --neurovox-icon-size: 20px;
     --neurovox-toggle-width: 40px;
     --neurovox-toggle-height: 20px;
@@ -67,33 +64,7 @@
     --neurovox-mobile-green: #34C759;
 }
 
-/************************************
- * MODAL STYLES
- ************************************/
-.neurovox-timer-modal {
-    background-color: var(--background-primary);
-    border-radius: var(--neurovox-border-radius-lg);
-    box-shadow: var(--shadow-l);
-    overflow: hidden;
-}
-
-.neurovox-timer-content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: var(--neurovox-spacing-lg);
-    padding: var(--neurovox-spacing-lg);
-    margin: 0 auto;
-    width: 100%;
-    max-width: 400px;
-}
-
 /* Mobile-specific modal adjustments */
-.neurovox-timer-modal.is-mobile .neurovox-timer-content {
-    padding: var(--neurovox-spacing-md);
-    gap: var(--neurovox-spacing-md);
-    max-width: 100%;
-}
 
 .neurovox-button.floating.drag-over {
     outline: 2px dashed var(--interactive-accent);
@@ -661,85 +632,14 @@
     margin-top: 14px;
 }
 
-.neurovox-timer-display {
-    font-family: var(--font-monospace);
-    font-size: var(--neurovox-timer-size);
-    font-weight: 700;
-    color: var(--text-normal);
-    line-height: 1;
-    letter-spacing: 0.1em;
-    text-align: center;
-    margin: 0;
-    white-space: nowrap;
-    transition: color var(--neurovox-transition-normal) ease;
-}
-
-.neurovox-timer-display.is-warning {
-    color: var(--text-error);
-    animation: pulse 2s infinite;
-}
-
 /************************************
  * CONTROL BUTTONS
  ************************************/
-.neurovox-timer-controls {
-    display: flex;
-    justify-content: center;
-    gap: var(--neurovox-spacing-md);
-    padding: 0;
-}
 
 /* Enhanced mobile button styles */
 /* Enhanced touch-optimized button styles */
-.neurovox-timer-button {
-    width: var(--neurovox-control-size);
-    height: var(--neurovox-control-size);
-    border: none;
-    border-radius: 50%;
-    background-color: var(--interactive-normal);
-    color: var(--text-on-accent);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: var(--neurovox-transition);
-    padding: 0;
-    box-shadow: var(--neurovox-shadow);
-    will-change: transform;
-    touch-action: manipulation; /* Prevent double-tap zoom on mobile */
-    -webkit-tap-highlight-color: transparent; /* Remove tap highlight on mobile */
-    -webkit-touch-callout: none; /* Disable callout on long press */
-    user-select: none; /* Prevent text selection */
-    position: relative;
-    overflow: hidden;
-}
 
 /* Touch feedback states */
-.neurovox-timer-button.touch-button {
-    transform: translateZ(0); /* Force GPU acceleration */
-}
-
-.neurovox-timer-button.touch-button::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(255, 255, 255, 0.1);
-    opacity: 0;
-    transition: opacity 0.2s ease;
-    pointer-events: none;
-    border-radius: 50%;
-}
-
-.neurovox-timer-button.touch-button.is-touching::after {
-    opacity: 1;
-}
-
-.neurovox-timer-button.touch-button.is-long-press::after {
-    background: rgba(255, 255, 255, 0.2);
-}
 
 /* Touch ripple effect */
 @keyframes touch-ripple {
@@ -753,54 +653,15 @@
     }
 }
 
-.neurovox-timer-button.touch-button::before {
-    content: '';
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 100%);
-    transform: scale(0);
-    opacity: 0;
-    pointer-events: none;
-    border-radius: 50%;
-}
-
-.neurovox-timer-button.touch-button.is-touching::before {
-    animation: touch-ripple 0.6s ease-out;
-}
-
 /* Larger touch targets for mobile */
-.neurovox-timer-modal.is-mobile .neurovox-timer-button {
-    width: calc(var(--neurovox-control-size) * 1.2);
-    height: calc(var(--neurovox-control-size) * 1.2);
-    margin: var(--neurovox-spacing-sm);
-}
 
 /* Disable hover effects on mobile */
 @media (hover: none) {
-    .neurovox-timer-button:hover {
-        transform: none;
-        box-shadow: var(--neurovox-shadow);
-    }
 }
 
 /* Active state for mobile */
-.neurovox-timer-modal.is-mobile .neurovox-timer-button:active {
-    transform: scale(0.95);
-    opacity: 0.8;
-}
 
 /* Mobile-optimized button states */
-.neurovox-timer-button[data-state="processing"] {
-    opacity: 0.7;
-    cursor: not-allowed;
-    animation: processing 1s infinite;
-}
-
-.neurovox-timer-button[data-state="error"] {
-    background-color: var(--text-error);
-    animation: shake 0.5s ease-in-out;
-}
 
 /* Processing animation */
 @keyframes processing {
@@ -815,25 +676,6 @@
     75% { transform: translateX(4px); }
 }
 
-.neurovox-timer-button:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--neurovox-shadow-hover);
-}
-
-.neurovox-timer-button:active {
-    transform: translateY(0);
-}
-
-.neurovox-timer-button svg {
-    width: var(--neurovox-icon-size);
-    height: var(--neurovox-icon-size);
-    stroke-width: 2;
-}
-
-.neurovox-pause-button {
-    background-color: var(--interactive-accent);
-}
-
 .neurovox-stop-button {
     background-color: var(--text-error);
 }
@@ -842,56 +684,8 @@
  * AUDIO VISUALIZATION
  ************************************/
 /* Enhanced audio wave visualization */
-.neurovox-audio-wave {
-    display: flex;
-    align-items: flex-end;
-    justify-content: center;
-    gap: var(--neurovox-spacing-xs);
-    height: calc(var(--neurovox-wave-height) + var(--neurovox-spacing-md));
-    margin: 0;
-    padding: var(--neurovox-spacing-sm);
-    touch-action: none;
-    pointer-events: none;
-}
 
 /* Mobile-specific wave adjustments */
-.neurovox-timer-modal.is-mobile .neurovox-audio-wave {
-    gap: calc(var(--neurovox-spacing-xs) * 1.5);
-    height: calc(var(--neurovox-wave-height) * 0.8);
-}
-
-.neurovox-timer-modal.is-mobile .neurovox-wave-bar {
-    width: calc(var(--neurovox-wave-width) * 1.2);
-}
-
-.neurovox-wave-bar {
-    width: var(--neurovox-wave-width);
-    height: var(--neurovox-wave-height);
-    border-radius: calc(var(--neurovox-wave-width) / 2);
-    background-color: var(--interactive-accent);
-    opacity: 0.8;
-    transform-origin: bottom;
-    will-change: transform;
-}
-
-.neurovox-audio-wave.is-recording .neurovox-wave-bar {
-    animation: wave var(--neurovox-animation-duration) ease-in-out infinite;
-}
-
-.neurovox-audio-wave.is-recording .neurovox-wave-bar:nth-child(1) { animation-delay: 0s; }
-.neurovox-audio-wave.is-recording .neurovox-wave-bar:nth-child(2) { animation-delay: 0.1s; }
-.neurovox-audio-wave.is-recording .neurovox-wave-bar:nth-child(3) { animation-delay: 0.2s; }
-.neurovox-audio-wave.is-recording .neurovox-wave-bar:nth-child(4) { animation-delay: 0.3s; }
-.neurovox-audio-wave.is-recording .neurovox-wave-bar:nth-child(5) { animation-delay: 0.4s; }
-
-.neurovox-audio-wave.is-paused .neurovox-wave-bar {
-    animation-play-state: paused;
-}
-
-.neurovox-audio-wave.is-stopped .neurovox-wave-bar {
-    animation: none;
-    transform: scaleY(0.3);
-}
 
 /************************************
  * FLOATING BUTTON
@@ -1221,16 +1015,6 @@ button.neurovox-button-primary {
     opacity: 0.9;
 }
 
-.neurovox-timer-modal .neurovox-modal-toggle-setting {
-    margin-top: 0;
-    margin-bottom: var(--neurovox-spacing-md);
-    opacity: 0.9;
-}
-
-.neurovox-modal-toggle-setting .setting-item-control {
-    padding-right: 2em;
-}
-
 /* Transition effect for settings */
 .neurovox-accordion-content .setting-item {
     transition: opacity var(--neurovox-transition-normal) ease;
@@ -1262,19 +1046,10 @@ button.neurovox-button.recording {
         0%, 100% { transform: scaleY(0.2); }
         50% { transform: scaleY(1.2); }
     }
-
-    .neurovox-timer-modal.is-mobile .neurovox-wave-bar {
-        animation-duration: calc(var(--neurovox-animation-duration) * 0.8);
-        will-change: transform;
-    }
 }
 
 /* Reduce motion if user prefers */
 @media (prefers-reduced-motion: reduce) {
-    .neurovox-audio-wave.is-recording .neurovox-wave-bar {
-        animation: none;
-        transform: scaleY(0.5);
-    }
 }
 
 @keyframes pulse {
