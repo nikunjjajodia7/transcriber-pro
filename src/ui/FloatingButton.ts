@@ -623,10 +623,6 @@ export class FloatingButton {
     }
     if (this.isProcessing)
       return;
-    if (this.pluginData.useRecordingModal) {
-      this.onClickCallback();
-      return;
-    }
     if (!this.isRecording) {
       await this.startDirectRecording();
     } else {

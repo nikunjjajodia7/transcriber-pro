@@ -11,7 +11,6 @@ import { RecordingProcessor } from './utils/RecordingProcessor';
 import { RecoveryJobsModal } from './modals/RecoveryJobsModal';
 import { RibbonRecorderController } from './ui/RibbonRecorderController';
 import { RuntimeLogger } from './utils/telemetry/RuntimeLogger';
-import { TimerModal } from './modals/TimerModal';
 import { VideoProcessor } from './utils/VideoProcessor';
 import { applySpeakerMappingToEntry, buildEntrySpeakerMappingSection, extractSpeakerLabels, hasEntrySpeakerMappingSection, hasSpeakerMappingSection } from './utils/document/SpeakerMapping';
 import { findEntryRegionAtPosition, findEntryRegions } from './utils/document/TranscriptionEntry';
@@ -30,7 +29,6 @@ class NeuroVoxPlugin extends Plugin {
   startupValidationInFlight: any;
   speakerAutoApplyDebounceTimers: any;
   speakerAutoApplyInFlight: any;
-  modalInstance: any;
   recordingProcessor: any;
   ribbonController: RibbonRecorderController | null = null;
   settings: any;
@@ -54,7 +52,6 @@ class NeuroVoxPlugin extends Plugin {
     this.startupValidationInFlight = false;
     this.speakerAutoApplyDebounceTimers = /* @__PURE__ */ new Map();
     this.speakerAutoApplyInFlight = /* @__PURE__ */ new Set();
-    this.modalInstance = null;
   }
   async onload() {
     const startupStartedAt = performance.now();
@@ -821,59 +818,20 @@ ${top.join("\n")}`, 12e3);
     this.buttonMap.clear();
   }
   handleRecordingStart() {
-    var _a;
     const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
     if (!activeView) {
       new Notice("\u274C No active note found to insert transcription.");
       return;
     }
-    const activeFile = activeView.file;
-    if (!activeFile) {
+    if (!activeView.file) {
       new Notice("\u274C No active file found.");
       return;
     }
-    const insertionPosition = activeView.editor.getCursor();
-    if (this.settings.useRecordingModal) {
-      if (this.modalInstance)
-        return;
-      this.modalInstance = new TimerModal(this, activeFile, insertionPosition);
-      this.modalInstance.onStop = async (result: any) => {
-        try {
-          if (typeof result === "string") {
-            await this.recordingProcessor.processStreamingResult(
-              result,
-              activeFile,
-              insertionPosition
-            );
-          } else {
-            const adapter = this.aiAdapters.get(this.settings.transcriptionProvider);
-            if (!adapter) {
-              throw new Error(`Transcription provider ${this.settings.transcriptionProvider} not found`);
-            }
-            if (!adapter.getApiKey()) {
-              throw new Error(`API key not set for ${this.settings.transcriptionProvider}`);
-            }
-            await this.recordingProcessor.processRecording(
-              result,
-              activeFile,
-              insertionPosition
-            );
-          }
-        } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : "Unknown error";
-          new Notice(`\u274C Failed to process recording: ${errorMessage}`);
-        }
-      };
-      const originalOnClose = (_a = this.modalInstance.onClose) == null ? void 0 : _a.bind(this.modalInstance);
-      this.modalInstance.onClose = async () => {
-        if (originalOnClose) {
-          await originalOnClose();
-        }
-        this.modalInstance = null;
-        return Promise.resolve();
-      };
-      this.modalInstance.open();
+    if (Platform.isMobile && this.settings.recorderMode === 'ribbon' && this.ribbonController) {
+      void this.ribbonController.onRecordTap(new MouseEvent('click'));
+      return;
     }
+    new Notice('Tap the floating microphone to start recording.');
   }
   updateAllButtonColors() {
     this.buttonMap.forEach((button: any) => {
@@ -1396,10 +1354,6 @@ ${top.join("\n")}`, 12e3);
     });
     this.speakerAutoApplyDebounceTimers.clear();
     this.speakerAutoApplyInFlight.clear();
-    if (this.modalInstance) {
-      this.modalInstance.close();
-      this.modalInstance = null;
-    }
     if (this.ribbonController) {
       this.ribbonController.dispose();
       this.ribbonController = null;

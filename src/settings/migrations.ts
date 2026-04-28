@@ -33,7 +33,6 @@ export function migrateAndNormalizeSettings(data: any) {
     ),
     transcriptFolderPath: asPath(merged.transcriptFolderPath, DEFAULT_SETTINGS.transcriptFolderPath),
     showFloatingButton: asBoolean(merged.showFloatingButton, DEFAULT_SETTINGS.showFloatingButton),
-    useRecordingModal: asBoolean(merged.useRecordingModal, DEFAULT_SETTINGS.useRecordingModal),
     recorderMode,
     firstRunRibbonNoticeShown,
     micButtonColor: asString(merged.micButtonColor, DEFAULT_SETTINGS.micButtonColor),
@@ -216,12 +215,13 @@ function getSourceVersion(raw: any) {
   return 1;
 }
 function isValidRecorderMode(value: any): value is RecorderMode {
-  return value === 'floating' || value === 'ribbon' || value === 'modal';
+  return value === 'floating' || value === 'ribbon';
 }
-// v5 → v6: introduce `recorderMode` enum. Mobile users flip to `ribbon` by
-// default (opt-out) so the iOS keyboard bug class is fixed by upgrade; a
-// first-run Notice (Unit 1a) lets them revert. Desktop users keep `floating`.
+// v6 → v7: drop the `'modal'` recorder mode. Existing `'modal'` users (and
+// pre-v6 users whose flags would have mapped to `'modal'`) migrate to
+// `'floating'` on desktop and `'ribbon'` on mobile.
 function resolveRecorderMode(merged: any, sourceVersion: number, isFreshInstall: boolean) {
+  const platformDefault: RecorderMode = Platform.isMobile ? 'ribbon' : 'floating';
   if (sourceVersion >= CURRENT_SETTINGS_VERSION && isValidRecorderMode(merged.recorderMode)) {
     return {
       recorderMode: merged.recorderMode as RecorderMode,
@@ -231,12 +231,10 @@ function resolveRecorderMode(merged: any, sourceVersion: number, isFreshInstall:
     };
   }
   let recorderMode: RecorderMode;
-  if (merged.useRecordingModal === true && merged.showFloatingButton === false) {
-    recorderMode = 'modal';
-  } else if (Platform.isMobile) {
-    recorderMode = 'ribbon';
+  if (merged.recorderMode === 'floating' || merged.recorderMode === 'ribbon') {
+    recorderMode = merged.recorderMode;
   } else {
-    recorderMode = 'floating';
+    recorderMode = platformDefault;
   }
   let firstRunRibbonNoticeShown: boolean;
   if (isFreshInstall) {
