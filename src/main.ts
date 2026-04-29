@@ -82,6 +82,11 @@ class NeuroVoxPlugin extends Plugin {
     if (!Platform.isMobile) return;
     if (this.settings.recorderMode !== 'ribbon') return;
     if (this.ribbonController) return;
+    if (this.buttonMap && this.buttonMap.size > 0) {
+      console.error('[NeuroVox] Floating recorder and ribbon recorder were both active; removing floating recorder.');
+      new Notice('NeuroVox recorder mode conflict fixed. Floating recorder was removed.');
+      this.cleanupUI();
+    }
     this.ribbonController = new RibbonRecorderController(this);
     this.ribbonController.register();
   }
@@ -245,14 +250,53 @@ class NeuroVoxPlugin extends Plugin {
     this.addCommand({
       id: "start-recording",
       name: "Start recording",
+      icon: "mic",
       checkCallback: (checking) => {
         const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
         if (!(activeView && activeView.file))
+          return false;
+        if (Platform.isMobile && this.settings.recorderMode === 'ribbon' && this.ribbonController && !this.ribbonController.canStartRecording())
           return false;
         if (checking)
           return true;
         this.handleRecordingStart();
         return true;
+      }
+    });
+    this.addCommand({
+      id: "upload-recording",
+      name: "Upload recording",
+      icon: "upload-cloud",
+      callback: () => {
+        if (Platform.isMobile && this.settings.recorderMode === 'ribbon' && this.ribbonController) {
+          this.ribbonController.onUploadTap(new MouseEvent('click'));
+          return;
+        }
+        new Notice('Upload recording is available in mobile ribbon recorder mode.');
+      }
+    });
+    this.addCommand({
+      id: "pause-resume-recording",
+      name: "Pause or resume recording",
+      icon: "pause",
+      callback: () => {
+        if (Platform.isMobile && this.settings.recorderMode === 'ribbon' && this.ribbonController?.canPauseOrResume()) {
+          this.ribbonController.onPauseResumeTap();
+          return;
+        }
+        new Notice('No active recording to pause or resume.');
+      }
+    });
+    this.addCommand({
+      id: "stop-recording",
+      name: "Stop recording",
+      icon: "square",
+      callback: () => {
+        if (Platform.isMobile && this.settings.recorderMode === 'ribbon' && this.ribbonController?.canStopRecording()) {
+          void this.ribbonController.onStopTap();
+          return;
+        }
+        new Notice('No active recording to stop.');
       }
     });
     this.addCommand({
