@@ -5,7 +5,7 @@ import { LivePreviewWriter } from '../utils/document/LivePreviewWriter';
 import { StreamingTranscriptionService } from '../utils/transcription/StreamingTranscriptionService';
 import { UploadBottomSheet } from './UploadBottomSheet';
 
-type RibbonState = 'idle' | 'recording' | 'processing';
+type RibbonState = 'idle' | 'recording' | 'paused' | 'processing';
 
 // Owns the mobile ribbon recorder surface: two ribbon icons (record / upload),
 // a 1-tap header action on the active MarkdownView, and a persistent Notice
@@ -19,12 +19,18 @@ export class RibbonRecorderController {
   plugin: any;
   private ribbonElements: HTMLElement[] = [];
   private leafChangeRef: any = null;
-  private headerAction: HTMLElement | null = null;
+  private layoutChangeRef: any = null;
+  private micAction: HTMLElement | null = null;
+  private uploadAction: HTMLElement | null = null;
+  private pauseAction: HTMLElement | null = null;
+  private resumeAction: HTMLElement | null = null;
+  private stopAction: HTMLElement | null = null;
 
   private state: RibbonState = 'idle';
   private currentNotice: Notice | null = null;
   private timerInterval: number | null = null;
   private recordingStartedAt: number = 0;
+  private elapsedBeforePauseSec: number = 0;
   private recordingManager: any = null;
   private streamingService: any = null;
   private livePreviewWriter: any = null;
@@ -57,28 +63,86 @@ export class RibbonRecorderController {
     );
     this.leafChangeRef = this.plugin.app.workspace.on(
       'active-leaf-change',
-      (leaf: any) => this.refreshHeaderAction(leaf)
+      (leaf: any) => this.refreshHeaderActions(leaf)
     );
     this.plugin.registerEvent(this.leafChangeRef);
-    this.refreshHeaderAction(this.plugin.app.workspace.activeLeaf);
+    this.layoutChangeRef = this.plugin.app.workspace.on(
+      'layout-change',
+      () => this.refreshHeaderActions(this.plugin.app.workspace.activeLeaf)
+    );
+    this.plugin.registerEvent(this.layoutChangeRef);
+    this.refreshHeaderActions(this.plugin.app.workspace.activeLeaf);
   }
 
-  private refreshHeaderAction(leaf: any) {
-    if (this.headerAction) {
-      try {
-        this.headerAction.remove();
-      } catch (_) {
-        // ignore — element may already be detached by Obsidian
-      }
-      this.headerAction = null;
-    }
+  private refreshHeaderActions(leaf: any = this.plugin.app.workspace.activeLeaf) {
+    this.detachHeaderActions();
     if (!leaf || !(leaf.view instanceof MarkdownView)) return;
     const view = leaf.view as MarkdownView;
-    this.headerAction = view.addAction(
-      'mic',
-      'Start recording',
-      (evt: MouseEvent) => this.onRecordTap(evt)
-    );
+    if (this.state === 'idle') {
+      this.micAction = view.addAction(
+        'mic',
+        'Start recording',
+        (evt: MouseEvent) => this.onRecordTap(evt)
+      );
+      this.uploadAction = view.addAction(
+        'upload-cloud',
+        'Upload recording',
+        (evt: MouseEvent) => this.onUploadTap(evt)
+      );
+      return;
+    }
+    if (this.state === 'recording') {
+      this.pauseAction = view.addAction(
+        'pause',
+        'Pause recording',
+        (evt: MouseEvent) => this.onPauseResumeTap(evt)
+      );
+      this.stopAction = view.addAction(
+        'square',
+        'Stop recording',
+        () => this.onStopTap()
+      );
+      return;
+    }
+    if (this.state === 'paused') {
+      this.resumeAction = view.addAction(
+        'play',
+        'Resume recording',
+        (evt: MouseEvent) => this.onPauseResumeTap(evt)
+      );
+      this.stopAction = view.addAction(
+        'square',
+        'Stop recording',
+        () => this.onStopTap()
+      );
+    }
+  }
+
+  private detachHeaderActions() {
+    const actions = [
+      this.micAction,
+      this.uploadAction,
+      this.pauseAction,
+      this.resumeAction,
+      this.stopAction
+    ];
+    for (const action of actions) {
+      if (!action) continue;
+      try {
+        action.detach();
+      } catch (_) {
+        try {
+          action.remove();
+        } catch (_) {
+          // ignore — Obsidian may have already cleaned the element
+        }
+      }
+    }
+    this.micAction = null;
+    this.uploadAction = null;
+    this.pauseAction = null;
+    this.resumeAction = null;
+    this.stopAction = null;
   }
 
   async onRecordTap(_evt: MouseEvent) {
@@ -88,6 +152,22 @@ export class RibbonRecorderController {
       return;
     }
     await this.startRecordingSession();
+  }
+
+  getState() {
+    return this.state;
+  }
+
+  canStartRecording() {
+    return this.state === 'idle';
+  }
+
+  canStopRecording() {
+    return this.state === 'recording' || this.state === 'paused';
+  }
+
+  canPauseOrResume() {
+    return this.state === 'recording' || this.state === 'paused';
   }
 
   onUploadTap(_evt: MouseEvent) {
@@ -121,6 +201,7 @@ export class RibbonRecorderController {
   private async processUploadedFile(file: any) {
     try {
       this.state = 'processing';
+      this.refreshHeaderActions();
       this.showProcessingNotice('Transcribing uploaded audio...');
       const blob = new Blob([await file.arrayBuffer()], { type: file.type || 'audio/wav' });
       await this.plugin.recordingProcessor.processRecording(blob, this.activeFile, this.cursorPosition, file.name);
@@ -132,6 +213,7 @@ export class RibbonRecorderController {
       this.hideCurrentNotice();
       this.state = 'idle';
       this.uploadSheet = null;
+      this.refreshHeaderActions();
     }
   }
 
@@ -144,6 +226,7 @@ export class RibbonRecorderController {
     this.activeFile = activeView.file;
     this.cursorPosition = activeView.editor.getCursor();
     this.state = 'processing';
+    this.refreshHeaderActions();
     const pendingNotice = new Notice('Requesting microphone...', 0);
     try {
       if (!this.recordingManager) {
@@ -190,20 +273,14 @@ export class RibbonRecorderController {
   private startRecordingIndicator() {
     this.state = 'recording';
     this.recordingStartedAt = Date.now();
+    this.elapsedBeforePauseSec = 0;
     const initialMessage = this.formatRecordingMessage(0);
     this.currentNotice = new Notice(initialMessage, 0);
     const noticeEl = this.currentNotice.noticeEl;
     noticeEl.classList.add('neurovox-recording-notice');
     this.attachStopHandler(noticeEl);
-    this.timerInterval = window.setInterval(() => {
-      if (!this.currentNotice) return;
-      const elapsedSec = Math.floor((Date.now() - this.recordingStartedAt) / 1000);
-      this.currentNotice.setMessage(this.formatRecordingMessage(elapsedSec, this.getInterimTail()));
-      // Belt-and-suspenders: if Obsidian rebuilt noticeEl on setMessage, the
-      // dataset flag is gone and we re-bind. If the element is the same, the
-      // guard inside attachStopHandler short-circuits.
-      this.attachStopHandler(this.currentNotice.noticeEl);
-    }, 1000);
+    this.startRecordingTimer();
+    this.refreshHeaderActions();
   }
 
   private attachStopHandler(noticeEl: HTMLElement) {
@@ -217,14 +294,46 @@ export class RibbonRecorderController {
   }
 
   async onStopTap() {
-    if (this.state !== 'recording') return;
+    if (!this.canStopRecording()) return;
     await this.finishRecordingSession();
   }
 
+  onPauseResumeTap(_evt?: MouseEvent) {
+    if (!this.canPauseOrResume()) return;
+    try {
+      if (this.state === 'paused') {
+        if (this.useStreaming && this.streamingService) {
+          this.streamingService.resumeLive();
+          if (this.liveAudioCaptureActive) this.recordingManager.resume();
+        } else {
+          this.recordingManager.resume();
+        }
+        this.recordingStartedAt = Date.now() - this.elapsedBeforePauseSec * 1000;
+        this.state = 'recording';
+        this.startRecordingTimer();
+      } else {
+        if (this.useStreaming && this.streamingService) {
+          this.streamingService.pauseLive();
+          if (this.liveAudioCaptureActive) this.recordingManager.pause();
+        } else {
+          this.recordingManager.pause();
+        }
+        this.elapsedBeforePauseSec = this.getElapsedSeconds();
+        this.stopRecordingTimer();
+        this.state = 'paused';
+      }
+      this.updateRecordingNotice();
+      this.refreshHeaderActions();
+    } catch (error) {
+      this.handleFailure('Failed to pause/resume', error);
+    }
+  }
+
   private async finishRecordingSession() {
-    const elapsedSec = Math.floor((Date.now() - this.recordingStartedAt) / 1000);
+    const elapsedSec = this.getElapsedSeconds();
     this.stopRecordingTimer();
     this.state = 'processing';
+    this.refreshHeaderActions();
     this.showProcessingNotice('Transcribing...');
     this.livePreviewWriter?.close();
     const writerForCleanup = this.livePreviewWriter;
@@ -254,6 +363,7 @@ export class RibbonRecorderController {
       }
       this.resetRecordingState();
       this.state = 'idle';
+      this.refreshHeaderActions();
     } catch (error) {
       if (this.streamingService) {
         const message = error instanceof Error ? error.message : String(error);
@@ -286,11 +396,36 @@ export class RibbonRecorderController {
     }
   }
 
+  private startRecordingTimer() {
+    this.stopRecordingTimer();
+    this.timerInterval = window.setInterval(() => this.updateRecordingNotice(), 1000);
+  }
+
+  private updateRecordingNotice() {
+    if (!this.currentNotice) return;
+    const elapsedSec = this.getElapsedSeconds();
+    this.currentNotice.setMessage(
+      this.formatRecordingMessage(elapsedSec, this.getInterimTail(), this.state === 'paused')
+    );
+    // Belt-and-suspenders: if Obsidian rebuilt noticeEl on setMessage, the
+    // dataset flag is gone and we re-bind. If the element is the same, the
+    // guard inside attachStopHandler short-circuits.
+    this.attachStopHandler(this.currentNotice.noticeEl);
+  }
+
+  private getElapsedSeconds() {
+    if (this.state === 'paused') return this.elapsedBeforePauseSec;
+    if (!this.recordingStartedAt) return 0;
+    return Math.floor((Date.now() - this.recordingStartedAt) / 1000);
+  }
+
   private stopRecordingIndicator() {
     this.stopRecordingTimer();
     this.hideCurrentNotice();
     this.recordingStartedAt = 0;
+    this.elapsedBeforePauseSec = 0;
     this.state = 'idle';
+    this.refreshHeaderActions();
   }
 
   private showProcessingNotice(message: string) {
@@ -319,8 +454,10 @@ export class RibbonRecorderController {
     return `...${normalized.slice(-50)}`;
   }
 
-  private formatRecordingMessage(elapsedSec: number, interimTail = ''): string {
-    const base = `\u{1F534} REC ${this.formatMmSs(elapsedSec)} · Tap to stop`;
+  private formatRecordingMessage(elapsedSec: number, interimTail = '', paused = false): string {
+    const base = paused
+      ? `Paused ${this.formatMmSs(elapsedSec)} · Tap to stop`
+      : `\u{1F534} REC ${this.formatMmSs(elapsedSec)} · Tap to stop`;
     return interimTail ? `${base}\n${interimTail}` : base;
   }
 
@@ -349,6 +486,7 @@ export class RibbonRecorderController {
 
   private resetRecordingState() {
     this.recordingStartedAt = 0;
+    this.elapsedBeforePauseSec = 0;
     this.liveAudioCaptureActive = false;
     this.activeFile = null;
     this.cursorPosition = null;
@@ -379,14 +517,6 @@ export class RibbonRecorderController {
       }
     }
     this.ribbonElements = [];
-    if (this.headerAction) {
-      try {
-        this.headerAction.remove();
-      } catch (_) {
-        // ignore
-      }
-      this.headerAction = null;
-    }
     if (this.leafChangeRef) {
       try {
         this.plugin.app.workspace.offref(this.leafChangeRef);
@@ -395,5 +525,14 @@ export class RibbonRecorderController {
       }
       this.leafChangeRef = null;
     }
+    if (this.layoutChangeRef) {
+      try {
+        this.plugin.app.workspace.offref(this.layoutChangeRef);
+      } catch (_) {
+        // ignore — registerEvent will also clean on plugin unload
+      }
+      this.layoutChangeRef = null;
+    }
+    this.detachHeaderActions();
   }
 }
